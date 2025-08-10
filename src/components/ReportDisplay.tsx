@@ -27,50 +27,54 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
             title: "Download Failed",
             description: "Could not find the report content to download.",
         });
+        setIsDownloading(false);
         return;
       }
       
       const canvas = await html2canvas(reportContentElement, { 
         scrollY: -window.scrollY,
         useCORS: true,
+        scale: 2, // Increase scale for better quality
       });
 
       const imgData = canvas.toDataURL('image/png');
       
       const pdf = new jsPDF({
         orientation: 'p',
-        unit: 'px',
+        unit: 'pt', // Use points for better precision
         format: 'a4',
       });
       
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
+      const margin = 40;
       
       const imgWidth = canvas.width;
       const imgHeight = canvas.height;
       const ratio = imgWidth / imgHeight;
       
-      const canvasWidthInPdf = pdfWidth;
-      const canvasHeightInPdf = canvasWidthInPdf / ratio;
+      const contentWidth = pdfWidth - margin * 2;
+      const contentHeight = contentWidth / ratio;
       
-      let position = 10;
-      let heightLeft = canvasHeightInPdf;
-
-      pdf.setFontSize(16);
-      pdf.text("IndiLaw AI Research Report", 10, position);
-      position += 10;
+      let heightLeft = contentHeight;
+      let position = margin;
+      
+      // Add a header to the first page
+      pdf.setFontSize(18);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text("IndiLaw AI Research Report", margin, margin);
 
       pdf.setFontSize(12);
-      pdf.text(`Query: ${query}`, 10, position);
-      position += 15;
-      
-      pdf.addImage(imgData, 'PNG', 10, position, canvasWidthInPdf - 20, canvasHeightInPdf);
-      heightLeft -= pdfHeight;
+      pdf.setFont('helvetica', 'normal');
+      pdf.text(`Query: ${query}`, margin, margin + 20);
 
-      while (heightLeft >= 0) {
-        position = heightLeft - canvasHeightInPdf;
+      pdf.addImage(imgData, 'PNG', margin, margin + 40, contentWidth, contentHeight);
+      heightLeft -= (pdfHeight - margin * 2 - 40);
+
+      while (heightLeft > 0) {
+        position = heightLeft - contentHeight;
         pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 10, position, canvasWidthInPdf - 20, canvasHeightInPdf);
+        pdf.addImage(imgData, 'PNG', margin, position + margin, contentWidth, contentHeight);
         heightLeft -= pdfHeight;
       }
 
