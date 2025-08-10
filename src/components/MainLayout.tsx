@@ -16,14 +16,33 @@ import {
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'
+import { useAuth } from '@/hooks/use-auth'
+import { useRouter } from 'next/navigation'
+import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 
 export function MainLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const { user, loading, logout } = useAuth();
+    const router = useRouter();
+
+    const handleLogout = async () => {
+        await logout();
+        router.push('/login');
+    };
 
     const navItems = [
         { href: '/', icon: Gavel, label: 'Research' },
         { href: '/admin', icon: Shield, label: 'Admin Panel' },
     ];
+    
+    const getInitials = (name?: string | null) => {
+        if (!name) return 'U';
+        const nameParts = name.split(' ');
+        if (nameParts.length > 1) {
+          return `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase();
+        }
+        return name[0].toUpperCase();
+    }
 
     return (
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
@@ -51,10 +70,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <Link href="/login" className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8">
+                                <Button onClick={handleLogout} variant="ghost" size="icon" className="flex h-9 w-9 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:text-foreground md:h-8 md:w-8">
                                     <LogOut className="h-5 w-5" />
                                     <span className="sr-only">Logout</span>
-                                </Link>
+                                </Button>
                             </TooltipTrigger>
                             <TooltipContent side="right">Logout</TooltipContent>
                         </Tooltip>
@@ -83,10 +102,10 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                                             {item.label}
                                         </Link>
                                     ))}
-                                    <Link href="/login" className="mt-auto flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
+                                    <Button onClick={handleLogout} variant="ghost" className="mt-auto flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
                                         <LogOut className="h-5 w-5" />
                                         Logout
-                                    </Link>
+                                    </Button>
                                 </nav>
                             </SheetContent>
                         </Sheet>
@@ -98,16 +117,19 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="secondary" size="icon" className="rounded-full">
-                                    <User className="h-5 w-5" />
+                                    <Avatar className="h-8 w-8">
+                                        <AvatarImage src={user?.photoURL || undefined} data-ai-hint="person" />
+                                        <AvatarFallback>{getInitials(user?.displayName)}</AvatarFallback>
+                                    </Avatar>
                                     <span className="sr-only">Toggle user menu</span>
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                                <DropdownMenuLabel>{user?.displayName || 'My Account'}</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem>Settings</DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem asChild><Link href="/login">Logout</Link></DropdownMenuItem>
+                                <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     </div>

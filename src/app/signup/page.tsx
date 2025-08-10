@@ -1,5 +1,4 @@
 import Link from 'next/link'
-import { Button } from '@/components/ui/button'
 import {
   Card,
   CardContent,
@@ -7,9 +6,8 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { AuthLogo } from '@/components/AuthLogo'
+import { Auth } from '@/components/Auth'
 
 export default function SignupPage() {
   return (
@@ -23,28 +21,7 @@ export default function SignupPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="grid gap-4">
-            <div className="grid gap-2">
-                <Label htmlFor="full-name">Full name</Label>
-                <Input id="full-name" placeholder="Saul Goodman" required />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="m@example.com"
-                required
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" />
-            </div>
-            <Button type="submit" className="w-full" asChild>
-                <Link href="/">Create account</Link>
-            </Button>
-          </form>
+          <Auth mode="signup" />
           <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
             <Link href="/login" className="font-semibold text-primary/80 hover:text-primary hover:underline">
