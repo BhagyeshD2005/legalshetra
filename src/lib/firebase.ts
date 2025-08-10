@@ -8,12 +8,12 @@ import { getAuth, GoogleAuthProvider } from "firebase/auth";
 // This is a public configuration and it's safe to be exposed.
 // Security is enforced by Firebase Security Rules.
 const firebaseConfig = {
-  apiKey: "AIzaSyA-7Mr5wc8141QxXkX6yCQe7hfkvsvKsZ0",
-  authDomain: "indilaw-ai-research.firebaseapp.com",
-  projectId: "indilaw-ai-research",
-  storageBucket: "indilaw-ai-research.appspot.com",
-  messagingSenderId: "1061576709161",
-  appId: "1:1061576709161:web:cadbb2a201dadcaf653838"
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
+  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID
 };
 
 
