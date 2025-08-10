@@ -51,7 +51,7 @@ export function Auth() {
       }
       
       toast({ title: "Logged in successfully!" });
-      router.push('/');
+      router.push('/research');
 
     } catch (error: any) {
       console.error(error);

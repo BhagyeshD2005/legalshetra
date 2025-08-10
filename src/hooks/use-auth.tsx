@@ -32,17 +32,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (loading) return;
 
     const isAuthPage = pathname === '/login' || pathname === '/signup';
+    const isLandingPage = pathname === '/';
 
-    if (!user && !isAuthPage) {
+    if (!user && !isAuthPage && !isLandingPage) {
       router.push('/login');
     } else if (user && isAuthPage) {
-      router.push('/');
+      router.push('/research');
     }
   }, [user, loading, router, pathname]);
 
   const logout = async () => {
     await signOut(auth);
     setUser(null);
+    router.push('/');
   };
   
   const value = { user, loading, logout };

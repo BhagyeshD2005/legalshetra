@@ -31,11 +31,11 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
 
     const handleLogout = async () => {
         await logout();
-        router.push('/login');
+        router.push('/');
     };
 
     const navItems = [
-        { href: '/', icon: Gavel, label: 'Research', adminOnly: false },
+        { href: '/research', icon: Gavel, label: 'Research', adminOnly: false },
         { href: '/admin', icon: Shield, label: 'Admin Panel', adminOnly: true },
     ];
     
@@ -52,7 +52,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
         <div className="flex min-h-screen w-full flex-col bg-muted/40">
             <aside className="fixed inset-y-0 left-0 z-10 hidden w-16 flex-col border-r bg-card sm:flex">
                 <nav className="flex flex-col items-center gap-4 px-2 py-4">
-                    <Link href="/" className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base">
+                    <Link href="/research" className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base">
                         <Gavel className="h-4 w-4 transition-all group-hover:scale-110" />
                         <span className="sr-only">IndiLaw AI</span>
                     </Link>
@@ -98,7 +98,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                             </SheetTrigger>
                             <SheetContent side="left" className="sm:max-w-xs">
                                 <nav className="grid gap-6 text-lg font-medium">
-                                    <Link href="/" className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base">
+                                    <Link href="/research" className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base">
                                         <Gavel className="h-5 w-5 transition-all group-hover:scale-110" />
                                         <span className="sr-only">IndiLaw AI</span>
                                     </Link>
