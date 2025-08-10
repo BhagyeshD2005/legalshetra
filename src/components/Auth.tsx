@@ -54,13 +54,17 @@ export function Auth() {
       router.push('/research');
 
     } catch (error: any) {
-      console.error(error);
-      const errorMessage = error.message || 'An unexpected error occurred.';
-      toast({
-        variant: 'destructive',
-        title: 'Authentication Failed',
-        description: errorMessage,
-      });
+      if (error.code === 'auth/popup-closed-by-user') {
+        console.log("Sign-in popup closed by user.");
+      } else {
+        console.error(error);
+        const errorMessage = error.message || 'An unexpected error occurred.';
+        toast({
+            variant: 'destructive',
+            title: 'Authentication Failed',
+            description: errorMessage,
+        });
+      }
     } finally {
       setLoading(false);
     }
