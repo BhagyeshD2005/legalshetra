@@ -20,10 +20,14 @@ import { useAuth } from '@/hooks/use-auth'
 import { useRouter } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
 
+const ADMIN_EMAIL = 'bhagyeshdedmuthe256@gmail.com';
+
 export function MainLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const { user, loading, logout } = useAuth();
     const router = useRouter();
+
+    const isAdmin = user?.email === ADMIN_EMAIL;
 
     const handleLogout = async () => {
         await logout();
@@ -31,8 +35,8 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
     };
 
     const navItems = [
-        { href: '/', icon: Gavel, label: 'Research' },
-        { href: '/admin', icon: Shield, label: 'Admin Panel' },
+        { href: '/', icon: Gavel, label: 'Research', adminOnly: false },
+        { href: '/admin', icon: Shield, label: 'Admin Panel', adminOnly: true },
     ];
     
     const getInitials = (name?: string | null) => {
@@ -54,15 +58,17 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                     </Link>
                     <TooltipProvider>
                         {navItems.map((item) => (
-                            <Tooltip key={item.label}>
-                                <TooltipTrigger asChild>
-                                    <Link href={item.href} className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:text-foreground md:h-8 md:w-8 ${pathname === item.href ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'}`}>
-                                        <item.icon className="h-5 w-5" />
-                                        <span className="sr-only">{item.label}</span>
-                                    </Link>
-                                </TooltipTrigger>
-                                <TooltipContent side="right">{item.label}</TooltipContent>
-                            </Tooltip>
+                            (!item.adminOnly || isAdmin) && (
+                                <Tooltip key={item.label}>
+                                    <TooltipTrigger asChild>
+                                        <Link href={item.href} className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:text-foreground md:h-8 md:w-8 ${pathname === item.href ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'}`}>
+                                            <item.icon className="h-5 w-5" />
+                                            <span className="sr-only">{item.label}</span>
+                                        </Link>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="right">{item.label}</TooltipContent>
+                                </Tooltip>
+                            )
                         ))}
                     </TooltipProvider>
                 </nav>
@@ -97,10 +103,12 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                                         <span className="sr-only">IndiLaw AI</span>
                                     </Link>
                                     {navItems.map((item) => (
-                                        <Link key={item.label} href={item.href} className={`flex items-center gap-4 px-2.5 ${pathname === item.href ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-                                            <item.icon className="h-5 w-5" />
-                                            {item.label}
-                                        </Link>
+                                        (!item.adminOnly || isAdmin) && (
+                                            <Link key={item.label} href={item.href} className={`flex items-center gap-4 px-2.5 ${pathname === item.href ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
+                                                <item.icon className="h-5 w-5" />
+                                                {item.label}
+                                            </Link>
+                                        )
                                     ))}
                                     <Button onClick={handleLogout} variant="ghost" className="mt-auto flex items-center gap-4 px-2.5 text-muted-foreground hover:text-foreground">
                                         <LogOut className="h-5 w-5" />
