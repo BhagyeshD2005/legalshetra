@@ -17,6 +17,8 @@ import { MoreHorizontal } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
+import { db } from '@/lib/firebase';
+import { doc, updateDoc } from 'firebase/firestore';
 
 type User = {
   id: string;
@@ -36,15 +38,39 @@ export function UserManagementTable({ initialUsers }: UserManagementTableProps) 
   const [users, setUsers] = React.useState(initialUsers);
   const { toast } = useToast();
 
-  const handleAccessChange = (userId: string, newAccess: boolean) => {
-    setUsers(users.map(user => 
-      user.id === userId ? { ...user, access: newAccess } : user
-    ));
-    const updatedUser = users.find(user => user.id === userId);
-    if(updatedUser){
+  React.useEffect(() => {
+    setUsers(initialUsers);
+  }, [initialUsers]);
+
+  const handleAccessChange = async (userId: string, newAccess: boolean) => {
+    const originalUsers = users;
+    // Optimistically update the UI
+    const updatedUsers = users.map(user => 
+        user.id === userId ? { ...user, access: newAccess } : user
+      );
+    setUsers(updatedUsers);
+
+    try {
+        const userRef = doc(db, 'users', userId);
+        await updateDoc(userRef, {
+            access: newAccess
+        });
+        
+        const updatedUser = users.find(user => user.id === userId);
+        if(updatedUser){
+            toast({
+                title: `Access ${newAccess ? 'granted' : 'revoked'}`,
+                description: `${updatedUser.name}'s access has been updated.`,
+            })
+        }
+    } catch (error) {
+        console.error("Error updating user access: ", error);
+        // Revert the UI change if the update fails
+        setUsers(originalUsers);
         toast({
-            title: `Access ${newAccess ? 'granted' : 'revoked'}`,
-            description: `${updatedUser.name}'s access has been updated.`,
+            variant: "destructive",
+            title: "Update Failed",
+            description: "Could not update the user's access. Please try again.",
         })
     }
   };
@@ -53,7 +79,7 @@ export function UserManagementTable({ initialUsers }: UserManagementTableProps) 
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle className="font-headline">User Management</CardTitle>
-        <CardDescription>Manage user access to IndiLaw AI Research.</CardDescription>
+        <CardDescription>Manage user access to IndiLaw AI Research. Data is live from Firestore.</CardDescription>
       </CardHeader>
       <CardContent>
         <Table>

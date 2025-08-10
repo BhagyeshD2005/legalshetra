@@ -1,14 +1,51 @@
 import { MainLayout } from '@/components/MainLayout';
 import { UserManagementTable } from '@/components/UserManagementTable';
+import { db } from '@/lib/firebase';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 
-export default function AdminPage() {
-  const users = [
-    { id: '1', name: 'Ananya Sharma', email: 'ananya.sharma@lawfirm.com', role: 'Senior Advocate', status: 'Active', access: true, avatar: 'AS' },
-    { id: '2', name: 'Vikram Singh', email: 'vikram.singh@legal.co.in', role: 'Associate', status: 'Active', access: true, avatar: 'VS' },
-    { id: '3', name: 'Priya Patel', email: 'priya.p@corporatecounsels.com', role: 'Paralegal', status: 'Inactive', access: false, avatar: 'PP' },
-    { id: '4', name: 'Rohan Mehta', email: 'rohan.mehta@justice.org', role: 'Junior Advocate', status: 'Active', access: true, avatar: 'RM' },
-    { id: '5', name: 'Sneha Gupta', email: 's.gupta@guptalegal.net', role: 'Legal Intern', status: 'Active', access: false, avatar: 'SG' },
-  ];
+// Define the User type according to your data structure
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  status: 'Active' | 'Inactive';
+  access: boolean;
+  avatar: string; // This can be a URL or initials
+};
+
+async function getUsers() {
+    try {
+        const usersCollection = collection(db, 'users');
+        const q = query(usersCollection, orderBy('name'));
+        const usersSnapshot = await getDocs(q);
+        const usersList = usersSnapshot.docs.map(doc => {
+            const data = doc.data();
+            // Construct the avatar from the first letter of the first and last name
+            const nameParts = data.name.split(' ');
+            const avatar = nameParts.length > 1 
+              ? `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`
+              : nameParts.length === 1 ? `${nameParts[0][0]}`: 'U';
+              
+            return {
+                id: doc.id,
+                name: data.name || '',
+                email: data.email || '',
+                role: data.role || 'N/A',
+                status: data.status || 'Inactive',
+                access: data.access || false,
+                avatar: avatar.toUpperCase(),
+            } as User;
+        });
+        return usersList;
+    } catch (error) {
+        console.error("Error fetching users: ", error);
+        return [];
+    }
+}
+
+export default async function AdminPage() {
+  const users = await getUsers();
 
   return (
     <MainLayout>
