@@ -17,17 +17,11 @@ export default function SignupPage() {
           <AuthLogo />
           <CardTitle className="text-2xl font-headline">Create an Account</CardTitle>
           <CardDescription>
-            Enter your information to create an account
+            Sign up with your Google account to get started
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Auth mode="signup" />
-          <div className="mt-4 text-center text-sm">
-            Already have an account?{' '}
-            <Link href="/login" className="font-semibold text-primary/80 hover:text-primary hover:underline">
-              Login
-            </Link>
-          </div>
+          <Auth />
         </CardContent>
       </Card>
     </div>

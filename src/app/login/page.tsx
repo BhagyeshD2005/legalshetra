@@ -10,16 +10,10 @@ export default function LoginPage() {
         <CardHeader className="space-y-4 text-center">
           <AuthLogo />
           <CardTitle className="font-headline text-2xl">Welcome Back</CardTitle>
-          <CardDescription>Enter your email below to login to your account</CardDescription>
+          <CardDescription>Sign in with your Google account to continue</CardDescription>
         </CardHeader>
         <CardContent>
-          <Auth mode="login" />
-          <div className="mt-4 text-center text-sm">
-            Don&apos;t have an account?{' '}
-            <Link href="/signup" className="font-semibold text-primary/80 hover:text-primary hover:underline">
-              Sign up
-            </Link>
-          </div>
+          <Auth />
         </CardContent>
       </Card>
     </div>
