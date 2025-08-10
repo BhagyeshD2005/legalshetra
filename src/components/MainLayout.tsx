@@ -119,7 +119,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                             </SheetContent>
                         </Sheet>
                          <h1 className="font-headline text-xl font-bold text-primary">
-                           {pathname === '/admin' ? 'Admin Panel' : 'AI Legal Research'}
+                           {pathname === '/admin' ? 'Admin Panel' : 'LegalshetraAI'}
                         </h1>
                     </div>
                     <div className="flex items-center gap-4">
