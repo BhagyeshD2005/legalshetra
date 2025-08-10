@@ -19,6 +19,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { useAuth } from '@/hooks/use-auth'
 import { useRouter } from 'next/navigation'
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
+import { ThemeToggle } from './ThemeToggle'
 
 const ADMIN_EMAIL = 'bhagyeshdedmuthe256@gmail.com';
 
@@ -122,6 +123,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                         </h1>
                     </div>
                     <div className="flex items-center gap-4">
+                        <ThemeToggle />
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="secondary" size="icon" className="rounded-full">

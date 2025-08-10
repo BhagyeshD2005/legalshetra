@@ -8,6 +8,7 @@ import { AuthLogo } from '@/components/AuthLogo';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const FeatureCard = ({ icon, title, description, delay }: { icon: React.ReactNode, title: string, description: string, delay: number }) => (
   <motion.div
@@ -44,6 +45,7 @@ export default function HomePage() {
              <span className="font-bold font-headline text-lg">IndiLaw AI Research</span>
           </div>
           <div className="flex items-center gap-4">
+            <ThemeToggle />
             <Button variant="ghost" asChild>
               <Link href="/login">Log In</Link>
             </Button>
