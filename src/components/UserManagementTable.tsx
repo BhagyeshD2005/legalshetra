@@ -79,7 +79,7 @@ export function UserManagementTable({ initialUsers }: UserManagementTableProps) 
     <Card className="shadow-lg">
       <CardHeader>
         <CardTitle className="font-headline">User Management</CardTitle>
-        <CardDescription>Manage user access to IndiLaw AI Research. Data is live from Firestore.</CardDescription>
+        <CardDescription>Manage user access to LegalshetraAI. Data is live from Firestore.</CardDescription>
       </CardHeader>
       <CardContent>
         <Table>

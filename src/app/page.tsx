@@ -42,7 +42,7 @@ export default function HomePage() {
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
              <Gavel className="h-6 w-6 text-primary" />
-             <span className="font-bold font-headline text-lg">IndiLaw AI Research</span>
+             <span className="font-bold font-headline text-lg">LegalshetraAI</span>
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
@@ -84,7 +84,7 @@ export default function HomePage() {
         <section className="py-20 sm:py-32 bg-muted/40">
           <div className="container">
             <div className="text-center mb-12">
-              <h2 className="text-3xl font-headline font-bold sm:text-4xl">Why IndiLaw AI?</h2>
+              <h2 className="text-3xl font-headline font-bold sm:text-4xl">Why LegalshetraAI?</h2>
               <p className="mt-4 max-w-2xl mx-auto text-muted-foreground">
                 Our platform is meticulously designed to empower legal professionals with cutting-edge tools and unparalleled efficiency.
               </p>
@@ -121,7 +121,7 @@ export default function HomePage() {
 
       <footer className="py-8 border-t border-border/40 bg-background">
         <div className="container text-center text-muted-foreground text-sm">
-          &copy; {new Date().getFullYear()} IndiLaw AI Research. All Rights Reserved.
+          &copy; {new Date().getFullYear()} LegalshetraAI. All Rights Reserved.
         </div>
       </footer>
     </div>

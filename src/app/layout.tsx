@@ -5,7 +5,7 @@ import { AuthProvider } from '@/hooks/use-auth';
 import { ThemeProvider } from '@/components/ThemeProvider';
 
 export const metadata: Metadata = {
-  title: 'IndiLaw AI Research',
+  title: 'LegalshetraAI',
   description: 'AI-powered legal research assistant',
 };
 
