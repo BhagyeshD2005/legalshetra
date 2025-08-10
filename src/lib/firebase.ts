@@ -1,3 +1,4 @@
+
 // Import the functions you need from the SDKs you need
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
@@ -10,10 +11,11 @@ const firebaseConfig = {
   apiKey: "AIzaSyA-7Mr5wc8141QxXkX6yCQe7hfkvsvKsZ0",
   authDomain: "indilaw-ai-research.firebaseapp.com",
   projectId: "indilaw-ai-research",
-  storageBucket: "indilaw-ai-research.firebasestorage.app",
+  storageBucket: "indilaw-ai-research.appspot.com",
   messagingSenderId: "1061576709161",
   appId: "1:1061576709161:web:cadbb2a201dadcaf653838"
 };
+
 
 // Initialize Firebase
 const app = !getApps().length ? initializeApp(firebaseConfig) : getApp();
