@@ -157,6 +157,29 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
   const handlePrint = () => {
     setIsPrinting(true);
     try {
+      let chartsHtml = '';
+      if (charts && charts.length > 0) {
+        const chartElements = document.querySelectorAll('[data-chart-id]');
+        chartElements.forEach((chartEl, index) => {
+          const chartData = charts[index];
+          const svg = chartEl.querySelector('svg');
+          if (svg) {
+            const serializer = new XMLSerializer();
+            const svgString = serializer.serializeToString(svg);
+            const svgDataUri = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgString)))}`;
+            chartsHtml += `
+              <div class="section chart-section">
+                <h3 class="section-title">${chartData.title}</h3>
+                <div class="chart-container">
+                  <img src="${svgDataUri}" alt="${chartData.title}" style="max-width: 400px; margin: 0 auto; display: block;" />
+                </div>
+              </div>
+            `;
+          }
+        });
+      }
+
+
       const printContent = `
         <!DOCTYPE html>
         <html>
@@ -225,6 +248,14 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
                 padding-bottom: 5px;
                 border-bottom: 1px solid #e5e7eb;
               }
+               .chart-section {
+                margin-top: 30px;
+               }
+               .chart-container {
+                padding: 20px;
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+               }
               @media print {
                 body { font-size: 11px; }
                 .header { page-break-after: avoid; }
@@ -248,6 +279,9 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
             </div>
             
             <div class="content">${report.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</div>
+            
+            ${chartsHtml}
+
           </body>
         </html>
       `;
@@ -266,6 +300,7 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
         throw new Error('Unable to open print window');
       }
     } catch (error) {
+      console.error("Print error:", error);
       toast({
         variant: "destructive",
         title: "Print failed",
@@ -485,7 +520,11 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
                       </div>
                       <Separator className="mb-4" />
                       <div className="pl-11">
-                        <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[250px]">
+                        <ChartContainer 
+                          config={chartConfig} 
+                          className="mx-auto aspect-square h-[250px]"
+                          data-chart-id={`chart-${index}`}
+                        >
                            <RechartsPieChart>
                               <ChartTooltip content={<ChartTooltipContent nameKey="value" hideLabel />} />
                               <Pie data={chart.data} dataKey="value" nameKey="name" innerRadius={60}>
