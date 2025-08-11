@@ -1,4 +1,3 @@
-'use server';
 
 /**
  * @fileOverview This file contains shared Zod schemas and TypeScript types
