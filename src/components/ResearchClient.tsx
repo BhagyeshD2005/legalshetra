@@ -26,6 +26,7 @@ import {
   BookOpen,
   Zap,
   Lightbulb,
+  BrainCircuit
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -53,9 +54,9 @@ interface ProcessingStep {
 }
 
 const PROCESSING_STEPS: ProcessingStep[] = [
-  { id: 'enhance', label: 'Enhancing query clarity', status: 'pending', icon: Sparkles },
+  { id: 'enhance', label: 'Enhancing query', status: 'pending', icon: Sparkles },
+  { id: 'think', label: 'Thinking', status: 'pending', icon: BrainCircuit },
   { id: 'search', label: 'Searching legal databases', status: 'pending', icon: Search },
-  { id: 'analyze', label: 'Analyzing case laws', status: 'pending', icon: BookOpen },
   { id: 'generate', label: 'Generating comprehensive report', status: 'pending', icon: FileText },
 ];
 
@@ -144,28 +145,30 @@ export function ResearchClient() {
       setEnhancedQuery(enhanced.rephrasedQuery);
       updateStepStatus('enhance', 'completed');
       setProgressValue(25);
-
-      setCurrentStep('search');
-      updateStepStatus('search', 'active');
+      
+      setCurrentStep('think');
+      updateStepStatus('think', 'active');
       setProgressValue(40);
 
+      // Simulate the agent "thinking" and deciding to use a tool
       setTimeout(() => {
         if (!signal.aborted) {
-          updateStepStatus('search', 'completed');
-          updateStepStatus('analyze', 'active');
-          setCurrentStep('analyze');
+          updateStepStatus('think', 'completed');
+          setCurrentStep('search');
+          updateStepStatus('search', 'active');
           setProgressValue(65);
         }
       }, 1500);
-
-      setTimeout(() => {
+      
+       setTimeout(() => {
         if (!signal.aborted) {
-          updateStepStatus('analyze', 'completed');
+          updateStepStatus('search', 'completed');
           updateStepStatus('generate', 'active');
           setCurrentStep('generate');
           setProgressValue(80);
         }
       }, 3000);
+
 
       const result = await generateLegalSummary({ 
         legalQuery: enhanced.rephrasedQuery 
@@ -193,8 +196,9 @@ export function ResearchClient() {
       const errorMessage = error?.message || 'An unexpected error occurred during research.';
       setError(errorMessage);
       
-      if (currentStep) {
-        updateStepStatus(currentStep, 'error');
+      const currentActiveStep = processingSteps.find(s => s.status === 'active');
+      if (currentActiveStep) {
+        updateStepStatus(currentActiveStep.id, 'error');
       }
 
       toast({
