@@ -18,7 +18,6 @@ export type GenerateLegalSummaryInput = z.infer<typeof GenerateLegalSummaryInput
 
 const GenerateLegalSummaryOutputSchema = z.object({
   summary: z.string().describe('A summarized report of relevant cases and laws from indiankanoon.org.'),
-  progress: z.string().describe('A short, one-sentence summary of the flow progress.'),
 });
 export type GenerateLegalSummaryOutput = z.infer<typeof GenerateLegalSummaryOutputSchema>;
 
@@ -112,8 +111,13 @@ const generateLegalSummaryFlow = ai.defineFlow(
   },
   async (input) => {
     // Use ai.generate() to run the prompt with tools.
-    const llmResponse = await summarizeLegalQueryPrompt.generate({
+    const llmResponse = await ai.generate({
         prompt: input.legalQuery,
+        model: 'googleai/gemini-2.0-flash',
+        tools: [searchIndianKanoon],
+        output: {
+            schema: GenerateLegalSummaryOutputSchema,
+        }
     });
     
     const output = llmResponse.output();
@@ -122,7 +126,6 @@ const generateLegalSummaryFlow = ai.defineFlow(
       throw new Error("The model did not return a valid summary.");
     }
     
-    output.progress = 'Generated a summarized report of relevant cases and laws from indiankanoon.org.';
     return output;
   }
 );
