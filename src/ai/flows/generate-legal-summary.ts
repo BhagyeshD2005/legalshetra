@@ -83,12 +83,18 @@ const searchIndianKanoon = ai.defineTool(
 
 // 2. Define the agent's prompt, making the tool available.
 const summarizeLegalQueryPrompt = ai.definePrompt({
-    name: 'summarizeLegalQueryPrompt',
-    tools: [searchIndianKanoon],
-    system: `You are an expert legal researcher specializing in Indian law. Your task is to provide a comprehensive summary based on a legal query.
+  name: 'summarizeLegalQueryPrompt',
+  tools: [searchIndianKanoon],
+  input: {
+    schema: GenerateLegalSummaryInputSchema,
+  },
+  output: {
+    schema: GenerateLegalSummaryOutputSchema,
+  },
+  prompt: `You are an expert legal researcher specializing in Indian law. Your task is to provide a comprehensive summary based on a legal query.
 
     Follow these steps:
-    1.  **Analyze the Query**: Carefully understand the user's legal query.
+    1.  **Analyze the Query**: Carefully understand the user's legal query: {{{legalQuery}}}
     2.  **Use the Tool**: Use the \`searchIndianKanoon\` tool to find relevant cases and statutes. You may need to call the tool multiple times with different sub-queries to gather comprehensive information.
     3.  **Synthesize the Report**: Once you have gathered sufficient information, generate a detailed summary. Your summary should:
         *   Be well-structured with clear headings.
@@ -96,9 +102,6 @@ const summarizeLegalQueryPrompt = ai.definePrompt({
         *   Summarize the key legal principles from the discovered documents.
         *   Be easy for a lawyer to understand.
     4.  **Do not** invent cases or legal principles. Your summary must be based *only* on the information returned by the \`searchIndianKanoon\` tool.`,
-    output: {
-        schema: GenerateLegalSummaryOutputSchema,
-    }
 });
 
 
@@ -110,18 +113,9 @@ const generateLegalSummaryFlow = ai.defineFlow(
     outputSchema: GenerateLegalSummaryOutputSchema,
   },
   async (input) => {
-    // Use ai.generate() to run the prompt with tools.
-    const llmResponse = await ai.generate({
-        prompt: input.legalQuery,
-        model: 'googleai/gemini-2.0-flash',
-        tools: [searchIndianKanoon],
-        output: {
-            schema: GenerateLegalSummaryOutputSchema,
-        }
-    });
-    
-    const output = llmResponse.output;
-    
+    // Use ai.generate() which will call the prompt with tools.
+    const {output} = await summarizeLegalQueryPrompt(input);
+        
     if (!output) {
       throw new Error("The model did not return a valid summary.");
     }
