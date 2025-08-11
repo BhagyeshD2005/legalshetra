@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -18,14 +19,12 @@ import {
   Maximize2,
   Minimize2,
   Share2,
-  Bookmark,
   Gavel,
   BookOpen,
   FileOutput
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-
 
 interface ReportDisplayProps {
   report: string;
@@ -36,6 +35,14 @@ interface ReportSection {
   title: string;
   content: string;
   type: 'summary' | 'cases' | 'analysis' | 'conclusion' | 'references';
+}
+
+function formatContent(content: string) {
+    // Convert markdown bold to strong tags
+    let html = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    // Convert markdown list items to html list items, preserving indentation
+    html = html.replace(/^\s*\*\s+/gm, '<li>');
+    return { __html: html };
 }
 
 export function ReportDisplay({ report, query }: ReportDisplayProps) {
@@ -64,7 +71,7 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
       const trimmedLine = line.trim();
       
       const headerMatch = trimmedLine.match(/^\*\*(.*?)\*\*$/) || trimmedLine.match(/^(.*?):$/);
-      if (headerMatch && headerMatch[1].split(' ').length < 10) { 
+      if (headerMatch && headerMatch[1].split(' ').length < 10 && headerMatch[1].trim()) { 
         if (currentSection) {
           sections.push(currentSection);
         }
@@ -77,18 +84,8 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
           content: '',
           type
         };
-      } else if (currentSection && trimmedLine) {
+      } else if (currentSection) {
         currentSection.content += line + '\n';
-      } else if (!currentSection && sections.length === 0) {
-         if (currentSection) {
-          sections.push(currentSection);
-        }
-        currentSection = {
-          title: 'Introduction',
-          content: line + '\n',
-          type: 'summary'
-        };
-
       }
     }
     
@@ -170,6 +167,9 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
                 font-size: 12px;
               }
               h1, h2, h3, h4 { font-family: 'Playfair Display', serif; }
+              strong { font-weight: 700; }
+              ul { padding-left: 20px; }
+              li { margin-bottom: 5px; }
               .header {
                 border-bottom: 2px solid #e5e7eb;
                 padding-bottom: 20px;
@@ -241,7 +241,7 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
               <div>${query}</div>
             </div>
             
-            <div class="content">${report.replace(/\n/g, '<br>')}</div>
+            <div class="content">${report.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</div>
           </body>
         </html>
       `;
@@ -402,7 +402,7 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
             ref={reportRef}
             id="report-content" 
             className={cn(
-              "prose prose-sm max-w-none p-6 transition-all duration-300",
+              "prose prose-sm max-w-none p-6 transition-all duration-300 prose-strong:font-semibold",
               isExpanded ? "max-h-none" : "max-h-[70vh] overflow-y-auto"
             )}
           >
@@ -431,17 +431,19 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
                         </h3>
                       </div>
                       <Separator className="mb-4" />
-                      <div className="whitespace-pre-wrap leading-relaxed text-foreground/90 pl-11">
-                        {section.content.trim()}
-                      </div>
+                      <div 
+                        className="whitespace-pre-wrap leading-relaxed text-foreground/90 pl-11"
+                        dangerouslySetInnerHTML={formatContent(section.content.trim())}
+                      />
                     </motion.div>
                   );
                 })}
               </div>
             ) : (
-              <div className="whitespace-pre-wrap leading-relaxed text-foreground">
-                {report}
-              </div>
+              <div 
+                className="whitespace-pre-wrap leading-relaxed text-foreground"
+                dangerouslySetInnerHTML={formatContent(report)}
+              />
             )}
           </div>
           
@@ -481,4 +483,5 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
       </Card>
     </div>
   );
-}
+
+    
