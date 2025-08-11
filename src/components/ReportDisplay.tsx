@@ -243,7 +243,7 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
   };
 
   const handlePrint = () => {
-    setPrinting(true);
+    setIsPrinting(true);
     try {
       const printContent = `
         <!DOCTYPE html>
@@ -358,7 +358,7 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
         description: "Unable to open print dialog. Please try again.",
       });
     } finally {
-      setPrinting(false);
+      setIsPrinting(false);
     }
   };
 
@@ -584,5 +584,3 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
     </div>
   );
 }
-
-    
