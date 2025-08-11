@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
-import { type ChatMessage as ChatMessageType } from '@/ai/flows/chat-with-report';
+import { type ChatMessage as ChatMessageType } from '@/ai/types';
 import { ChatMessage } from './ChatMessage';
 import { MessageSquare, Send, RefreshCw } from 'lucide-react';
 

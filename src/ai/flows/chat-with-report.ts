@@ -7,17 +7,11 @@
  * - chatWithReport - A function that handles the conversational chat.
  * - ChatWithReportInput - The input type for the function.
  * - ChatWithReportOutput - The return type for the function.
- * - ChatMessage - The type for an individual chat message.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-
-export const ChatMessageSchema = z.object({
-  role: z.enum(['user', 'model']),
-  content: z.string(),
-});
-export type ChatMessage = z.infer<typeof ChatMessageSchema>;
+import { ChatMessage, ChatMessageSchema } from '@/ai/types';
 
 const ChatWithReportInputSchema = z.object({
   report: z.string().describe('The full text of the legal report being discussed.'),

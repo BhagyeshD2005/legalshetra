@@ -1,6 +1,6 @@
 'use client';
 
-import { type ChatMessage as ChatMessageType } from '@/ai/flows/chat-with-report';
+import { type ChatMessage as ChatMessageType } from '@/ai/types';
 import { cn } from '@/lib/utils';
 import { Bot, User } from 'lucide-react';
 import { motion } from 'framer-motion';

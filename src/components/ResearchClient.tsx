@@ -33,6 +33,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { type ChatMessage, chatWithReport } from '@/ai/flows/chat-with-report';
 import { ChatInterface } from './ChatInterface';
 import { nanoid } from 'nanoid';
+import { type ChatMessage as ChatMessageType } from '@/ai/types';
 
 const FormSchema = z.object({
   query: z.string()
@@ -72,7 +73,7 @@ export function ResearchClient() {
   const [startTime, setStartTime] = useState<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   
-  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [chatHistory, setChatHistory] = useState<ChatMessageType[]>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
 
   const { toast } = useToast();
@@ -223,7 +224,7 @@ export function ResearchClient() {
   const handleSendMessage = async (message: string) => {
     if (!report) return;
 
-    const userMessage: ChatMessage = { role: 'user', content: message };
+    const userMessage: ChatMessageType = { role: 'user', content: message };
     setChatHistory(prev => [...prev, userMessage]);
     setIsChatLoading(true);
 
@@ -234,7 +235,7 @@ export function ResearchClient() {
         question: message,
       });
 
-      const modelMessage: ChatMessage = { role: 'model', content: result.answer };
+      const modelMessage: ChatMessageType = { role: 'model', content: result.answer };
       setChatHistory(prev => [...prev, modelMessage]);
 
     } catch (error: any) {
