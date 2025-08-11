@@ -120,7 +120,7 @@ const generateLegalSummaryFlow = ai.defineFlow(
         }
     });
     
-    const output = llmResponse.output();
+    const output = llmResponse.output;
     
     if (!output) {
       throw new Error("The model did not return a valid summary.");
