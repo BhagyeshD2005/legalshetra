@@ -104,7 +104,7 @@ const summarizeLegalQueryPrompt = ai.definePrompt({
   output: {
     schema: GenerateLegalSummaryOutputSchema,
   },
-  system: `You are an expert legal researcher specializing in Indian law. Your task is to provide a comprehensive summary based on a legal query.
+  prompt: `You are an expert legal researcher specializing in Indian law. Your task is to provide a comprehensive summary based on a legal query.
 
     Follow these steps:
     1.  **Analyze the Query**: Carefully understand the user's legal query: {{{legalQuery}}}
