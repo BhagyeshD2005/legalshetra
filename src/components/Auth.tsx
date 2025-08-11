@@ -8,6 +8,12 @@ import { auth, db, googleProvider } from '@/lib/firebase';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 
+const GoogleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/><path d="M12 22c-2.29 0-4.42-.77-6.12-2.06"/><path d="M21.56 10.97c-.08-1.15-.43-2.24-1-3.24M2.44 10.97c.08-1.15.43-2.24 1-3.24m4.44-3.08a9.96 9.96 0 0 0-4.14 4.14M16.24 4.65a9.96 9.96 0 0 0 4.14 4.14"/><path d="M12 12.01c-1.37 0-2.5-1.12-2.5-2.5s1.13-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/><path d="M12.01 12c-2.49 0-4.5 2.01-4.5 4.5s0 4.5 0 4.5c2.49 0 4.5-2.01 4.5-4.5s0-4.5 0-4.5z"/><path d="M12 12.01c2.49 0 4.5 2.01 4.5 4.5s0 4.5 0 4.5-2.01-4.5-4.5-4.5z"/>
+    </svg>
+);
+
 export function Auth() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -62,7 +68,7 @@ export function Auth() {
     <div className="grid gap-4">
       <Button 
         onClick={handleGoogleSignIn} 
-        className="w-full" 
+        className="w-full flex items-center gap-2" 
         disabled={loading}
         variant="outline"
       >
@@ -72,6 +78,7 @@ export function Auth() {
           </>
         ) : (
           <>
+            <GoogleIcon className="h-4 w-4" />
             Sign in with Google
           </>
         )}
