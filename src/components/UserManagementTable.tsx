@@ -18,6 +18,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Label } from '@/components/ui/label';
 import { db } from '@/lib/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
+import { MoreHorizontal, Pencil, Trash2 } from 'lucide-react';
 
 type User = {
   id: string;
@@ -43,7 +44,6 @@ export function UserManagementTable({ initialUsers }: UserManagementTableProps) 
 
   const handleAccessChange = async (userId: string, newAccess: boolean) => {
     const originalUsers = users;
-    // Optimistically update the UI
     const updatedUsers = users.map(user => 
         user.id === userId ? { ...user, access: newAccess } : user
       );
@@ -64,7 +64,6 @@ export function UserManagementTable({ initialUsers }: UserManagementTableProps) 
         }
     } catch (error) {
         console.error("Error updating user access: ", error);
-        // Revert the UI change if the update fails
         setUsers(originalUsers);
         toast({
             variant: "destructive",
@@ -127,13 +126,20 @@ export function UserManagementTable({ initialUsers }: UserManagementTableProps) 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button aria-haspopup="true" size="icon" variant="ghost">
+                                <MoreHorizontal className="h-4 w-4" />
                                 <span className="sr-only">Toggle menu</span>
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>Edit User</DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">Delete User</DropdownMenuItem>
+                            <DropdownMenuItem>
+                                <Pencil className="mr-2 h-4 w-4" />
+                                Edit User
+                            </DropdownMenuItem>
+                            <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete User
+                            </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                 </TableCell>

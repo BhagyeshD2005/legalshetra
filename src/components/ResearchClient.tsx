@@ -24,9 +24,11 @@ import {
   Clock,
   RefreshCw,
   BookOpen,
-  Zap
+  Zap,
+  Lightbulb
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { motion } from 'framer-motion';
 
 const FormSchema = z.object({
   query: z.string()
@@ -72,7 +74,6 @@ export function ResearchClient() {
     defaultValues: { query: '' },
   });
 
-  // Reset states when starting new research
   const resetStates = useCallback(() => {
     setReport(null);
     setError(null);
@@ -84,14 +85,12 @@ export function ResearchClient() {
     setProcessingSteps(PROCESSING_STEPS.map(step => ({ ...step, status: 'pending' })));
   }, []);
 
-  // Update processing step status
   const updateStepStatus = useCallback((stepId: string, status: ProcessingStep['status']) => {
     setProcessingSteps(prev => prev.map(step => 
       step.id === stepId ? { ...step, status } : step
     ));
   }, []);
 
-  // Calculate estimated time remaining
   useEffect(() => {
     if (isLoading && startTime) {
       const interval = setInterval(() => {
@@ -103,6 +102,8 @@ export function ResearchClient() {
           const avgTimePerStep = elapsed / completedSteps;
           const remainingSteps = totalSteps - completedSteps;
           setEstimatedTime(Math.ceil(avgTimePerStep * remainingSteps));
+        } else {
+          setEstimatedTime(45); // Initial estimate
         }
       }, 1000);
 
@@ -110,9 +111,7 @@ export function ResearchClient() {
     }
   }, [isLoading, startTime, processingSteps]);
 
-  // Handle form submission with improved error handling
   const onSubmit: SubmitHandler<FormData> = async (data) => {
-    // Cancel any ongoing request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
     }
@@ -124,14 +123,13 @@ export function ResearchClient() {
     resetStates();
 
     try {
-      // Step 1: Enhance query
       setCurrentStep('enhance');
       updateStepStatus('enhance', 'active');
       setProgressValue(10);
 
       const enhanced = await enhanceQueryClarity({ 
         legalQuery: data.query.trim() 
-      }, { signal });
+      });
       
       if (signal.aborted) return;
 
@@ -139,12 +137,10 @@ export function ResearchClient() {
       updateStepStatus('enhance', 'completed');
       setProgressValue(25);
 
-      // Step 2: Search databases
       setCurrentStep('search');
       updateStepStatus('search', 'active');
       setProgressValue(40);
 
-      // Step 3: Analyze (simulate progress)
       setTimeout(() => {
         if (!signal.aborted) {
           updateStepStatus('search', 'completed');
@@ -154,7 +150,6 @@ export function ResearchClient() {
         }
       }, 1500);
 
-      // Step 4: Generate report
       setTimeout(() => {
         if (!signal.aborted) {
           updateStepStatus('analyze', 'completed');
@@ -166,7 +161,7 @@ export function ResearchClient() {
 
       const result = await generateLegalSummary({ 
         legalQuery: enhanced.rephrasedQuery 
-      }, { signal });
+      });
 
       if (signal.aborted) return;
 
@@ -182,7 +177,7 @@ export function ResearchClient() {
 
     } catch (error: any) {
       if (error.name === 'AbortError') {
-        return; // Request was cancelled
+        return;
       }
 
       console.error('Research error:', error);
@@ -190,7 +185,6 @@ export function ResearchClient() {
       const errorMessage = error?.message || 'An unexpected error occurred during research.';
       setError(errorMessage);
       
-      // Mark current step as error
       if (currentStep) {
         updateStepStatus(currentStep, 'error');
       }
@@ -206,7 +200,6 @@ export function ResearchClient() {
     }
   };
 
-  // Cancel ongoing request
   const handleCancel = () => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -218,7 +211,6 @@ export function ResearchClient() {
     }
   };
 
-  // Format time display
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -227,7 +219,6 @@ export function ResearchClient() {
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-      {/* Input Form */}
       <div className="lg:col-span-1">
         <Card className="shadow-lg sticky top-24">
           <CardHeader className="pb-4">
@@ -304,17 +295,16 @@ export function ResearchClient() {
               </form>
             </Form>
 
-            {/* Research Tips */}
             {!isLoading && !report && (
               <div className="mt-6 p-4 bg-muted/50 rounded-lg">
                 <h4 className="text-sm font-medium mb-2 flex items-center gap-1">
-                  <Sparkles className="h-3 w-3" />
+                  <Lightbulb className="h-3 w-3 text-yellow-500" />
                   Research Tips
                 </h4>
-                <ul className="text-xs text-muted-foreground space-y-1">
-                  <li>• Be specific with section numbers and acts</li>
-                  <li>• Include jurisdiction if relevant</li>
-                  <li>• Mention time period for recent cases</li>
+                <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                  <li>Be specific with section numbers and acts.</li>
+                  <li>Include jurisdiction if relevant.</li>
+                  <li>Mention a time period for recent cases.</li>
                 </ul>
               </div>
             )}
@@ -322,9 +312,7 @@ export function ResearchClient() {
         </Card>
       </div>
 
-      {/* Results Area */}
       <div className="lg:col-span-2">
-        {/* Error Display */}
         {error && (
           <Alert variant="destructive" className="mb-6">
             <AlertCircle className="h-4 w-4" />
@@ -341,7 +329,6 @@ export function ResearchClient() {
           </Alert>
         )}
 
-        {/* Loading State */}
         {isLoading && (
           <Card className="mb-6">
             <CardHeader className="pb-4">
@@ -357,7 +344,6 @@ export function ResearchClient() {
               </div>
             </CardHeader>
             <CardContent className="space-y-6">
-              {/* Progress Bar */}
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="font-medium">Overall Progress</span>
@@ -366,44 +352,54 @@ export function ResearchClient() {
                 <Progress value={progressValue} className="h-2" />
               </div>
 
-              {/* Enhanced Query Display */}
               {enhancedQuery && (
                 <div className="p-4 border rounded-lg bg-gradient-to-r from-primary/5 to-secondary/5">
                   <p className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-2">
-                    <Sparkles className="h-3 w-3" />
+                    <Sparkles className="h-3 w-3 text-primary" />
                     Enhanced Query
                   </p>
                   <p className="italic text-sm">{enhancedQuery}</p>
                 </div>
               )}
 
-              {/* Processing Steps */}
               <div className="space-y-3">
                 {processingSteps.map((step) => {
                   const Icon = step.icon;
                   return (
-                    <div 
+                    <motion.div 
                       key={step.id}
                       className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
                         step.status === 'active' ? 'bg-primary/10 border border-primary/20' :
-                        step.status === 'completed' ? 'bg-green-50 border border-green-200' :
-                        step.status === 'error' ? 'bg-red-50 border border-red-200' :
+                        step.status === 'completed' ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' :
+                        step.status === 'error' ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800' :
                         'bg-muted/30'
                       }`}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.2 }}
                     >
-                      {step.status === 'completed' ? (
-                        <CheckCircle2 className="h-4 w-4 text-green-600" />
-                      ) : step.status === 'error' ? (
-                        <AlertCircle className="h-4 w-4 text-red-600" />
-                      ) : step.status === 'active' ? (
-                        <RefreshCw className="h-4 w-4 animate-spin text-primary" />
-                      ) : (
-                        <Icon className="h-4 w-4 text-muted-foreground" />
-                      )}
+                      <motion.div
+                        animate={{
+                          rotate: step.status === 'active' ? 360 : 0,
+                          scale: step.status === 'completed' ? [1, 1.2, 1] : 1
+                        }}
+                        transition={{
+                          rotate: { repeat: Infinity, duration: 1, ease: 'linear' },
+                          scale: { duration: 0.3 }
+                        }}
+                      >
+                        {step.status === 'completed' ? (
+                          <CheckCircle2 className="h-4 w-4 text-green-600" />
+                        ) : step.status === 'error' ? (
+                          <AlertCircle className="h-4 w-4 text-red-600" />
+                        ) : (
+                          <Icon className={`h-4 w-4 ${step.status === 'active' ? 'text-primary' : 'text-muted-foreground'}`} />
+                        )}
+                      </motion.div>
                       
                       <span className={`text-sm font-medium ${
-                        step.status === 'completed' ? 'text-green-800' :
-                        step.status === 'error' ? 'text-red-800' :
+                        step.status === 'completed' ? 'text-green-800 dark:text-green-300' :
+                        step.status === 'error' ? 'text-red-800 dark:text-red-300' :
                         step.status === 'active' ? 'text-primary' :
                         'text-muted-foreground'
                       }`}>
@@ -413,25 +409,20 @@ export function ResearchClient() {
                       {step.status === 'active' && (
                         <Badge variant="secondary" size="sm">Active</Badge>
                       )}
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>
 
-              {/* Loading Skeleton */}
               <div className="space-y-3 pt-4">
                 <Skeleton className="h-4 w-[85%]" />
                 <Skeleton className="h-4 w-full" />
                 <Skeleton className="h-4 w-[92%]" />
-                <Skeleton className="h-4 w-[78%]" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-[88%]" />
               </div>
             </CardContent>
           </Card>
         )}
 
-        {/* Report Display */}
         {report && (
           <ReportDisplay 
             report={report} 
@@ -439,12 +430,16 @@ export function ResearchClient() {
           />
         )}
 
-        {/* Empty State */}
         {!isLoading && !report && !error && (
           <div className="flex flex-col items-center justify-center min-h-[60vh] border-2 border-dashed rounded-lg p-12 text-center bg-gradient-to-br from-card to-muted/20">
-            <div className="rounded-full bg-primary/10 p-6 mb-4">
+            <motion.div 
+              className="rounded-full bg-primary/10 p-6 mb-4"
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+            >
               <FileText className="h-12 w-12 text-primary" />
-            </div>
+            </motion.div>
             <h3 className="text-xl font-semibold font-headline mb-2">
               Ready for Legal Research
             </h3>

@@ -18,9 +18,14 @@ import {
   Maximize2,
   Minimize2,
   Share2,
-  Bookmark
+  Bookmark,
+  Gavel,
+  BookOpen,
+  FileOutput
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { motion } from "framer-motion";
+
 
 interface ReportDisplayProps {
   report: string;
@@ -58,9 +63,8 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
     for (const line of lines) {
       const trimmedLine = line.trim();
       
-      // Check if line is a section header (handles markdown bolding and colons)
       const headerMatch = trimmedLine.match(/^\*\*(.*?)\*\*$/) || trimmedLine.match(/^(.*?):$/);
-      if (headerMatch && headerMatch[1].split(' ').length < 10) { // Assume headers are short
+      if (headerMatch && headerMatch[1].split(' ').length < 10) { 
         if (currentSection) {
           sections.push(currentSection);
         }
@@ -76,7 +80,6 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
       } else if (currentSection && trimmedLine) {
         currentSection.content += line + '\n';
       } else if (!currentSection && sections.length === 0) {
-        // Handle case where report doesn't start with a clear header
          if (currentSection) {
           sections.push(currentSection);
         }
@@ -93,7 +96,6 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
       sections.push(currentSection);
     }
     
-     // If still no sections, treat the whole report as one section
     if (sections.length === 0 && text.trim().length > 0) {
       return [{
         title: 'Legal Research Report',
@@ -118,9 +120,9 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
   const getSectionIcon = (type: ReportSection['type']) => {
     switch (type) {
       case 'summary': return FileText;
-      case 'cases': return Search;
-      case 'analysis': return CheckCircle2;
-      case 'conclusion': return CheckCircle2;
+      case 'cases': return Gavel;
+      case 'analysis': return BookOpen;
+      case 'conclusion': return FileOutput;
       case 'references': return ExternalLink;
       default: return FileText;
     }
@@ -145,7 +147,7 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
         description: "Unable to copy to clipboard. Please try selecting and copying manually."
       });
     } finally {
-      setIsCopying(false);
+      setTimeout(() => setIsCopying(false), 2000);
     }
   };
 
@@ -250,7 +252,6 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
         printWindow.document.close();
         printWindow.focus();
         
-        // Wait for fonts to load before printing
         setTimeout(() => {
           printWindow.print();
           printWindow.close();
@@ -279,11 +280,11 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
         });
       } catch (error: any) {
         if (error.name !== 'AbortError') {
-          handleCopy(); // Fallback to copy
+          handleCopy();
         }
       }
     } else {
-      handleCopy(); // Fallback for browsers without Web Share API
+      handleCopy(); 
     }
   };
 
@@ -297,7 +298,6 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
 
   return (
     <div className="space-y-6">
-      {/* Report Header */}
       <Card className="shadow-lg border-l-4 border-l-primary">
         <CardHeader>
           <div className="flex justify-between items-start flex-wrap gap-4">
@@ -322,7 +322,6 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
               </CardDescription>
             </div>
             
-            {/* Action Buttons */}
             <div className="flex items-center gap-2 flex-wrap">
               <Button 
                 variant="ghost" 
@@ -341,7 +340,7 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
                 className="flex items-center gap-1"
               >
                 <Copy className="h-3 w-3" />
-                {isCopying ? 'Copying...' : 'Copy'}
+                {isCopying ? 'Copied!' : 'Copy'}
               </Button>
               <Button 
                 variant="ghost" 
@@ -358,7 +357,6 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
         </CardHeader>
       </Card>
 
-      {/* Query Summary */}
       <Card>
         <CardContent className="pt-6">
           <div className="flex items-start gap-3 p-4 bg-muted/10 rounded-lg border">
@@ -371,7 +369,6 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
         </CardContent>
       </Card>
 
-      {/* Section Navigation (if multiple sections) */}
       {sections.length > 1 && (
         <Card>
           <CardHeader className="pb-3">
@@ -399,7 +396,6 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
         </Card>
       )}
 
-      {/* Report Content */}
       <Card className="shadow-lg">
         <CardContent className="p-0">
           <div 
@@ -415,15 +411,21 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
                 {sections.map((section, index) => {
                   const Icon = getSectionIcon(section.type);
                   return (
-                    <div 
+                    <motion.div 
                       key={index}
                       id={`section-${section.title.toLowerCase().replace(/\s+/g, '-')}`}
                       className="scroll-mt-4"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
                     >
                       <div className="flex items-center gap-3 mb-4">
-                        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                        <motion.span 
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10"
+                          whileHover={{ scale: 1.2, rotate: 15 }}
+                        >
                           <Icon className="h-4 w-4 text-primary" />
-                        </span>
+                        </motion.span>
                         <h3 className="text-xl font-semibold font-headline text-foreground m-0">
                           {section.title}
                         </h3>
@@ -432,7 +434,7 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
                       <div className="whitespace-pre-wrap leading-relaxed text-foreground/90 pl-11">
                         {section.content.trim()}
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>
@@ -443,7 +445,6 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
             )}
           </div>
           
-          {/* Expand/Collapse Footer */}
           {!isExpanded && (
             <div className="border-t bg-muted/50 p-3 flex justify-center">
               <Button
@@ -460,7 +461,6 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
         </CardContent>
       </Card>
 
-      {/* Report Metadata */}
       <Card className="bg-muted/30">
         <CardContent className="pt-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">

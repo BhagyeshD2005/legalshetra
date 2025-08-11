@@ -8,12 +8,14 @@ import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { Bot, FileText, Scale, Gavel } from 'lucide-react';
 
-const FeatureCard = ({ title, description, delay, index }: { 
+const FeatureCard = ({ title, description, delay, index, icon: Icon }: { 
   title: string, 
   description: string, 
   delay: number,
-  index: number 
+  index: number,
+  icon: React.ElementType
 }) => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, amount: 0.3 });
@@ -51,8 +53,9 @@ const FeatureCard = ({ title, description, delay, index }: {
           initial={{ scale: 0 }}
           animate={isInView ? { scale: 1 } : {}}
           transition={{ delay: delay + 0.3, duration: 0.4, type: "spring", stiffness: 200 }}
-          className="w-6 h-6 bg-primary rounded-full"
-        />
+        >
+          <Icon className="w-6 h-6" />
+        </motion.div>
       </motion.div>
       <motion.h3 
         className="text-xl font-headline font-semibold mb-2 group-hover:text-primary transition-colors duration-300"
@@ -292,24 +295,28 @@ export default function HomePage() {
                 description="Instantly get concise, AI-generated summaries of complex legal documents and case laws, saving you hours of reading."
                 delay={0.1}
                 index={0}
+                icon={FileText}
               />
               <FeatureCard
                 title="Enhanced Query Understanding"
                 description="Our AI understands legal jargon. It refines your queries to fetch the most relevant results from vast legal databases."
                 delay={0.2}
                 index={1}
+                icon={Bot}
               />
               <FeatureCard
                 title="Comprehensive Case Analysis"
                 description="Go beyond summaries. Get detailed analysis, including cited cases, key legal principles, and judicial precedents."
                 delay={0.3}
                 index={2}
+                icon={Gavel}
               />
               <FeatureCard
                 title="Focused on Indian Law"
                 description="Specialized models trained specifically on the Indian legal system and data from sources like IndianKanoon."
                 delay={0.4}
                 index={3}
+                icon={Scale}
               />
             </motion.div>
           </div>
