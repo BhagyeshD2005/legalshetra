@@ -13,9 +13,10 @@ interface ChatInterfaceProps {
   messages: ChatMessageType[];
   onSendMessage: (message: string) => void;
   isLoading: boolean;
+  onAddToReport: (content: string) => void;
 }
 
-export function ChatInterface({ messages, onSendMessage, isLoading }: ChatInterfaceProps) {
+export function ChatInterface({ messages, onSendMessage, isLoading, onAddToReport }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -59,7 +60,11 @@ export function ChatInterface({ messages, onSendMessage, isLoading }: ChatInterf
           <ScrollArea className="flex-1 p-4 border rounded-lg" ref={scrollAreaRef}>
             <div className="space-y-4">
               {messages.map((msg, index) => (
-                <ChatMessage key={index} message={msg} />
+                <ChatMessage 
+                    key={index} 
+                    message={msg} 
+                    onAddToReport={onAddToReport}
+                />
               ))}
               {isLoading && messages[messages.length-1]?.role === 'user' && (
                 <ChatMessage 

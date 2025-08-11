@@ -26,13 +26,11 @@ import {
   BookOpen,
   Zap,
   Lightbulb,
-  MessageSquare
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion, AnimatePresence } from 'framer-motion';
-import { type ChatMessage, chatWithReport } from '@/ai/flows/chat-with-report';
+import { chatWithReport } from '@/ai/flows/chat-with-report';
 import { ChatInterface } from './ChatInterface';
-import { nanoid } from 'nanoid';
 import { type ChatMessage as ChatMessageType } from '@/ai/types';
 
 const FormSchema = z.object({
@@ -250,6 +248,26 @@ export function ResearchClient() {
     } finally {
       setIsChatLoading(false);
     }
+  };
+  
+  const handleAddToReport = (content: string) => {
+    setReport(prevReport => {
+      if (!prevReport) return content;
+      
+      const newSectionTitle = "\n\n**Follow-up Clarifications:**\n\n";
+      const newContent = `*   ${content.replace(/\n/g, '\n    ')}`;
+
+      if (prevReport.includes(newSectionTitle)) {
+        return prevReport + `\n${newContent}`;
+      } else {
+        return prevReport + newSectionTitle + newContent;
+      }
+    });
+
+    toast({
+      title: "Added to Report",
+      description: "The AI's response has been appended to the report.",
+    });
   };
 
   const formatTime = (seconds: number) => {
@@ -541,7 +559,8 @@ export function ResearchClient() {
             <ChatInterface 
               messages={chatHistory} 
               onSendMessage={handleSendMessage} 
-              isLoading={isChatLoading} 
+              isLoading={isChatLoading}
+              onAddToReport={handleAddToReport}
             />
           </motion.div>
         )}
