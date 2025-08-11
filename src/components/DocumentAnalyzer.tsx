@@ -10,8 +10,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from "@/hooks/use-toast";
-import { FileText, RefreshCw, Sparkles } from 'lucide-react';
+import { FileSearch, FileText, RefreshCw, Sparkles, BrainCircuit } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { Mode } from '@/app/research/page';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Separator } from './ui/separator';
 
 const FormSchema = z.object({
   documentText: z.string().min(50, { message: 'Please paste document text of at least 50 characters.' }),
@@ -19,7 +22,18 @@ const FormSchema = z.object({
 
 type FormData = z.infer<typeof FormSchema>;
 
-export function DocumentAnalyzer() {
+interface DocumentAnalyzerProps {
+    selectedMode: Mode;
+    onModeChange: (mode: Mode) => void;
+}
+
+const modes = [
+  { value: 'research' as Mode, label: 'AI Legal Research', icon: FileSearch },
+  { value: 'analyzer' as Mode, label: 'Document Analyzer', icon: FileText },
+  { value: 'reasoning' as Mode, label: 'Reasoning Mode', icon: BrainCircuit },
+];
+
+export function DocumentAnalyzer({ selectedMode, onModeChange }: DocumentAnalyzerProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<string | null>(null);
   const { toast } = useToast();
@@ -44,11 +58,39 @@ export function DocumentAnalyzer() {
     setAnalysisResult("This is a simulated analysis result. The real AI-powered document analysis feature is coming soon!");
     setIsLoading(false);
   };
+  
+  const ActiveIcon = modes.find(m => m.value === selectedMode)?.icon;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start mt-6">
       <div className="lg:col-span-1">
         <Card className="shadow-lg sticky top-24">
+         <CardContent className="p-4">
+             <Select onValueChange={(value) => onModeChange(value as Mode)} defaultValue={selectedMode}>
+                <SelectTrigger className="w-full h-11 text-base font-medium">
+                    <div className="flex items-center gap-3">
+                        {ActiveIcon && <ActiveIcon className="h-5 w-5 text-primary" />}
+                        <SelectValue placeholder="Select a mode..." />
+                    </div>
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectGroup>
+                    {modes.map(mode => {
+                        const Icon = mode.icon;
+                        return (
+                        <SelectItem key={mode.value} value={mode.value}>
+                            <div className="flex items-center gap-2">
+                            <Icon className="h-4 w-4" />
+                            <span>{mode.label}</span>
+                            </div>
+                        </SelectItem>
+                        );
+                    })}
+                    </SelectGroup>
+                </SelectContent>
+            </Select>
+          </CardContent>
+          <Separator />
           <CardHeader>
             <div className="flex items-center gap-2">
                 <FileText className="h-5 w-5 text-primary" />

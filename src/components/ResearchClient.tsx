@@ -27,13 +27,17 @@ import {
   BookOpen,
   Zap,
   Lightbulb,
-  BrainCircuit
+  BrainCircuit,
+  FileSearch,
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion, AnimatePresence } from 'framer-motion';
 import { chatWithReport } from '@/ai/flows/chat-with-report';
 import { ChatInterface } from './ChatInterface';
 import { type ChatMessage as ChatMessageType } from '@/ai/types';
+import type { Mode } from '@/app/research/page';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Separator } from './ui/separator';
 
 const FormSchema = z.object({
   query: z.string()
@@ -61,7 +65,18 @@ const PROCESSING_STEPS: ProcessingStep[] = [
   { id: 'generate', label: 'Generating comprehensive report', status: 'pending', icon: FileText },
 ];
 
-export function ResearchClient() {
+const modes = [
+  { value: 'research' as Mode, label: 'AI Legal Research', icon: FileSearch },
+  { value: 'analyzer' as Mode, label: 'Document Analyzer', icon: FileText },
+  { value: 'reasoning' as Mode, label: 'Reasoning Mode', icon: BrainCircuit },
+];
+
+interface ResearchClientProps {
+    selectedMode: Mode;
+    onModeChange: (mode: Mode) => void;
+}
+
+export function ResearchClient({ selectedMode, onModeChange }: ResearchClientProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<string>('');
   const [processingSteps, setProcessingSteps] = useState<ProcessingStep[]>(PROCESSING_STEPS);
@@ -259,13 +274,13 @@ export function ResearchClient() {
     setReportData(prevReportData => {
       if (!prevReportData) return { summary: content, charts: [] };
       
-      const newSectionTitle = "\n\n**Follow-up Clarifications:**\n\n";
-      const newContent = `*   ${content.replace(/\n/g, '\n    ')}`;
+      const newSectionTitle = "\\n\\n**Follow-up Clarifications:**\\n\\n";
+      const newContent = `*   ${content.replace(/\\n/g, '\\n    ')}`;
 
       if (prevReportData.summary.includes(newSectionTitle)) {
         return {
            ...prevReportData,
-           summary: prevReportData.summary + `\n${newContent}`
+           summary: prevReportData.summary + `\\n${newContent}`
         };
       } else {
          return {
@@ -286,11 +301,39 @@ export function ResearchClient() {
     const secs = seconds % 60;
     return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
   };
+  
+  const ActiveIcon = modes.find(m => m.value === selectedMode)?.icon;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start mt-6">
       <div className="lg:col-span-1">
         <Card className="shadow-lg sticky top-24">
+          <CardContent className="p-4">
+             <Select onValueChange={(value) => onModeChange(value as Mode)} defaultValue={selectedMode}>
+                <SelectTrigger className="w-full h-11 text-base font-medium">
+                    <div className="flex items-center gap-3">
+                        {ActiveIcon && <ActiveIcon className="h-5 w-5 text-primary" />}
+                        <SelectValue placeholder="Select a mode..." />
+                    </div>
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectGroup>
+                    {modes.map(mode => {
+                        const Icon = mode.icon;
+                        return (
+                        <SelectItem key={mode.value} value={mode.value}>
+                            <div className="flex items-center gap-2">
+                            <Icon className="h-4 w-4" />
+                            <span>{mode.label}</span>
+                            </div>
+                        </SelectItem>
+                        );
+                    })}
+                    </SelectGroup>
+                </SelectContent>
+            </Select>
+          </CardContent>
+          <Separator />
           <CardHeader className="pb-4">
             <div className="flex items-center gap-2">
               <Zap className="h-5 w-5 text-primary" />

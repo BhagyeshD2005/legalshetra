@@ -10,10 +10,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from "@/hooks/use-toast";
-import { BrainCircuit, RefreshCw, Sparkles, Wand2 } from 'lucide-react';
+import { BrainCircuit, RefreshCw, Sparkles, Wand2, FileSearch, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { reasonAboutScenario } from '@/ai/flows/reason-about-scenario';
 import { Separator } from './ui/separator';
+import type { Mode } from '@/app/research/page';
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 const FormSchema = z.object({
   scenario: z.string().min(50, { message: 'Please provide a scenario of at least 50 characters.' }),
@@ -22,7 +24,18 @@ const FormSchema = z.object({
 
 type FormData = z.infer<typeof FormSchema>;
 
-export function ReasoningMode() {
+interface ReasoningModeProps {
+    selectedMode: Mode;
+    onModeChange: (mode: Mode) => void;
+}
+
+const modes = [
+  { value: 'research' as Mode, label: 'AI Legal Research', icon: FileSearch },
+  { value: 'analyzer' as Mode, label: 'Document Analyzer', icon: FileText },
+  { value: 'reasoning' as Mode, label: 'Reasoning Mode', icon: BrainCircuit },
+];
+
+export function ReasoningMode({ selectedMode, onModeChange }: ReasoningModeProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<string | null>(null);
   const { toast } = useToast();
@@ -53,11 +66,39 @@ export function ReasoningMode() {
 
     setIsLoading(false);
   };
+  
+  const ActiveIcon = modes.find(m => m.value === selectedMode)?.icon;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start mt-6">
       <div className="lg:col-span-1">
         <Card className="shadow-lg sticky top-24">
+         <CardContent className="p-4">
+             <Select onValueChange={(value) => onModeChange(value as Mode)} defaultValue={selectedMode}>
+                <SelectTrigger className="w-full h-11 text-base font-medium">
+                    <div className="flex items-center gap-3">
+                        {ActiveIcon && <ActiveIcon className="h-5 w-5 text-primary" />}
+                        <SelectValue placeholder="Select a mode..." />
+                    </div>
+                </SelectTrigger>
+                <SelectContent>
+                    <SelectGroup>
+                    {modes.map(mode => {
+                        const Icon = mode.icon;
+                        return (
+                        <SelectItem key={mode.value} value={mode.value}>
+                            <div className="flex items-center gap-2">
+                            <Icon className="h-4 w-4" />
+                            <span>{mode.label}</span>
+                            </div>
+                        </SelectItem>
+                        );
+                    })}
+                    </SelectGroup>
+                </SelectContent>
+            </Select>
+          </CardContent>
+          <Separator />
           <CardHeader>
             <div className="flex items-center gap-2">
                 <BrainCircuit className="h-5 w-5 text-primary" />
