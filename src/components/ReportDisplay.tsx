@@ -2,7 +2,6 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileDown, Printer, Copy, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import jsPDF from "jspdf";
@@ -143,17 +142,12 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
             </div>
             <div className="flex items-center gap-2">
                 <Button variant="ghost" size="icon" onClick={handleCopy} aria-label="Copy Report" disabled={isDownloading}>
-                    <Copy className="h-4 w-4" />
+                    Copy
                 </Button>
                 <Button variant="ghost" size="icon" onClick={handlePrint} aria-label="Print Report" disabled={isDownloading}>
-                    <Printer className="h-4 w-4" />
+                    Print
                 </Button>
                 <Button onClick={handleDownload} disabled={isDownloading}>
-                    {isDownloading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    ) : (
-                        <FileDown className="mr-2 h-4 w-4" />
-                    )}
                     {isDownloading ? 'Processing...' : 'Download PDF'}
                 </Button>
             </div>

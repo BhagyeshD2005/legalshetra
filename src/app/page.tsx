@@ -2,7 +2,6 @@
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowRight, Gavel, Scale, FileText, Bot } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { AuthLogo } from '@/components/AuthLogo';
 import { useAuth } from '@/hooks/use-auth';
@@ -10,7 +9,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
-const FeatureCard = ({ icon, title, description, delay }: { icon: React.ReactNode, title: string, description: string, delay: number }) => (
+const FeatureCard = ({ title, description, delay }: { title: string, description: string, delay: number }) => (
   <motion.div
     initial={{ opacity: 0, y: 50 }}
     animate={{ opacity: 1, y: 0 }}
@@ -18,7 +17,6 @@ const FeatureCard = ({ icon, title, description, delay }: { icon: React.ReactNod
     className="bg-card p-6 rounded-lg shadow-lg hover:shadow-xl transition-shadow border border-border/20"
   >
     <div className="flex items-center justify-center h-12 w-12 rounded-full bg-primary/10 text-primary mb-4">
-      {icon}
     </div>
     <h3 className="text-xl font-headline font-semibold mb-2">{title}</h3>
     <p className="text-muted-foreground">{description}</p>
@@ -41,7 +39,6 @@ export default function HomePage() {
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-             <Gavel className="h-6 w-6 text-primary" />
              <span className="font-bold font-headline text-lg">LegalshetraAI</span>
           </div>
           <div className="flex items-center gap-4">
@@ -51,7 +48,7 @@ export default function HomePage() {
             </Button>
             <Button asChild>
               <Link href="/signup">
-                Get Started <ArrowRight className="ml-2 h-4 w-4" />
+                Get Started
               </Link>
             </Button>
           </div>
@@ -73,7 +70,7 @@ export default function HomePage() {
               <div className="mt-8">
                 <Button size="lg" asChild className="shadow-lg">
                   <Link href="/signup">
-                    Start Your Free Research <ArrowRight className="ml-2 h-5 w-5" />
+                    Start Your Free Research
                   </Link>
                 </Button>
               </div>
@@ -91,25 +88,21 @@ export default function HomePage() {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               <FeatureCard
-                icon={<Bot size={24} />}
                 title="AI-Powered Summaries"
                 description="Instantly get concise, AI-generated summaries of complex legal documents and case laws, saving you hours of reading."
                 delay={0.1}
               />
               <FeatureCard
-                icon={<Scale size={24} />}
                 title="Enhanced Query Understanding"
                 description="Our AI understands legal jargon. It refines your queries to fetch the most relevant results from vast legal databases."
                 delay={0.2}
               />
               <FeatureCard
-                icon={<FileText size={24} />}
                 title="Comprehensive Case Analysis"
                 description="Go beyond summaries. Get detailed analysis, including cited cases, key legal principles, and judicial precedents."
                 delay={0.3}
               />
                 <FeatureCard
-                icon={<Gavel size={24} />}
                 title="Focused on Indian Law"
                 description="Specialized models trained specifically on the Indian legal system and data from sources like IndianKanoon."
                 delay={0.4}

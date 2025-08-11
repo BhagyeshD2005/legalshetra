@@ -12,7 +12,6 @@ import { enhanceQueryClarity } from '@/ai/flows/enhance-query-clarity';
 import { generateLegalSummary } from '@/ai/flows/generate-legal-summary';
 import { useToast } from "@/hooks/use-toast";
 import { ReportDisplay } from './ReportDisplay';
-import { Loader2, Sparkles, Wand2, Gavel } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const FormSchema = z.object({
@@ -94,12 +93,10 @@ export function ResearchClient() {
                 <Button type="submit" className="w-full" disabled={isLoading}>
                   {isLoading ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                       Generating...
                     </>
                   ) : (
                     <>
-                      <Wand2 className="mr-2 h-4 w-4" />
                       Generate Report
                     </>
                   )}
@@ -117,13 +114,12 @@ export function ResearchClient() {
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-4">
-                <Loader2 className="h-6 w-6 animate-spin text-primary" />
                 <p className="font-semibold">{progress || 'Initializing...'}</p>
               </div>
               {enhancedQuery && (
                 <div className="p-4 border rounded-md bg-muted/50">
                     <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-accent"/> Enhanced Query
+                        Enhanced Query
                     </p>
                     <p className="italic">{enhancedQuery}</p>
                 </div>
@@ -141,7 +137,6 @@ export function ResearchClient() {
         {report && <ReportDisplay report={report} query={enhancedQuery || form.getValues('query')} />}
         {!isLoading && !report && (
             <div className="flex flex-col items-center justify-center min-h-[60vh] border-2 border-dashed rounded-lg p-12 text-center bg-card">
-                <Gavel className="w-16 h-16 text-muted-foreground/50" />
                 <h3 className="mt-4 text-xl font-semibold font-headline">Your legal report will appear here</h3>
                 <p className="mt-2 text-sm text-muted-foreground">Submit a query to begin your AI-powered legal research.</p>
             </div>

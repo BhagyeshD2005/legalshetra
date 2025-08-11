@@ -9,7 +9,6 @@ import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { ShieldAlert } from 'lucide-react';
 
 const ADMIN_EMAIL = 'bhagyeshdedmuthe256@gmail.com';
 
@@ -82,7 +81,6 @@ export default function AdminPage() {
         <div className="flex justify-center items-center h-full">
             <Card className="w-full max-w-md">
                 <CardHeader className="text-center">
-                    <ShieldAlert className="w-16 h-16 mx-auto text-destructive" />
                 </CardHeader>
                 <CardContent className="text-center">
                     <h2 className="text-xl font-bold">Access Denied</h2>
