@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
@@ -151,23 +152,23 @@ export function ResearchClient() {
       setProgressValue(40);
 
       // Simulate the agent "thinking" and deciding to use a tool
-      setTimeout(() => {
-        if (!signal.aborted) {
-          updateStepStatus('think', 'completed');
-          setCurrentStep('search');
-          updateStepStatus('search', 'active');
-          setProgressValue(65);
-        }
-      }, 1500);
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
-       setTimeout(() => {
-        if (!signal.aborted) {
-          updateStepStatus('search', 'completed');
-          updateStepStatus('generate', 'active');
-          setCurrentStep('generate');
-          setProgressValue(80);
-        }
-      }, 3000);
+      if (!signal.aborted) {
+        updateStepStatus('think', 'completed');
+        setCurrentStep('search');
+        updateStepStatus('search', 'active');
+        setProgressValue(65);
+      }
+      
+       await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      if (!signal.aborted) {
+        updateStepStatus('search', 'completed');
+        updateStepStatus('generate', 'active');
+        setCurrentStep('generate');
+        setProgressValue(80);
+      }
 
 
       const result = await generateLegalSummary({ 
@@ -287,7 +288,7 @@ export function ResearchClient() {
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start mt-6">
       <div className="lg:col-span-1">
         <Card className="shadow-lg sticky top-24">
           <CardHeader className="pb-4">
