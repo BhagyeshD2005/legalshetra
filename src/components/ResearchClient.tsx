@@ -25,10 +25,14 @@ import {
   RefreshCw,
   BookOpen,
   Zap,
-  Lightbulb
+  Lightbulb,
+  MessageSquare
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { type ChatMessage, chatWithReport } from '@/ai/flows/chat-with-report';
+import { ChatInterface } from './ChatInterface';
+import { nanoid } from 'nanoid';
 
 const FormSchema = z.object({
   query: z.string()
@@ -67,6 +71,10 @@ export function ResearchClient() {
   const [estimatedTime, setEstimatedTime] = useState<number | null>(null);
   const [startTime, setStartTime] = useState<number | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  
+  const [chatHistory, setChatHistory] = useState<ChatMessage[]>([]);
+  const [isChatLoading, setIsChatLoading] = useState(false);
+
   const { toast } = useToast();
 
   const form = useForm<FormData>({
@@ -83,6 +91,7 @@ export function ResearchClient() {
     setEstimatedTime(null);
     setStartTime(Date.now());
     setProcessingSteps(PROCESSING_STEPS.map(step => ({ ...step, status: 'pending' })));
+    setChatHistory([]);
   }, []);
 
   const updateStepStatus = useCallback((stepId: string, status: ProcessingStep['status']) => {
@@ -211,6 +220,37 @@ export function ResearchClient() {
     }
   };
 
+  const handleSendMessage = async (message: string) => {
+    if (!report) return;
+
+    const userMessage: ChatMessage = { role: 'user', content: message };
+    setChatHistory(prev => [...prev, userMessage]);
+    setIsChatLoading(true);
+
+    try {
+      const result = await chatWithReport({
+        report,
+        history: chatHistory,
+        question: message,
+      });
+
+      const modelMessage: ChatMessage = { role: 'model', content: result.answer };
+      setChatHistory(prev => [...prev, modelMessage]);
+
+    } catch (error: any) {
+      console.error('Chat error:', error);
+      toast({
+        variant: "destructive",
+        title: "Chat Error",
+        description: "Could not get a response from the AI. Please try again.",
+      });
+      // remove the user message on error to allow retry
+      setChatHistory(prev => prev.slice(0, -1));
+    } finally {
+      setIsChatLoading(false);
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -312,155 +352,197 @@ export function ResearchClient() {
         </Card>
       </div>
 
-      <div className="lg:col-span-2">
-        {error && (
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertDescription className="flex items-center justify-between">
-              <span>{error}</span>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => setError(null)}
-              >
-                Dismiss
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {isLoading && (
-          <Card className="mb-6">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="font-headline flex items-center gap-2">
-                  <RefreshCw className="h-5 w-5 animate-spin text-primary" />
-                  Research in Progress
-                </CardTitle>
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  {estimatedTime ? `~${formatTime(estimatedTime)} left` : 'Estimating...'}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="font-medium">Overall Progress</span>
-                  <span className="text-muted-foreground">{progressValue}%</span>
-                </div>
-                <Progress value={progressValue} className="h-2" />
-              </div>
-
-              {enhancedQuery && (
-                <div className="p-4 border rounded-lg bg-gradient-to-r from-primary/5 to-secondary/5">
-                  <p className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-2">
-                    <Sparkles className="h-3 w-3 text-primary" />
-                    Enhanced Query
-                  </p>
-                  <p className="italic text-sm">{enhancedQuery}</p>
-                </div>
-              )}
-
-              <div className="space-y-3">
-                {processingSteps.map((step) => {
-                  const Icon = step.icon;
-                  return (
-                    <motion.div 
-                      key={step.id}
-                      className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
-                        step.status === 'active' ? 'bg-primary/10 border border-primary/20' :
-                        step.status === 'completed' ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' :
-                        step.status === 'error' ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800' :
-                        'bg-muted/30'
-                      }`}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.2 }}
-                    >
-                      <motion.div
-                        animate={{
-                          rotate: step.status === 'active' ? 360 : 0,
-                          scale: step.status === 'completed' ? [1, 1.2, 1] : 1
-                        }}
-                        transition={{
-                          rotate: { repeat: Infinity, duration: 1, ease: 'linear' },
-                          scale: { duration: 0.3 }
-                        }}
-                      >
-                        {step.status === 'completed' ? (
-                          <CheckCircle2 className="h-4 w-4 text-green-600" />
-                        ) : step.status === 'error' ? (
-                          <AlertCircle className="h-4 w-4 text-red-600" />
-                        ) : (
-                          <Icon className={`h-4 w-4 ${step.status === 'active' ? 'text-primary' : 'text-muted-foreground'}`} />
-                        )}
-                      </motion.div>
-                      
-                      <span className={`text-sm font-medium ${
-                        step.status === 'completed' ? 'text-green-800 dark:text-green-300' :
-                        step.status === 'error' ? 'text-red-800 dark:text-red-300' :
-                        step.status === 'active' ? 'text-primary' :
-                        'text-muted-foreground'
-                      }`}>
-                        {step.label}
-                      </span>
-                      
-                      {step.status === 'active' && (
-                        <Badge variant="secondary" size="sm">Active</Badge>
-                      )}
-                    </motion.div>
-                  );
-                })}
-              </div>
-
-              <div className="space-y-3 pt-4">
-                <Skeleton className="h-4 w-[85%]" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-[92%]" />
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {report && (
-          <ReportDisplay 
-            report={report} 
-            query={enhancedQuery || form.getValues('query')} 
-          />
-        )}
-
-        {!isLoading && !report && !error && (
-          <div className="flex flex-col items-center justify-center min-h-[60vh] border-2 border-dashed rounded-lg p-12 text-center bg-gradient-to-br from-card to-muted/20">
-            <motion.div 
-              className="rounded-full bg-primary/10 p-6 mb-4"
-              initial={{ scale: 0, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+      <div className="lg:col-span-2 space-y-8">
+        <AnimatePresence>
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
             >
-              <FileText className="h-12 w-12 text-primary" />
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="flex items-center justify-between">
+                  <span>{error}</span>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setError(null)}
+                  >
+                    Dismiss
+                  </Button>
+                </AlertDescription>
+              </Alert>
             </motion.div>
-            <h3 className="text-xl font-semibold font-headline mb-2">
-              Ready for Legal Research
-            </h3>
-            <p className="text-muted-foreground mb-4 max-w-md">
-              Submit your legal query to begin comprehensive AI-powered research with case law analysis and expert insights.
-            </p>
-            <div className="flex gap-4 text-xs text-muted-foreground">
-              <span className="flex items-center gap-1">
-                <Search className="h-3 w-3" />
-                Database Search
-              </span>
-              <span className="flex items-center gap-1">
-                <BookOpen className="h-3 w-3" />
-                Case Analysis
-              </span>
-              <span className="flex items-center gap-1">
-                <FileText className="h-3 w-3" />
-                Detailed Report
-              </span>
-            </div>
-          </div>
+          )}
+
+          {isLoading && (
+            <motion.div
+              key="loading"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+            >
+              <Card>
+                <CardHeader className="pb-4">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="font-headline flex items-center gap-2">
+                      <RefreshCw className="h-5 w-5 animate-spin text-primary" />
+                      Research in Progress
+                    </CardTitle>
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {estimatedTime ? `~${formatTime(estimatedTime)} left` : 'Estimating...'}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="font-medium">Overall Progress</span>
+                      <span className="text-muted-foreground">{progressValue}%</span>
+                    </div>
+                    <Progress value={progressValue} className="h-2" />
+                  </div>
+
+                  {enhancedQuery && (
+                    <div className="p-4 border rounded-lg bg-gradient-to-r from-primary/5 to-secondary/5">
+                      <p className="text-sm font-medium text-muted-foreground flex items-center gap-2 mb-2">
+                        <Sparkles className="h-3 w-3 text-primary" />
+                        Enhanced Query
+                      </p>
+                      <p className="italic text-sm">{enhancedQuery}</p>
+                    </div>
+                  )}
+
+                  <div className="space-y-3">
+                    {processingSteps.map((step) => {
+                      const Icon = step.icon;
+                      return (
+                        <motion.div 
+                          key={step.id}
+                          className={`flex items-center gap-3 p-3 rounded-lg transition-all duration-200 ${
+                            step.status === 'active' ? 'bg-primary/10 border border-primary/20' :
+                            step.status === 'completed' ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800' :
+                            step.status === 'error' ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800' :
+                            'bg-muted/30'
+                          }`}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.2 }}
+                        >
+                          <motion.div
+                            animate={{
+                              rotate: step.status === 'active' ? 360 : 0,
+                              scale: step.status === 'completed' ? [1, 1.2, 1] : 1
+                            }}
+                            transition={{
+                              rotate: { repeat: Infinity, duration: 1, ease: 'linear' },
+                              scale: { duration: 0.3 }
+                            }}
+                          >
+                            {step.status === 'completed' ? (
+                              <CheckCircle2 className="h-4 w-4 text-green-600" />
+                            ) : step.status === 'error' ? (
+                              <AlertCircle className="h-4 w-4 text-red-600" />
+                            ) : (
+                              <Icon className={`h-4 w-4 ${step.status === 'active' ? 'text-primary' : 'text-muted-foreground'}`} />
+                            )}
+                          </motion.div>
+                          
+                          <span className={`text-sm font-medium ${
+                            step.status === 'completed' ? 'text-green-800 dark:text-green-300' :
+                            step.status === 'error' ? 'text-red-800 dark:text-red-300' :
+                            step.status === 'active' ? 'text-primary' :
+                            'text-muted-foreground'
+                          }`}>
+                            {step.label}
+                          </span>
+                          
+                          {step.status === 'active' && (
+                            <Badge variant="secondary" size="sm">Active</Badge>
+                          )}
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="space-y-3 pt-4">
+                    <Skeleton className="h-4 w-[85%]" />
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-4 w-[92%]" />
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {report && (
+            <motion.div
+              key="report"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
+              <ReportDisplay 
+                report={report} 
+                query={enhancedQuery || form.getValues('query')} 
+              />
+            </motion.div>
+          )}
+
+          {!isLoading && !report && !error && (
+            <motion.div
+              key="initial"
+              initial={{ opacity: 0, scale: 0.98 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3 }}
+              className="flex flex-col items-center justify-center min-h-[60vh] border-2 border-dashed rounded-lg p-12 text-center bg-gradient-to-br from-card to-muted/20"
+            >
+              <motion.div 
+                className="rounded-full bg-primary/10 p-6 mb-4"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.4 }}
+              >
+                <FileText className="h-12 w-12 text-primary" />
+              </motion.div>
+              <h3 className="text-xl font-semibold font-headline mb-2">
+                Ready for Legal Research
+              </h3>
+              <p className="text-muted-foreground mb-4 max-w-md">
+                Submit your legal query to begin comprehensive AI-powered research with case law analysis and expert insights.
+              </p>
+              <div className="flex gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <Search className="h-3 w-3" />
+                  Database Search
+                </span>
+                <span className="flex items-center gap-1">
+                  <BookOpen className="h-3 w-3" />
+                  Case Analysis
+                </span>
+                <span className="flex items-center gap-1">
+                  <FileText className="h-3 w-3" />
+                  Detailed Report
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
+        {report && !isLoading && (
+          <motion.div
+            key="chat"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <ChatInterface 
+              messages={chatHistory} 
+              onSendMessage={handleSendMessage} 
+              isLoading={isChatLoading} 
+            />
+          </motion.div>
         )}
       </div>
     </div>
