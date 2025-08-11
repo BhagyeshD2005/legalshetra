@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { enhanceQueryClarity } from '@/ai/flows/enhance-query-clarity';
-import { generateLegalSummary } from '@/ai/flows/generate-legal-summary';
+import { generateLegalSummary, type GenerateLegalSummaryOutput } from '@/ai/flows/generate-legal-summary';
 import { useToast } from "@/hooks/use-toast";
 import { ReportDisplay } from './ReportDisplay';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -64,7 +64,7 @@ export function ResearchClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<string>('');
   const [processingSteps, setProcessingSteps] = useState<ProcessingStep[]>(PROCESSING_STEPS);
-  const [report, setReport] = useState<string | null>(null);
+  const [reportData, setReportData] = useState<GenerateLegalSummaryOutput | null>(null);
   const [enhancedQuery, setEnhancedQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [progressValue, setProgressValue] = useState(0);
@@ -83,7 +83,7 @@ export function ResearchClient() {
   });
 
   const resetStates = useCallback(() => {
-    setReport(null);
+    setReportData(null);
     setError(null);
     setEnhancedQuery('');
     setCurrentStep('');
@@ -178,7 +178,7 @@ export function ResearchClient() {
 
       updateStepStatus('generate', 'completed');
       setProgressValue(100);
-      setReport(result.summary);
+      setReportData(result);
       setCurrentStep('completed');
 
       toast({
@@ -224,7 +224,7 @@ export function ResearchClient() {
   };
 
   const handleSendMessage = async (message: string) => {
-    if (!report) return;
+    if (!reportData) return;
 
     const userMessage: ChatMessageType = { role: 'user', content: message };
     setChatHistory(prev => [...prev, userMessage]);
@@ -232,7 +232,7 @@ export function ResearchClient() {
 
     try {
       const result = await chatWithReport({
-        report,
+        report: reportData.summary,
         history: chatHistory,
         question: message,
       });
@@ -255,16 +255,22 @@ export function ResearchClient() {
   };
   
   const handleAddToReport = (content: string) => {
-    setReport(prevReport => {
-      if (!prevReport) return content;
+    setReportData(prevReportData => {
+      if (!prevReportData) return { summary: content, charts: [] };
       
       const newSectionTitle = "\n\n**Follow-up Clarifications:**\n\n";
       const newContent = `*   ${content.replace(/\n/g, '\n    ')}`;
 
-      if (prevReport.includes(newSectionTitle)) {
-        return prevReport + `\n${newContent}`;
+      if (prevReportData.summary.includes(newSectionTitle)) {
+        return {
+           ...prevReportData,
+           summary: prevReportData.summary + `\n${newContent}`
+        };
       } else {
-        return prevReport + newSectionTitle + newContent;
+         return {
+           ...prevReportData,
+           summary: prevReportData.summary + newSectionTitle + newContent
+         };
       }
     });
 
@@ -358,7 +364,7 @@ export function ResearchClient() {
               </form>
             </Form>
 
-            {!isLoading && !report && (
+            {!isLoading && !reportData && (
               <div className="mt-6 p-4 bg-muted/50 rounded-lg">
                 <h4 className="text-sm font-medium mb-2 flex items-center gap-1">
                   <Lightbulb className="h-3 w-3 text-yellow-500" />
@@ -500,20 +506,20 @@ export function ResearchClient() {
             </motion.div>
           )}
 
-          {report && (
+          {reportData && (
             <motion.div
               key="report"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
             >
               <ReportDisplay 
-                report={report} 
+                reportData={reportData} 
                 query={enhancedQuery || form.getValues('query')} 
               />
             </motion.div>
           )}
 
-          {!isLoading && !report && !error && (
+          {!isLoading && !reportData && !error && (
             <motion.div
               key="initial"
               initial={{ opacity: 0, scale: 0.98 }}
@@ -553,7 +559,7 @@ export function ResearchClient() {
           )}
         </AnimatePresence>
         
-        {report && !isLoading && (
+        {reportData && !isLoading && (
           <motion.div
             key="chat"
             initial={{ opacity: 0, y: 20 }}

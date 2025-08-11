@@ -21,13 +21,17 @@ import {
   Share2,
   Gavel,
   BookOpen,
-  FileOutput
+  FileOutput,
+  PieChart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import type { GenerateLegalSummaryOutput } from "@/ai/flows/generate-legal-summary";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
+import { Pie, Cell, PieChart as RechartsPieChart } from 'recharts';
 
 interface ReportDisplayProps {
-  report: string;
+  reportData: GenerateLegalSummaryOutput;
   query: string;
 }
 
@@ -45,7 +49,7 @@ function formatContent(content: string) {
     return { __html: html };
 }
 
-export function ReportDisplay({ report, query }: ReportDisplayProps) {
+export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
   const { toast } = useToast();
   const [isCopying, setIsCopying] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
@@ -53,6 +57,8 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const [readingTime, setReadingTime] = useState(0);
   const reportRef = useRef<HTMLDivElement>(null);
+
+  const { summary: report, charts } = reportData;
 
   // Calculate reading time
   useEffect(() => {
@@ -369,7 +375,7 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
         </CardContent>
       </Card>
 
-      {sections.length > 1 && (
+      {(sections.length > 1 || (charts && charts.length > 0)) && (
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-headline">Report Sections</CardTitle>
@@ -391,6 +397,18 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
                   </Button>
                 );
               })}
+              {charts && charts.map((chart, index) => (
+                 <Button
+                    key={`chart-${index}`}
+                    variant={activeSection === chart.title ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => scrollToSection(chart.title)}
+                    className="flex items-center gap-1"
+                  >
+                    <PieChart className="h-3 w-3" />
+                    {chart.title}
+                  </Button>
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -438,6 +456,49 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
                     </motion.div>
                   );
                 })}
+
+                {charts && charts.map((chart, index) => {
+                   const chartConfig = chart.data.reduce((acc, item) => {
+                      acc[item.name] = { label: item.name, color: item.fill };
+                      return acc;
+                    }, {} as any);
+                  
+                  return (
+                     <motion.div 
+                      key={`chart-div-${index}`}
+                      id={`section-${chart.title.toLowerCase().replace(/\s+/g, '-')}`}
+                      className="scroll-mt-4"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: (sections.length + index) * 0.1 }}
+                    >
+                      <div className="flex items-center gap-3 mb-4">
+                        <motion.span 
+                          className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10"
+                          whileHover={{ scale: 1.2, rotate: 15 }}
+                        >
+                          <PieChart className="h-4 w-4 text-primary" />
+                        </motion.span>
+                        <h3 className="text-xl font-semibold font-headline text-foreground m-0">
+                          {chart.title}
+                        </h3>
+                      </div>
+                      <Separator className="mb-4" />
+                      <div className="pl-11">
+                        <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[250px]">
+                           <RechartsPieChart>
+                              <ChartTooltip content={<ChartTooltipContent nameKey="value" hideLabel />} />
+                              <Pie data={chart.data} dataKey="value" nameKey="name" innerRadius={60}>
+                                {chart.data.map((entry, idx) => (
+                                  <Cell key={`cell-${idx}`} fill={entry.fill} />
+                                ))}
+                              </Pie>
+                           </RechartsPieChart>
+                        </ChartContainer>
+                      </div>
+                    </motion.div>
+                  )
+                })}
               </div>
             ) : (
               <div 
@@ -483,5 +544,4 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
       </Card>
     </div>
   );
-
-    
+}

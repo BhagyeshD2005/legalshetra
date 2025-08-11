@@ -16,8 +16,21 @@ const GenerateLegalSummaryInputSchema = z.object({
 });
 export type GenerateLegalSummaryInput = z.infer<typeof GenerateLegalSummaryInputSchema>;
 
+const ChartDataSchema = z.object({
+  type: z.enum(['bar', 'pie', 'line']).describe('The type of chart to render.'),
+  title: z.string().describe('The title of the chart.'),
+  data: z.array(z.object({
+      name: z.string(),
+      value: z.number(),
+      fill: z.string().optional().describe("Hex color code for the chart segment")
+  })).describe('The data for the chart.'),
+});
+export type ChartData = z.infer<typeof ChartDataSchema>;
+
+
 const GenerateLegalSummaryOutputSchema = z.object({
   summary: z.string().describe('A summarized report of relevant cases and laws from indiankanoon.org.'),
+  charts: z.array(ChartDataSchema).optional().describe('Any statistical data found in the research that can be visualized as charts.'),
 });
 export type GenerateLegalSummaryOutput = z.infer<typeof GenerateLegalSummaryOutputSchema>;
 
@@ -101,7 +114,8 @@ const summarizeLegalQueryPrompt = ai.definePrompt({
         *   Include case citations.
         *   Summarize the key legal principles from the discovered documents.
         *   Be easy for a lawyer to understand.
-    4.  **Do not** invent cases or legal principles. Your summary must be based *only* on the information returned by the \`searchIndianKanoon\` tool.`,
+    4.  **Extract Chart Data**: While synthesizing the report, identify any statistical data or concepts that can be visualized (e.g., quotas, limits, timelines). If found, populate the \`charts\` array with appropriate data. For example, a 50% reservation rule can be a pie chart.
+    5.  **Do not** invent cases or legal principles. Your summary must be based *only* on the information returned by the \`searchIndianKanoon\` tool.`,
 });
 
 
