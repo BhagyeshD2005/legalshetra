@@ -6,7 +6,7 @@ import { ResearchClient } from '@/components/ResearchClient';
 import { DocumentAnalyzer } from '@/components/DocumentAnalyzer';
 import { ReasoningMode } from '@/components/ReasoningMode';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { FileSearch, FileText, BrainCircuit, ChevronDown } from 'lucide-react';
+import { FileSearch, FileText, BrainCircuit } from 'lucide-react';
 
 type Mode = 'research' | 'analyzer' | 'reasoning';
 
