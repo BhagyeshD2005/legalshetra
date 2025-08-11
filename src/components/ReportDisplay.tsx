@@ -7,7 +7,6 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useRef, useEffect } from "react";
 import { 
-  Download, 
   Copy, 
   Printer, 
   FileText, 
@@ -22,8 +21,6 @@ import {
   Bookmark
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
 
 interface ReportDisplayProps {
   report: string;
@@ -38,7 +35,6 @@ interface ReportSection {
 
 export function ReportDisplay({ report, query }: ReportDisplayProps) {
   const { toast } = useToast();
-  const [isDownloading, setIsDownloading] = useState(false);
   const [isCopying, setIsCopying] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
@@ -131,95 +127,6 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
   };
 
   const sections = parseReportSections(report);
-
-  const handleDownload = async () => {
-    setIsDownloading(true);
-    try {
-      const reportElement = reportRef.current;
-      if (!reportElement) {
-        throw new Error('Report content not found');
-      }
-      
-      // Create a clean version for PDF
-      const clonedElement = reportElement.cloneNode(true) as HTMLElement;
-      clonedElement.style.maxHeight = 'none';
-      clonedElement.style.overflow = 'visible';
-      
-      document.body.appendChild(clonedElement);
-      
-      const canvas = await html2canvas(clonedElement, { 
-        scrollY: 0,
-        useCORS: true,
-        scale: 2,
-        backgroundColor: '#ffffff',
-        logging: false,
-      });
-
-      document.body.removeChild(clonedElement);
-
-      const imgData = canvas.toDataURL('image/png', 0.8);
-      const pdf = new jsPDF({
-        orientation: 'p',
-        unit: 'mm',
-        format: 'a4',
-      });
-      
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = pdf.internal.pageSize.getHeight();
-      const margin = 15;
-      
-      const imgWidth = canvas.width;
-      const imgHeight = canvas.height;
-      const ratio = imgWidth / imgHeight;
-      
-      const contentWidth = pdfWidth - margin * 2;
-      let contentHeight = contentWidth / ratio;
-      
-      // Add header
-      pdf.setFontSize(16);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text("Legal Research Report", margin, margin + 10);
-      
-      pdf.setFontSize(10);
-      pdf.setFont('helvetica', 'normal');
-      pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, margin, margin + 20);
-      pdf.text(`Query: ${query}`, margin, margin + 30, { maxWidth: contentWidth });
-      
-      // Add report content
-      let yPosition = margin + 45;
-      let heightLeft = contentHeight;
-      let pageNumber = 1;
-
-      pdf.addImage(imgData, 'PNG', margin, yPosition, contentWidth, contentHeight);
-      heightLeft -= (pdfHeight - yPosition - margin);
-
-      while (heightLeft > 0) {
-        pdf.addPage();
-        pageNumber++;
-        yPosition = heightLeft * -1 + margin; // Adjust yPosition for the new page
-        pdf.addImage(imgData, 'PNG', margin, yPosition, contentWidth, contentHeight);
-        heightLeft -= (pdfHeight - margin * 2);
-      }
-      
-      const fileName = `legal-report-${new Date().toISOString().split('T')[0]}.pdf`;
-      pdf.save(fileName);
-
-      toast({
-        title: "Download successful!",
-        description: `Report saved as ${fileName}`,
-      });
-
-    } catch (error) {
-      console.error("PDF generation error:", error);
-      toast({
-        variant: "destructive",
-        title: "Download failed",
-        description: "Unable to generate PDF. Please try again.",
-      });
-    } finally {
-      setIsDownloading(false);
-    }
-  };
 
   const handleCopy = async () => {
     setIsCopying(true);
@@ -445,15 +352,6 @@ export function ReportDisplay({ report, query }: ReportDisplayProps) {
               >
                 <Printer className="h-3 w-3" />
                 {isPrinting ? 'Printing...' : 'Print'}
-              </Button>
-              <Button 
-                onClick={handleDownload} 
-                disabled={isDownloading}
-                size="sm"
-                className="flex items-center gap-1"
-              >
-                <Download className="h-3 w-3" />
-                {isDownloading ? 'Generating...' : 'Download PDF'}
               </Button>
             </div>
           </div>
