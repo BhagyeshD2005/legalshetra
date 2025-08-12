@@ -415,7 +415,10 @@ export function ModeSwitcher({
       </CardContent>
       <Separator />
       <CardHeader>
-        <CardTitle className="font-headline">{modes.find(m => m.value === selectedMode)?.label}</CardTitle>
+        <CardTitle className="font-headline flex items-center gap-2">
+            {selectedMode === 'research' && <Sparkles className="h-5 w-5 text-primary" />}
+            {modes.find(m => m.value === selectedMode)?.label}
+        </CardTitle>
         <CardDescription>
             {
                 selectedMode === 'research' ? 'Enter your legal query to start comprehensive AI-powered research.' :
