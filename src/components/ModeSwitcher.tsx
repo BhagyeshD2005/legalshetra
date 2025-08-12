@@ -16,6 +16,7 @@ import { useState, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { generateLegalSummary } from '@/ai/flows/generate-legal-summary';
 import { reasonAboutScenario } from '@/ai/flows/reason-about-scenario';
+import { analyzeDocument } from '@/ai/flows/analyze-document';
 import { Input } from './ui/input';
 import { cn } from '@/lib/utils';
 import { enhanceQueryClarity } from '@/ai/flows/enhance-query-clarity';
@@ -54,6 +55,16 @@ const modes = [
   { value: 'analyzer' as Mode, label: 'Document Analyzer', icon: FileText },
   { value: 'reasoning' as Mode, label: 'Reasoning Mode', icon: BrainCircuit },
 ];
+
+const readFileAsText = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
+    reader.readAsText(file);
+  });
+};
+
 
 export function ModeSwitcher({ 
     selectedMode, 
@@ -99,19 +110,33 @@ export function ModeSwitcher({
     setIsSubmitting(true);
     onAnalysisStart();
     try {
-        // Placeholder for AI call
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        let documentContent = data.documentText || '';
         
+        if (data.file) {
+            documentContent = await readFileAsText(data.file);
+        }
+
+        if (!documentContent) {
+            toast({
+                variant: 'destructive',
+                title: 'No content provided',
+                description: 'Please paste text or upload a file to analyze.',
+            });
+            onAnalysisError();
+            setIsSubmitting(false);
+            return;
+        }
+
+        const result = await analyzeDocument({ documentContent });
+        
+        onAnalysisComplete(result);
         toast({
-          title: "Analysis Complete (Simulated)",
-          description: "This is a placeholder for the real AI analysis.",
+          title: "Analysis Complete",
+          description: "The AI has provided a summary of the document.",
         });
 
-        const result = { summary: "This is a simulated analysis result for the document. The real AI-powered document analysis feature is coming soon!" };
-        onAnalysisComplete(result);
-
     } catch (error) {
-        toast({ variant: 'destructive', title: 'Analysis Failed' });
+        toast({ variant: 'destructive', title: 'Analysis Failed', description: 'Could not analyze the document.' });
         onAnalysisError();
     }
     setIsSubmitting(false);
