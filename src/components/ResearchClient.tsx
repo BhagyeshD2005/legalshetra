@@ -30,9 +30,10 @@ import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 interface ResearchClientProps {
   isLoading: boolean;
   reportData: GenerateLegalSummaryOutput | null;
-  onAnalysisStart: () => void;
   onAnalysisComplete: (result: GenerateLegalSummaryOutput) => void;
+  onAnalysisStart: (query: {query: string}) => void;
   onAnalysisError: () => void;
+  initialQuery?: { query: string };
 }
 
 interface ProcessingStep {
@@ -48,7 +49,7 @@ const PROCESSING_STEPS: ProcessingStep[] = [
   { id: 'generate', label: 'Generating comprehensive report', status: 'pending', icon: FileText },
 ];
 
-export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnalysisComplete, onAnalysisError }: ResearchClientProps) {
+export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnalysisComplete, onAnalysisError, initialQuery }: ResearchClientProps) {
   const [currentStep, setCurrentStep] = useState<string>('');
   const [processingSteps, setProcessingSteps] = useState<ProcessingStep[]>(PROCESSING_STEPS);
   const [enhancedQuery, setEnhancedQuery] = useState('');
@@ -74,7 +75,6 @@ export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnaly
   }, []);
   
   const startResearch = useCallback(async (query: string) => {
-    onAnalysisStart();
     resetStates();
 
     try {
@@ -127,7 +127,7 @@ export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnaly
       });
       onAnalysisError();
     }
-  }, [onAnalysisStart, onAnalysisComplete, onAnalysisError, resetStates]);
+  }, [onAnalysisComplete, onAnalysisError, resetStates]);
 
 
   const updateStepStatus = useCallback((stepId: string, status: ProcessingStep['status']) => {
@@ -157,16 +157,11 @@ export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnaly
   }, [isLoading, startTime, processingSteps]);
   
    useEffect(() => {
-    // This effect is triggered when the parent signals a new analysis has started for 'research' mode
-    if (isLoading && reportData === null) {
-      // The `reportData` here would be the initial form submission data.
-      // We need to check if it has a query property.
-      const query = (reportData as any)?.query;
-      if (typeof query === 'string') {
-        startResearch(query);
-      }
+    if (initialQuery?.query) {
+      onAnalysisStart(initialQuery);
+      startResearch(initialQuery.query);
     }
-  }, [isLoading, reportData, startResearch]);
+  }, [initialQuery, startResearch, onAnalysisStart]);
 
 
   const handleSendMessage = async (message: string) => {
@@ -348,7 +343,7 @@ export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnaly
             >
               <ReportDisplay 
                 reportData={reportData} 
-                query={enhancedQuery || (reportData as any)?.query || ''} 
+                query={enhancedQuery || ''} 
               />
             </motion.div>
           )}

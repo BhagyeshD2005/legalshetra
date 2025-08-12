@@ -14,7 +14,6 @@ import { Separator } from './ui/separator';
 import { FileSearch, FileText, BrainCircuit, RefreshCw, Sparkles, Wand2, Search, Lightbulb, Upload, File as FileIcon, X } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
-import { generateLegalSummary } from '@/ai/flows/generate-legal-summary';
 import { reasonAboutScenario } from '@/ai/flows/reason-about-scenario';
 import { analyzeDocument } from '@/ai/flows/analyze-document';
 import { Input } from './ui/input';
@@ -24,7 +23,7 @@ import { enhanceQueryClarity } from '@/ai/flows/enhance-query-clarity';
 interface ModeSwitcherProps {
   selectedMode: Mode;
   onModeChange: (mode: Mode) => void;
-  onAnalysisStart: () => void;
+  onAnalysisStart: (data?: {query: string}) => void;
   onAnalysisComplete: (result: AnalysisResult) => void;
   onAnalysisError: () => void;
 }
@@ -51,9 +50,9 @@ const reasoningFormSchema = z.object({
 
 
 const modes = [
-  { value: 'research' as Mode, label: 'AI Legal Research', icon: FileSearch },
-  { value: 'analyzer' as Mode, label: 'Document Analyzer', icon: FileText },
-  { value: 'reasoning' as Mode, label: 'Reasoning Mode', icon: BrainCircuit },
+  { value: 'research' as Mode, label: 'AI Legal Research' },
+  { value: 'analyzer' as Mode, label: 'Document Analyzer' },
+  { value: 'reasoning' as Mode, label: 'Reasoning Mode' },
 ];
 
 const readFileAsDataUri = (file: File): Promise<string> => {
@@ -93,17 +92,7 @@ export function ModeSwitcher({
   });
   
   const onResearchSubmit: SubmitHandler<z.infer<typeof researchFormSchema>> = async (data) => {
-    setIsSubmitting(true);
-    onAnalysisStart();
-    try {
-      // The research client will handle its own multi-step flow
-      onAnalysisComplete(data);
-    } catch(e) {
-      console.error(e);
-      toast({ variant: "destructive", title: "An error occurred."});
-      onAnalysisError();
-    }
-    setIsSubmitting(false);
+    onAnalysisStart(data);
   };
   
   const onAnalyzerSubmit: SubmitHandler<z.infer<typeof analyzerFormSchema>> = async (data) => {
@@ -165,7 +154,18 @@ export function ModeSwitcher({
     setIsSubmitting(false);
   };
 
-  const ActiveIcon = modes.find(m => m.value === selectedMode)?.icon;
+  const ActiveIcon = selectedMode === 'research' ? FileSearch :
+                     selectedMode === 'analyzer' ? FileText :
+                     selectedMode === 'reasoning' ? BrainCircuit :
+                     null;
+
+  const getModeIcon = (modeValue: Mode) => {
+    if (modeValue === 'research') return FileSearch;
+    if (modeValue === 'analyzer') return FileText;
+    if (modeValue === 'reasoning') return BrainCircuit;
+    return null;
+  }
+
 
   const renderForm = () => {
     switch(selectedMode) {
@@ -226,7 +226,6 @@ export function ModeSwitcher({
                                 ref={fileInputRef}
                                 onChange={(e) => {
                                   const file = e.target.files?.[0] ?? null;
-                                  field.onChange(file);
                                   analyzerForm.setValue('file', file);
                                   if (file) {
                                       analyzerForm.setValue('documentText', '');
@@ -400,7 +399,7 @@ export function ModeSwitcher({
           <SelectContent>
             <SelectGroup>
               {modes.map(mode => {
-                const Icon = mode.icon;
+                const Icon = getModeIcon(mode.value);
                 return (
                   <SelectItem key={mode.value} value={mode.value}>
                     <div className="flex items-center gap-2">

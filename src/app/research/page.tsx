@@ -17,20 +17,25 @@ export default function ResearchPage() {
   const [selectedMode, setSelectedMode] = useState<Mode>('research');
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult>(null);
+  const [initialQuery, setInitialQuery] = useState<{ query: string } | undefined>(undefined);
 
-  const handleAnalysisStart = () => {
+  const handleAnalysisStart = (data?: { query: string }) => {
     setIsLoading(true);
     setAnalysisResult(null);
+    if(data && selectedMode === 'research') {
+        setInitialQuery(data);
+    }
   };
 
   const handleAnalysisComplete = (result: AnalysisResult) => {
     setAnalysisResult(result);
     setIsLoading(false);
+    setInitialQuery(undefined);
   };
 
   const handleAnalysisError = () => {
     setIsLoading(false);
-    setAnalysisResult(null);
+    setInitialQuery(undefined);
   }
 
   const renderActiveComponent = () => {
@@ -42,6 +47,7 @@ export default function ResearchPage() {
                   onAnalysisComplete={handleAnalysisComplete}
                   onAnalysisStart={handleAnalysisStart}
                   onAnalysisError={handleAnalysisError}
+                  initialQuery={initialQuery}
                 />;
       case 'analyzer':
         return <DocumentAnalyzer isLoading={isLoading} result={analysisResult as DocumentAnalysisResult | null} />;
@@ -61,6 +67,7 @@ export default function ResearchPage() {
                     onModeChange={(mode) => {
                         setSelectedMode(mode);
                         setAnalysisResult(null);
+                        setInitialQuery(undefined);
                     }}
                     onAnalysisStart={handleAnalysisStart}
                     onAnalysisComplete={handleAnalysisComplete}
