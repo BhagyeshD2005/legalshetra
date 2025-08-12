@@ -42,6 +42,7 @@ interface AnalysisSection {
 
 const parseAnalysis = (analysis: string): AnalysisSection[] => {
     const sections: AnalysisSection[] = [];
+    // This regex looks for lines starting with ##, optionally followed by a number and a dot.
     const parts = analysis.split(/^##\s*(?:\d+\.\s*)?/m).filter(p => p.trim());
 
     parts.forEach(part => {
@@ -51,7 +52,7 @@ const parseAnalysis = (analysis: string): AnalysisSection[] => {
         
         if (title) {
             const points = lines
-                .map(line => line.trim().replace(/^\* \s*/, ''))
+                .map(line => line.trim().replace(/^\*\s*/, '')) // Handles list items starting with *
                 .filter(point => point.length > 0);
             
             sections.push({ title, points });
@@ -202,13 +203,6 @@ export function ReasoningMode({ selectedMode, onModeChange }: ReasoningModeProps
               animate={{ opacity: 1, y: 0 }}
               className="space-y-4"
             >
-              <Card>
-                  <CardHeader>
-                    <CardTitle className="font-headline">Logical Analysis</CardTitle>
-                    <CardDescription>A step-by-step breakdown of the legal reasoning.</CardDescription>
-                  </CardHeader>
-              </Card>
-
               {parsedAnalysis.length > 0 ? (
                 parsedAnalysis.map((section, index) => (
                     <motion.div
@@ -234,6 +228,9 @@ export function ReasoningMode({ selectedMode, onModeChange }: ReasoningModeProps
                 ))
               ) : (
                 <Card>
+                    <CardHeader>
+                        <CardTitle className="font-headline">Analysis</CardTitle>
+                    </CardHeader>
                     <CardContent className="pt-6">
                         <p className="whitespace-pre-wrap">{analysisResult}</p>
                     </CardContent>
