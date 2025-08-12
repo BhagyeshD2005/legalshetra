@@ -6,29 +6,29 @@ import { MainLayout } from '@/components/MainLayout';
 import { ResearchClient } from '@/components/ResearchClient';
 import { DocumentAnalyzer } from '@/components/DocumentAnalyzer';
 import { ReasoningMode } from '@/components/ReasoningMode';
+import { ModeSwitcher } from '@/components/ModeSwitcher';
 
 export type Mode = 'research' | 'analyzer' | 'reasoning';
 
 export default function ResearchPage() {
   const [selectedMode, setSelectedMode] = useState<Mode>('research');
 
-  const handleModeChange = (value: string) => {
-    setSelectedMode(value as Mode);
-  };
-  
   const modeComponents: Record<Mode, React.ReactNode> = {
-      research: <ResearchClient selectedMode={selectedMode} onModeChange={handleModeChange} />,
-      analyzer: <DocumentAnalyzer selectedMode={selectedMode} onModeChange={handleModeChange} />,
-      reasoning: <ReasoningMode selectedMode={selectedMode} onModeChange={handleModeChange} />,
+      research: <ResearchClient />,
+      analyzer: <DocumentAnalyzer />,
+      reasoning: <ReasoningMode />,
   }
 
   return (
     <MainLayout>
-      <div className="w-full">
-        <div className="mt-4">
-          {modeComponents[selectedMode]}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start mt-6">
+            <div className="lg:col-span-1">
+                 <ModeSwitcher selectedMode={selectedMode} onModeChange={setSelectedMode} />
+            </div>
+            <div className="lg:col-span-2">
+                {modeComponents[selectedMode]}
+            </div>
         </div>
-      </div>
     </MainLayout>
   );
 }

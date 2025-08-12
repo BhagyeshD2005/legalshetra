@@ -14,8 +14,6 @@ import { BrainCircuit, RefreshCw, Sparkles, Wand2, FileSearch, FileText, Dot } f
 import { motion, AnimatePresence } from 'framer-motion';
 import { reasonAboutScenario } from '@/ai/flows/reason-about-scenario';
 import { Separator } from './ui/separator';
-import type { Mode } from '@/app/research/page';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 const FormSchema = z.object({
   scenario: z.string().min(50, { message: 'Please provide a scenario of at least 50 characters.' }),
@@ -23,17 +21,6 @@ const FormSchema = z.object({
 });
 
 type FormData = z.infer<typeof FormSchema>;
-
-interface ReasoningModeProps {
-    selectedMode: Mode;
-    onModeChange: (mode: Mode) => void;
-}
-
-const modes = [
-  { value: 'research' as Mode, label: 'AI Legal Research' },
-  { value: 'analyzer' as Mode, label: 'Document Analyzer', icon: FileText },
-  { value: 'reasoning' as Mode, label: 'Reasoning Mode', icon: BrainCircuit },
-];
 
 interface AnalysisSection {
     title: string;
@@ -61,8 +48,7 @@ const parseAnalysis = (analysis: string): AnalysisSection[] => {
     return sections;
 }
 
-
-export function ReasoningMode({ selectedMode, onModeChange }: ReasoningModeProps) {
+export function ReasoningMode() {
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<string | null>(null);
   const { toast } = useToast();
@@ -94,106 +80,10 @@ export function ReasoningMode({ selectedMode, onModeChange }: ReasoningModeProps
     setIsLoading(false);
   };
   
-  const ActiveIcon = modes.find(m => m.value === selectedMode)?.icon;
   const parsedAnalysis = analysisResult ? parseAnalysis(analysisResult) : [];
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start mt-6">
-      <div className="lg:col-span-1">
-        <Card className="shadow-lg sticky top-24">
-         <CardContent className="p-4">
-             <Select onValueChange={(value) => onModeChange(value as Mode)} defaultValue={selectedMode}>
-                <SelectTrigger className="w-full h-11 text-base font-medium">
-                    <div className="flex items-center gap-3">
-                        {ActiveIcon && <ActiveIcon className="h-5 w-5 text-primary" />}
-                        <SelectValue placeholder="Select a mode..." />
-                    </div>
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectGroup>
-                    {modes.map(mode => {
-                        const Icon = mode.icon;
-                        return (
-                        <SelectItem key={mode.value} value={mode.value}>
-                            <div className="flex items-center gap-2">
-                            {Icon && <Icon className="h-4 w-4" />}
-                            <span>{mode.label}</span>
-                            </div>
-                        </SelectItem>
-                        );
-                    })}
-                    </SelectGroup>
-                </SelectContent>
-            </Select>
-          </CardContent>
-          <Separator />
-          <CardHeader>
-            <div className="flex items-center gap-2">
-                <BrainCircuit className="h-5 w-5 text-primary" />
-                <CardTitle className="font-headline">Reasoning Mode</CardTitle>
-            </div>
-            <CardDescription>
-              Provide a legal scenario and a question for the AI to reason about.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="scenario"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Case Scenario</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Describe the factual matrix of the case..."
-                          className="min-h-[200px] resize-y"
-                          {...field}
-                          disabled={isLoading}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="question"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Specific Question</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="e.g., 'Is the non-compete clause enforceable under the Indian Contract Act?'"
-                          className="min-h-[80px] resize-y"
-                          {...field}
-                          disabled={isLoading}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? (
-                    <>
-                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                      Analyzing...
-                    </>
-                  ) : (
-                    <>
-                      <Wand2 className="mr-2 h-4 w-4" />
-                      Analyze Scenario
-                    </>
-                  )}
-                </Button>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-      </div>
-      <div className="lg:col-span-2 space-y-4">
+    <div className="space-y-4">
         <AnimatePresence>
           {analysisResult && (
             <motion.div
@@ -253,7 +143,6 @@ export function ReasoningMode({ selectedMode, onModeChange }: ReasoningModeProps
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
     </div>
   );
 }

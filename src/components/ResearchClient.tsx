@@ -35,7 +35,6 @@ import { chatWithReport } from '@/ai/flows/chat-with-report';
 import { ChatInterface } from './ChatInterface';
 import { type ChatMessage as ChatMessageType } from '@/ai/types';
 import type { Mode } from '@/app/research/page';
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Separator } from './ui/separator';
 
 const FormSchema = z.object({
@@ -64,18 +63,7 @@ const PROCESSING_STEPS: ProcessingStep[] = [
   { id: 'generate', label: 'Generating comprehensive report', status: 'pending', icon: FileText },
 ];
 
-const modes = [
-  { value: 'research' as Mode, label: 'AI Legal Research' },
-  { value: 'analyzer' as Mode, label: 'Document Analyzer', icon: FileText },
-  { value: 'reasoning' as Mode, label: 'Reasoning Mode', icon: BrainCircuit },
-];
-
-interface ResearchClientProps {
-    selectedMode: Mode;
-    onModeChange: (mode: Mode) => void;
-}
-
-export function ResearchClient({ selectedMode, onModeChange }: ResearchClientProps) {
+export function ResearchClient() {
   const [isLoading, setIsLoading] = useState(false);
   const [currentStep, setCurrentStep] = useState<string>('');
   const [processingSteps, setProcessingSteps] = useState<ProcessingStep[]>(PROCESSING_STEPS);
@@ -300,130 +288,9 @@ export function ResearchClient({ selectedMode, onModeChange }: ResearchClientPro
     const secs = seconds % 60;
     return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
   };
-  
-  const ActiveIcon = modes.find(m => m.value === selectedMode)?.icon;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start mt-6">
-      <div className="lg:col-span-1">
-        <Card className="shadow-lg sticky top-24">
-          <CardContent className="p-4">
-             <Select onValueChange={(value) => onModeChange(value as Mode)} defaultValue={selectedMode}>
-                <SelectTrigger className="w-full h-11 text-base font-medium">
-                    <div className="flex items-center gap-3">
-                        {ActiveIcon && <ActiveIcon className="h-5 w-5 text-primary" />}
-                        <SelectValue placeholder="Select a mode..." />
-                    </div>
-                </SelectTrigger>
-                <SelectContent>
-                    <SelectGroup>
-                    {modes.map(mode => {
-                        const Icon = mode.icon;
-                        return (
-                        <SelectItem key={mode.value} value={mode.value}>
-                            <div className="flex items-center gap-2">
-                            {Icon && <Icon className="h-4 w-4" />}
-                            <span>{mode.label}</span>
-                            </div>
-                        </SelectItem>
-                        );
-                    })}
-                    </SelectGroup>
-                </SelectContent>
-            </Select>
-          </CardContent>
-          <Separator />
-          <CardHeader className="pb-4">
-            <div className="flex items-center gap-2">
-              <CardTitle className="font-headline">AI Legal Research</CardTitle>
-            </div>
-            <CardDescription>
-              Enter your legal query to start comprehensive AI-powered research.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="query"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        Legal Query
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="e.g., 'Case laws related to anticipatory bail under Section 438 CrPC' or 'Recent judgments on trademark infringement in e-commerce'"
-                          className="min-h-[150px] resize-none focus-visible:ring-2 focus-visible:ring-primary"
-                          {...field}
-                          disabled={isLoading}
-                          maxLength={1000}
-                        />
-                      </FormControl>
-                      <div className="flex justify-between items-center">
-                        <FormMessage />
-                        <span className="text-xs text-muted-foreground">
-                          {field.value?.length || 0}/1000
-                        </span>
-                      </div>
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="flex gap-2">
-                  <Button 
-                    type="submit" 
-                    className="flex-1" 
-                    disabled={isLoading}
-                    size="lg"
-                  >
-                    {isLoading ? (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                        Researching...
-                      </>
-                    ) : (
-                      <>
-                        <Search className="mr-2 h-4 w-4" />
-                        Generate Report
-                      </>
-                    )}
-                  </Button>
-                  
-                  {isLoading && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      onClick={handleCancel}
-                      size="lg"
-                    >
-                      Cancel
-                    </Button>
-                  )}
-                </div>
-              </form>
-            </Form>
-
-            {!isLoading && !reportData && (
-              <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-                <h4 className="text-sm font-medium mb-2 flex items-center gap-1">
-                  <Lightbulb className="h-3 w-3 text-yellow-500" />
-                  Research Tips
-                </h4>
-                <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                  <li>Be specific with section numbers and acts.</li>
-                  <li>Include jurisdiction if relevant.</li>
-                  <li>Mention a time period for recent cases.</li>
-                </ul>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="lg:col-span-2 space-y-8">
+    <div className="space-y-8">
         <AnimatePresence>
           {error && (
             <motion.div
@@ -616,7 +483,6 @@ export function ResearchClient({ selectedMode, onModeChange }: ResearchClientPro
             />
           </motion.div>
         )}
-      </div>
     </div>
   );
 }
