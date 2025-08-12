@@ -11,14 +11,30 @@ import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Separator } from './ui/separator';
-import { FileSearch, FileText, BrainCircuit, RefreshCw, Sparkles, Wand2, Search, Lightbulb, Upload, File as FileIcon, X } from 'lucide-react';
+import { 
+    FileSearch, 
+    FileText, 
+    BrainCircuit, 
+    RefreshCw, 
+    Sparkles, 
+    Wand2, 
+    Search, 
+    Lightbulb, 
+    Upload, 
+    File as FileIcon, 
+    X,
+    DraftingCompass
+} from 'lucide-react';
 import { useState, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { reasonAboutScenario } from '@/ai/flows/reason-about-scenario';
 import { analyzeDocument } from '@/ai/flows/analyze-document';
+import { draftLegalDocument } from '@/ai/flows/draft-legal-document';
 import { Input } from './ui/input';
 import { cn } from '@/lib/utils';
 import { enhanceQueryClarity } from '@/ai/flows/enhance-query-clarity';
+import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
+
 
 interface ModeSwitcherProps {
   selectedMode: Mode;
@@ -39,7 +55,7 @@ const analyzerFormSchema = z.object({
   file: z.any().optional(),
 }).refine(data => data.documentText || data.file, {
     message: "Please either paste text or upload a file.",
-    path: ['documentText'], // assign error to a field
+    path: ['documentText'],
 });
 
 
@@ -48,11 +64,19 @@ const reasoningFormSchema = z.object({
   question: z.string().min(10, { message: 'Please provide a question of at least 10 characters.' }),
 });
 
+const draftingFormSchema = z.object({
+    documentType: z.enum(['contract', 'petition', 'affidavit', 'notice']),
+    prompt: z.string().min(20, { message: 'Please provide a detailed prompt of at least 20 characters.' }),
+    tone: z.enum(['aggressive', 'neutral', 'conciliatory']),
+    jurisdiction: z.enum(['delhi', 'mumbai', 'generic']),
+});
+
 
 const modes = [
   { value: 'research' as Mode, label: 'AI Legal Research', icon: FileSearch },
   { value: 'analyzer' as Mode, label: 'Document Analyzer', icon: FileText },
   { value: 'reasoning' as Mode, label: 'Reasoning Mode', icon: BrainCircuit },
+  { value: 'drafting' as Mode, label: 'Drafting Mode', icon: DraftingCompass },
 ];
 
 const readFileAsDataUri = (file: File): Promise<string> => {
@@ -91,6 +115,16 @@ export function ModeSwitcher({
     defaultValues: { scenario: '', question: '' },
   });
   
+  const draftingForm = useForm<z.infer<typeof draftingFormSchema>>({
+    resolver: zodResolver(draftingFormSchema),
+    defaultValues: { 
+        documentType: 'contract',
+        prompt: '',
+        tone: 'neutral',
+        jurisdiction: 'generic',
+     },
+  });
+
   const onResearchSubmit: SubmitHandler<z.infer<typeof researchFormSchema>> = async (data) => {
     onAnalysisStart(data);
     researchForm.reset();
@@ -100,7 +134,7 @@ export function ModeSwitcher({
     setIsSubmitting(true);
     onAnalysisStart();
     try {
-        let analysisInput = {};
+        let analysisInput: { documentText?: string, documentDataUri?: string } = {};
 
         if (data.file) {
             const documentDataUri = await readFileAsDataUri(data.file);
@@ -122,6 +156,7 @@ export function ModeSwitcher({
         
         onAnalysisComplete(result);
         analyzerForm.reset();
+        if (fileInputRef.current) fileInputRef.current.value = "";
         toast({
           title: "Analysis Complete",
           description: "The AI has provided a summary of the document.",
@@ -156,13 +191,28 @@ export function ModeSwitcher({
     }
     setIsSubmitting(false);
   };
-
-  const getModeIcon = (modeValue: Mode) => {
-    if (modeValue === 'research') return FileSearch;
-    if (modeValue === 'analyzer') return FileText;
-    if (modeValue === 'reasoning') return BrainCircuit;
-    return null;
-  }
+  
+  const onDraftingSubmit: SubmitHandler<z.infer<typeof draftingFormSchema>> = async (data) => {
+    setIsSubmitting(true);
+    onAnalysisStart();
+    try {
+        const result = await draftLegalDocument(data);
+        onAnalysisComplete(result);
+        draftingForm.reset();
+        toast({
+          title: "Draft Generated",
+          description: "The AI has generated the initial draft. Proceed to the review step.",
+        });
+    } catch (error) {
+         toast({
+            variant: "destructive",
+            title: "Drafting Failed",
+            description: "An error occurred while generating the document.",
+        });
+        onAnalysisError();
+    }
+    setIsSubmitting(false);
+  };
 
 
   const renderForm = () => {
@@ -225,6 +275,7 @@ export function ModeSwitcher({
                                 onChange={(e) => {
                                   const file = e.target.files?.[0];
                                   if (file) {
+                                    analyzerForm.setValue('file', file);
                                     field.onChange(file);
                                     analyzerForm.setValue('documentText', '');
                                   }
@@ -359,6 +410,104 @@ export function ModeSwitcher({
               </form>
             </Form>
         );
+        case 'drafting':
+            return (
+                <Form {...draftingForm}>
+                  <form onSubmit={draftingForm.handleSubmit(onDraftingSubmit)} className="space-y-6">
+                    <FormField
+                      control={draftingForm.control}
+                      name="documentType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Document Type</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a document type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="contract">Contract / Agreement</SelectItem>
+                              <SelectItem value="petition">Petition</SelectItem>
+                              <SelectItem value="affidavit">Affidavit</SelectItem>
+                              <SelectItem value="notice">Legal Notice</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={draftingForm.control}
+                      name="prompt"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Drafting Prompt</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="e.g., 'Draft a basic rental agreement between John Doe (Landlord) and Jane Smith (Tenant) for a property in Delhi...'"
+                              className="min-h-[150px] resize-y"
+                              {...field}
+                              disabled={isSubmitting}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={draftingForm.control}
+                      name="tone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Tone</FormLabel>
+                            <FormControl>
+                               <ToggleGroup 
+                                type="single" 
+                                defaultValue="neutral" 
+                                className="w-full grid grid-cols-3"
+                                onValueChange={field.onChange}
+                                disabled={isSubmitting}
+                               >
+                                    <ToggleGroupItem value="aggressive">Aggressive</ToggleGroupItem>
+                                    <ToggleGroupItem value="neutral">Neutral</ToggleGroupItem>
+                                    <ToggleGroupItem value="conciliatory">Conciliatory</ToggleGroupItem>
+                                </ToggleGroup>
+                            </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={draftingForm.control}
+                      name="jurisdiction"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Jurisdiction</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select jurisdiction for boilerplate" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="delhi">Delhi</SelectItem>
+                              <SelectItem value="mumbai">Mumbai</SelectItem>
+                              <SelectItem value="generic">Generic</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Drafting...</> 
+                                 : <><Sparkles className="mr-2 h-4 w-4" /> Start Drafting</>}
+                    </Button>
+                  </form>
+                </Form>
+            );
       default:
         return null;
     }
@@ -397,7 +546,7 @@ export function ModeSwitcher({
           <SelectContent>
             <SelectGroup>
               {modes.map(mode => {
-                const Icon = getModeIcon(mode.value);
+                const Icon = mode.icon;
                 return (
                   <SelectItem key={mode.value} value={mode.value}>
                     <div className="flex items-center gap-2">
@@ -421,6 +570,7 @@ export function ModeSwitcher({
             {
                 selectedMode === 'research' ? 'Enter your legal query to start comprehensive AI-powered research.' :
                 selectedMode === 'analyzer' ? 'Upload a document or paste text for an AI-powered analysis.' :
+                selectedMode === 'drafting' ? 'Create contracts, petitions, and more with AI assistance.' :
                 'Provide a legal scenario and a question for the AI to reason about.'
             }
         </CardDescription>

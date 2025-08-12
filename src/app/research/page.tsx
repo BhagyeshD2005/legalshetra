@@ -6,12 +6,14 @@ import { MainLayout } from '@/components/MainLayout';
 import { ResearchClient } from '@/components/ResearchClient';
 import { DocumentAnalyzer, type DocumentAnalysisResult } from '@/components/DocumentAnalyzer';
 import { ReasoningMode, type ReasoningResult } from '@/components/ReasoningMode';
+import { DraftingMode, type DraftResult } from '@/components/DraftingMode';
 import { ModeSwitcher } from '@/components/ModeSwitcher';
 import { type GenerateLegalSummaryOutput } from '@/ai/flows/generate-legal-summary';
 
-export type Mode = 'research' | 'analyzer' | 'reasoning';
 
-export type AnalysisResult = GenerateLegalSummaryOutput | DocumentAnalysisResult | ReasoningResult | null;
+export type Mode = 'research' | 'analyzer' | 'reasoning' | 'drafting';
+
+export type AnalysisResult = GenerateLegalSummaryOutput | DocumentAnalysisResult | ReasoningResult | DraftResult | null;
 
 export default function ResearchPage() {
   const [selectedMode, setSelectedMode] = useState<Mode>('research');
@@ -53,6 +55,8 @@ export default function ResearchPage() {
         return <DocumentAnalyzer isLoading={isLoading} result={analysisResult as DocumentAnalysisResult | null} />;
       case 'reasoning':
         return <ReasoningMode isLoading={isLoading} result={analysisResult as ReasoningResult | null} />;
+      case 'drafting':
+        return <DraftingMode isLoading={isLoading} result={analysisResult as DraftResult | null} />;
       default:
         return null;
     }

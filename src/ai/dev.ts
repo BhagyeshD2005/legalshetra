@@ -7,4 +7,5 @@ import '@/ai/flows/enhance-query-clarity.ts';
 import '@/ai/flows/chat-with-report.ts';
 import '@/ai/flows/reason-about-scenario.ts';
 import '@/ai/flows/analyze-document.ts';
+import '@/ai/flows/draft-legal-document.ts';
 
