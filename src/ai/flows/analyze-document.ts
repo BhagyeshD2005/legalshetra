@@ -13,7 +13,8 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const AnalyzeDocumentInputSchema = z.object({
-  documentContent: z.string().describe('The full text content of the legal document to be analyzed.'),
+  documentText: z.string().optional().describe('The full text content of the legal document.'),
+  documentDataUri: z.string().optional().describe("A document file (e.g., PDF) as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."),
 });
 export type AnalyzeDocumentInput = z.infer<typeof AnalyzeDocumentInputSchema>;
 
@@ -39,11 +40,16 @@ Focus on the following:
 - The main facts of the case or issue.
 - The final judgment, conclusion, or main takeaway.
 
-Keep the summary objective and based *only* on the text provided.
+Keep the summary objective and based *only* on the content provided.
 
 **Document to Analyze:**
 ---
-{{{documentContent}}}
+{{#if documentText}}
+{{{documentText}}}
+{{/if}}
+{{#if documentDataUri}}
+{{media url=documentDataUri}}
+{{/if}}
 ---
 
 Provide your summary below.`,

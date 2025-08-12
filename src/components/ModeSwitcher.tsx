@@ -110,14 +110,15 @@ export function ModeSwitcher({
     setIsSubmitting(true);
     onAnalysisStart();
     try {
-        let documentContent = data.documentText || '';
-        
-        if (data.file) {
-            documentContent = await readFileAsDataUri(data.file);
-        }
+        let analysisInput = {};
 
-        if (!documentContent) {
-            toast({
+        if (data.file) {
+            const documentDataUri = await readFileAsDataUri(data.file);
+            analysisInput = { documentDataUri };
+        } else if (data.documentText) {
+            analysisInput = { documentText: data.documentText };
+        } else {
+             toast({
                 variant: 'destructive',
                 title: 'No content provided',
                 description: 'Please paste text or upload a file to analyze.',
@@ -127,7 +128,7 @@ export function ModeSwitcher({
             return;
         }
 
-        const result = await analyzeDocument({ documentContent });
+        const result = await analyzeDocument(analysisInput);
         
         onAnalysisComplete(result);
         toast({
@@ -136,6 +137,7 @@ export function ModeSwitcher({
         });
 
     } catch (error) {
+        console.error(error);
         toast({ variant: 'destructive', title: 'Analysis Failed', description: 'Could not analyze the document.' });
         onAnalysisError();
     }
@@ -226,6 +228,9 @@ export function ModeSwitcher({
                                   const file = e.target.files?.[0] ?? null;
                                   field.onChange(file);
                                   analyzerForm.setValue('file', file);
+                                  if (file) {
+                                      analyzerForm.setValue('documentText', '');
+                                  }
                                 }}
                                 accept=".pdf,.doc,.docx,.txt"
                                 disabled={isSubmitting}
@@ -288,6 +293,13 @@ export function ModeSwitcher({
                           placeholder="Paste the full text of a legal document here..."
                           className="min-h-[150px] resize-y"
                           {...field}
+                          onChange={(e) => {
+                              field.onChange(e);
+                              if(e.target.value) {
+                                  analyzerForm.setValue('file', null);
+                                  if (fileInputRef.current) fileInputRef.current.value = "";
+                              }
+                          }}
                           disabled={isSubmitting}
                         />
                       </FormControl>
