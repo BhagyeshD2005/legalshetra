@@ -42,7 +42,7 @@ interface AnalysisSection {
 
 const parseAnalysis = (analysis: string): AnalysisSection[] => {
     const sections: AnalysisSection[] = [];
-    const parts = analysis.split(/\n*##\s*(?:\d+\.\s*)?/m).filter(p => p.trim());
+    const parts = analysis.split(/\n*##?\s*(?:\d+\.\s*)?/m).filter(p => p.trim());
 
     parts.forEach(part => {
         const lines = part.trim().split('\n');
