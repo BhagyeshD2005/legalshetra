@@ -242,7 +242,7 @@ export function ModeSwitcher({ selectedMode, onModeChange }: ModeSwitcherProps) 
         <Select onValueChange={(value) => onModeChange(value as Mode)} defaultValue={selectedMode}>
           <SelectTrigger className="w-full h-11 text-base font-medium">
             <div className="flex items-center gap-3">
-              {ActiveIcon && <ActiveIcon className="h-5 w-5 text-primary" />}
+              {ActiveIcon && <ActiveIcon className="h-5 w-5" />}
               <SelectValue placeholder="Select a mode..." />
             </div>
           </SelectTrigger>
