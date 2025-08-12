@@ -22,13 +22,15 @@ import {
   Gavel,
   BookOpen,
   FileOutput,
-  PieChart
+  PieChart as PieChartIcon,
+  BarChart,
+  LineChart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import type { GenerateLegalSummaryOutput } from "@/ai/flows/generate-legal-summary";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
-import { Pie, Cell, PieChart as RechartsPieChart } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
+import { Pie, Cell, PieChart as RechartsPieChart, Bar, BarChart as RechartsBarChart, XAxis, YAxis, CartesianGrid, Line, LineChart as RechartsLineChart } from 'recharts';
 
 interface ReportDisplayProps {
   reportData: GenerateLegalSummaryOutput;
@@ -42,9 +44,7 @@ interface ReportSection {
 }
 
 function formatContent(content: string) {
-    // Convert markdown bold to strong tags
     let html = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-    // Convert markdown list items to html list items, preserving indentation
     html = html.replace(/^\s*\*\s+/gm, '<li>');
     return { __html: html };
 }
@@ -60,14 +60,12 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
 
   const { summary: report, charts } = reportData;
 
-  // Calculate reading time
   useEffect(() => {
     const wordCount = report.split(/\s+/).length;
-    const avgReadingSpeed = 200; // words per minute
+    const avgReadingSpeed = 200;
     setReadingTime(Math.ceil(wordCount / avgReadingSpeed));
   }, [report]);
 
-  // Parse report into sections
   const parseReportSections = (text: string): ReportSection[] => {
     const sections: ReportSection[] = [];
     const lines = text.split('\n');
@@ -165,12 +163,12 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
           if (svg) {
             const serializer = new XMLSerializer();
             const svgString = serializer.serializeToString(svg);
-            const svgDataUri = `data:image/svg+xml;base64,${btoa(svgString)}`;
+            const svgDataUri = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgString)))}`;
             chartsHtml += `
               <div class="section chart-section">
                 <h3 class="section-title">${chartData.title}</h3>
                 <div class="chart-container">
-                  <img src="${svgDataUri}" alt="${chartData.title}" style="max-width: 400px; margin: 0 auto; display: block;" />
+                  <img src="${svgDataUri}" alt="${chartData.title}" style="max-width: 500px; margin: 0 auto; display: block;" />
                 </div>
               </div>
             `;
@@ -249,12 +247,21 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
               }
                .chart-section {
                 margin-top: 30px;
+                page-break-before: auto;
+                page-break-inside: avoid;
                }
                .chart-container {
                 padding: 20px;
                 border: 1px solid #e5e7eb;
                 border-radius: 8px;
                }
+              .recharts-label, .recharts-text, .recharts-legend-item-text {
+                fill: #333 !important;
+                font-size: 11px !important;
+              }
+              .recharts-tooltip-cursor {
+                fill: #f0f0f0;
+              }
               @media print {
                 body { font-size: 11px; }
                 .header { page-break-after: avoid; }
@@ -277,7 +284,7 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
               <div>${query}</div>
             </div>
             
-            <div class="content">${report.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\n/g, '<br>')}</div>
+            <div class="content">${report.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\\n/g, '<br>')}</div>
             
             ${chartsHtml}
 
@@ -329,12 +336,21 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
   };
 
   const scrollToSection = (sectionTitle: string) => {
-    const element = document.getElementById(`section-${sectionTitle.toLowerCase().replace(/\s+/g, '-')}`);
+    const element = document.getElementById(`section-${sectionTitle.toLowerCase().replace(/\\s+/g, '-')}`);
     if (element) {
       element.scrollIntoView({ behavior: 'smooth', block: 'start' });
       setActiveSection(sectionTitle);
     }
   };
+  
+  const getChartIcon = (type: string) => {
+    switch (type) {
+      case 'pie': return PieChartIcon;
+      case 'bar': return BarChart;
+      case 'line': return LineChart;
+      default: return PieChartIcon;
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -431,7 +447,9 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
                   </Button>
                 );
               })}
-              {charts && charts.map((chart, index) => (
+              {charts && charts.map((chart, index) => {
+                 const ChartIcon = getChartIcon(chart.type);
+                 return (
                  <Button
                     key={`chart-${index}`}
                     variant={activeSection === chart.title ? "default" : "outline"}
@@ -439,10 +457,10 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
                     onClick={() => scrollToSection(chart.title)}
                     className="flex items-center gap-1"
                   >
-                    <PieChart className="h-3 w-3" />
+                    <ChartIcon className="h-3 w-3" />
                     {chart.title}
                   </Button>
-              ))}
+              )})}
             </div>
           </CardContent>
         </Card>
@@ -465,7 +483,7 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
                   return (
                     <motion.div 
                       key={index}
-                      id={`section-${section.title.toLowerCase().replace(/\s+/g, '-')}`}
+                      id={`section-${section.title.toLowerCase().replace(/\\s+/g, '-')}`}
                       className="scroll-mt-4"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -496,11 +514,90 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
                       acc[item.name] = { label: item.name, color: item.fill };
                       return acc;
                     }, {} as any);
+                  const ChartIcon = getChartIcon(chart.type);
+                  
+                  const renderChart = () => {
+                      switch (chart.type) {
+                          case 'pie':
+                            return (
+                                <RechartsPieChart>
+                                    <ChartTooltip content={<ChartTooltipContent nameKey="value" hideLabel />} />
+                                    <Pie 
+                                        data={chart.data} 
+                                        dataKey="value" 
+                                        nameKey="name" 
+                                        innerRadius={60} 
+                                        labelLine={false}
+                                        label={({
+                                          cx,
+                                          cy,
+                                          midAngle,
+                                          innerRadius,
+                                          outerRadius,
+                                          value,
+                                          index,
+                                          name
+                                        }) => {
+                                          const RADIAN = Math.PI / 180
+                                          const radius = innerRadius + (outerRadius - innerRadius) * 0.5
+                                          const x = cx + radius * Math.cos(-midAngle * RADIAN)
+                                          const y = cy + radius * Math.sin(-midAngle * RADIAN)
+                                          const cornerRadius = 10;
+                                          
+                                          return (
+                                            <text
+                                              x={x}
+                                              y={y}
+                                              fill="white"
+                                              textAnchor={x > cx ? 'start' : 'end'}
+                                              dominantBaseline="central"
+                                              className="text-xs font-medium"
+                                            >
+                                              {`${name} (${value}%)`}
+                                            </text>
+                                          );
+                                        }}
+                                     >
+                                        {chart.data.map((entry, idx) => (
+                                            <Cell key={`cell-${idx}`} fill={entry.fill} />
+                                        ))}
+                                    </Pie>
+                                    <ChartLegend content={<ChartLegendContent />} />
+                                </RechartsPieChart>
+                            );
+                          case 'bar':
+                            return (
+                                <RechartsBarChart data={chart.data}>
+                                    <CartesianGrid vertical={false} />
+                                    <XAxis dataKey="name" tickLine={false} tickMargin={10} axisLine={false} />
+                                    <YAxis />
+                                    <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                                    <Bar dataKey="value" radius={4}>
+                                        {chart.data.map((entry, idx) => (
+                                            <Cell key={`cell-${idx}`} fill={entry.fill} />
+                                        ))}
+                                    </Bar>
+                                </RechartsBarChart>
+                            );
+                           case 'line':
+                                return (
+                                    <RechartsLineChart data={chart.data}>
+                                        <CartesianGrid vertical={false} />
+                                        <XAxis dataKey="name" tickLine={false} tickMargin={10} axisLine={false} />
+                                        <YAxis />
+                                        <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                                        <Line type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ fill: "hsl(var(--primary))" }} activeDot={{ r: 6 }} />
+                                    </RechartsLineChart>
+                                );
+                          default:
+                              return null;
+                      }
+                  }
                   
                   return (
                      <motion.div 
                       key={`chart-div-${index}`}
-                      id={`section-${chart.title.toLowerCase().replace(/\s+/g, '-')}`}
+                      id={`section-${chart.title.toLowerCase().replace(/\\s+/g, '-')}`}
                       className="scroll-mt-4"
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
@@ -511,7 +608,7 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
                           className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10"
                           whileHover={{ scale: 1.2, rotate: 15 }}
                         >
-                          <PieChart className="h-4 w-4 text-primary" />
+                          <ChartIcon className="h-4 w-4 text-primary" />
                         </motion.span>
                         <h3 className="text-xl font-semibold font-headline text-foreground m-0">
                           {chart.title}
@@ -521,16 +618,9 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
                       <div className="pl-11" id={`chart-container-${index}`}>
                         <ChartContainer 
                           config={chartConfig} 
-                          className="mx-auto aspect-square h-[250px]"
+                          className="mx-auto aspect-video h-[300px]"
                         >
-                           <RechartsPieChart>
-                              <ChartTooltip content={<ChartTooltipContent nameKey="value" hideLabel />} />
-                              <Pie data={chart.data} dataKey="value" nameKey="name" innerRadius={60}>
-                                {chart.data.map((entry, idx) => (
-                                  <Cell key={`cell-${idx}`} fill={entry.fill} />
-                                ))}
-                              </Pie>
-                           </RechartsPieChart>
+                           {renderChart()}
                         </ChartContainer>
                       </div>
                     </motion.div>
@@ -582,4 +672,5 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
     </div>
   );
 
+    
     
