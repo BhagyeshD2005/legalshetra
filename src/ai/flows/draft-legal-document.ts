@@ -81,8 +81,8 @@ const draftPrompt = ai.definePrompt({
 4.  **Assemble the Full Draft**: Combine all generated clauses and the provided boilerplate into a single, coherent document. Ensure proper formatting, headings, and legal structure.
 
 **Important:**
-*   The generated `fullDraft` must be a complete, ready-to-use document.
-*   The `clauses` array must contain a detailed breakdown and analysis of each individual clause.
+*   The generated \`fullDraft\` must be a complete, ready-to-use document.
+*   The \`clauses\` array must contain a detailed breakdown and analysis of each individual clause.
 *   Incorporate the provided boilerplate text seamlessly into the full draft, usually in a "Jurisdiction" or "Governing Law" clause.
 
 Begin the draft now.`,
