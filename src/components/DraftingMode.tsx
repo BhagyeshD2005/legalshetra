@@ -9,7 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileSignature, Bot, ClipboardCheck, AlertTriangle, Shield, CheckCircle2, ChevronRight, DraftingCompass } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
-import { type DraftLegalDocumentOutput } from '@/ai/flows/draft-legal-document';
+import { type DraftLegalDocumentOutput } from '@/ai/types';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
