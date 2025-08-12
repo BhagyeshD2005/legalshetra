@@ -42,16 +42,20 @@ interface AnalysisSection {
 
 const parseAnalysis = (analysis: string): AnalysisSection[] => {
     const sections: AnalysisSection[] = [];
-    const parts = analysis.split(/## \d+\. /).slice(1); // Split by "## 1. ", "## 2. ", etc. and remove the first empty element
+    const parts = analysis.split(/^##\s*(?:\d+\.\s*)?/m).filter(p => p.trim());
 
     parts.forEach(part => {
         const lines = part.trim().split('\n');
-        const title = lines[0].replace(/:$/, '').trim();
-        const points = lines.slice(1)
-            .map(line => line.trim().replace(/^\*\s*/, '')) // Remove leading "* "
-            .filter(point => point.length > 0);
+        const titleLine = lines.shift() || '';
+        const title = titleLine.replace(/:$/, '').trim();
         
-        sections.push({ title, points });
+        if (title) {
+            const points = lines
+                .map(line => line.trim().replace(/^\* \s*/, ''))
+                .filter(point => point.length > 0);
+            
+            sections.push({ title, points });
+        }
     });
 
     return sections;
@@ -191,7 +195,7 @@ export function ReasoningMode({ selectedMode, onModeChange }: ReasoningModeProps
       </div>
       <div className="lg:col-span-2 space-y-4">
         <AnimatePresence>
-          {analysisResult && parsedAnalysis.length > 0 && (
+          {analysisResult && (
             <motion.div
               key="result"
               initial={{ opacity: 0, y: 20 }}
@@ -205,28 +209,36 @@ export function ReasoningMode({ selectedMode, onModeChange }: ReasoningModeProps
                   </CardHeader>
               </Card>
 
-              {parsedAnalysis.map((section, index) => (
-                  <motion.div
-                      key={index}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                  >
-                      <Card>
-                          <CardHeader>
-                              <CardTitle className="text-lg">{section.title}</CardTitle>
-                          </CardHeader>
-                          <CardContent className="space-y-2">
-                              {section.points.map((point, pIndex) => (
-                                  <div key={pIndex} className="flex items-start gap-2">
-                                      <Dot className="h-4 w-4 mt-1 flex-shrink-0 text-primary" />
-                                      <p className="text-sm text-muted-foreground">{point}</p>
-                                  </div>
-                              ))}
-                          </CardContent>
-                      </Card>
-                  </motion.div>
-              ))}
+              {parsedAnalysis.length > 0 ? (
+                parsedAnalysis.map((section, index) => (
+                    <motion.div
+                        key={index}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.1 }}
+                    >
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="text-lg">{section.title}</CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-2">
+                                {section.points.map((point, pIndex) => (
+                                    <div key={pIndex} className="flex items-start gap-2">
+                                        <Dot className="h-4 w-4 mt-1 flex-shrink-0 text-primary" />
+                                        <p className="text-sm text-muted-foreground">{point}</p>
+                                    </div>
+                                ))}
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+                ))
+              ) : (
+                <Card>
+                    <CardContent className="pt-6">
+                        <p className="whitespace-pre-wrap">{analysisResult}</p>
+                    </CardContent>
+                </Card>
+              )}
             </motion.div>
           )}
 
