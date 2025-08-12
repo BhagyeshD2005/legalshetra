@@ -11,11 +11,13 @@ import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Separator } from './ui/separator';
-import { FileSearch, FileText, BrainCircuit, RefreshCw, Sparkles, Wand2, Search, Lightbulb } from 'lucide-react';
-import { useState } from 'react';
+import { FileSearch, FileText, BrainCircuit, RefreshCw, Sparkles, Wand2, Search, Lightbulb, Upload, File as FileIcon, X } from 'lucide-react';
+import { useState, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { generateLegalSummary } from '@/ai/flows/generate-legal-summary';
 import { reasonAboutScenario } from '@/ai/flows/reason-about-scenario';
+import { Input } from './ui/input';
+import { cn } from '@/lib/utils';
 
 interface ModeSwitcherProps {
   selectedMode: Mode;
@@ -29,8 +31,13 @@ const researchFormSchema = z.object({
 });
 
 const analyzerFormSchema = z.object({
-  documentText: z.string().min(50, { message: 'Please paste document text of at least 50 characters.' }),
+  documentText: z.string().optional(),
+  file: z.any().optional(),
+}).refine(data => data.documentText || data.file, {
+    message: "Please either paste text or upload a file.",
+    path: ['documentText'], // assign error to a field
 });
+
 
 const reasoningFormSchema = z.object({
   scenario: z.string().min(50, { message: 'Please provide a scenario of at least 50 characters.' }),
@@ -52,6 +59,7 @@ const modes = [
 export function ModeSwitcher({ selectedMode, onModeChange }: ModeSwitcherProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const researchForm = useForm<z.infer<typeof researchFormSchema>>({
     resolver: zodResolver(researchFormSchema),
@@ -79,6 +87,7 @@ export function ModeSwitcher({ selectedMode, onModeChange }: ModeSwitcherProps) 
   const onAnalyzerSubmit: SubmitHandler<z.infer<typeof analyzerFormSchema>> = async (data) => {
     setIsLoading(true);
     // This will be implemented fully later to show results on the right
+    console.log("Analyzer data:", data);
     await new Promise(res => setTimeout(res, 1000));
     toast({ title: "Analysis Complete (WIP)" });
     setIsLoading(false);
@@ -135,19 +144,83 @@ export function ModeSwitcher({ selectedMode, onModeChange }: ModeSwitcherProps) 
             </Form>
         );
       case 'analyzer':
+        const selectedFile = analyzerForm.watch('file');
         return (
             <Form {...analyzerForm}>
               <form onSubmit={analyzerForm.handleSubmit(onAnalyzerSubmit)} className="space-y-6">
                 <FormField
                   control={analyzerForm.control}
+                  name="file"
+                  render={({ field }) => (
+                    <FormItem>
+                       <FormLabel>Upload Document</FormLabel>
+                       <FormControl>
+                          <>
+                            <Input 
+                                type="file"
+                                className="hidden"
+                                ref={fileInputRef}
+                                onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)}
+                                accept=".pdf,.doc,.docx,.txt"
+                                disabled={isLoading}
+                            />
+                            <div 
+                                className={cn(
+                                    "border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors",
+                                    selectedFile && "border-solid border-primary/50"
+                                )}
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                {selectedFile ? (
+                                    <div className="flex items-center justify-between gap-2">
+                                        <div className="flex items-center gap-2 text-sm text-foreground">
+                                            <FileIcon className="h-4 w-4" />
+                                            <span>{selectedFile.name}</span>
+                                        </div>
+                                        <Button 
+                                            variant="ghost" 
+                                            size="icon" 
+                                            className="h-6 w-6"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                analyzerForm.setValue('file', null);
+                                                if(fileInputRef.current) fileInputRef.current.value = "";
+                                            }}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-1">
+                                        <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
+                                        <p className="font-medium">Click to upload or drag & drop</p>
+                                        <p className="text-xs text-muted-foreground">PDF, DOC, DOCX, or TXT</p>
+                                    </div>
+                                )}
+                            </div>
+                          </>
+                       </FormControl>
+                       <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="flex items-center gap-2">
+                    <Separator className="flex-1" />
+                    <span className="text-xs text-muted-foreground">OR</span>
+                    <Separator className="flex-1" />
+                </div>
+                
+                <FormField
+                  control={analyzerForm.control}
                   name="documentText"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Document Text</FormLabel>
+                      <FormLabel>Paste Text</FormLabel>
                       <FormControl>
                         <Textarea
                           placeholder="Paste the full text of a legal document here..."
-                          className="min-h-[250px] resize-y"
+                          className="min-h-[150px] resize-y"
                           {...field}
                           disabled={isLoading}
                         />
@@ -269,7 +342,7 @@ export function ModeSwitcher({ selectedMode, onModeChange }: ModeSwitcherProps) 
         <CardDescription>
             {
                 selectedMode === 'research' ? 'Enter your legal query to start comprehensive AI-powered research.' :
-                selectedMode === 'analyzer' ? 'Paste the text of a legal document to get an AI-powered analysis.' :
+                selectedMode === 'analyzer' ? 'Upload a document or paste text for an AI-powered analysis.' :
                 'Provide a legal scenario and a question for the AI to reason about.'
             }
         </CardDescription>
@@ -281,3 +354,5 @@ export function ModeSwitcher({ selectedMode, onModeChange }: ModeSwitcherProps) 
     </Card>
   );
 }
+
+    
