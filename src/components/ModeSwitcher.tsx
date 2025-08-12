@@ -56,12 +56,12 @@ const modes = [
   { value: 'reasoning' as Mode, label: 'Reasoning Mode', icon: BrainCircuit },
 ];
 
-const readFileAsText = (file: File): Promise<string> => {
+const readFileAsDataUri = (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
     reader.onerror = reject;
-    reader.readAsText(file);
+    reader.readAsDataURL(file);
   });
 };
 
@@ -113,7 +113,7 @@ export function ModeSwitcher({
         let documentContent = data.documentText || '';
         
         if (data.file) {
-            documentContent = await readFileAsText(data.file);
+            documentContent = await readFileAsDataUri(data.file);
         }
 
         if (!documentContent) {
@@ -420,3 +420,5 @@ export function ModeSwitcher({
     </Card>
   );
 }
+
+    
