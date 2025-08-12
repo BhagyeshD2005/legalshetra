@@ -28,7 +28,6 @@ import {
   Zap,
   Lightbulb,
   BrainCircuit,
-  FileSearch,
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -66,7 +65,7 @@ const PROCESSING_STEPS: ProcessingStep[] = [
 ];
 
 const modes = [
-  { value: 'research' as Mode, label: 'AI Legal Research', icon: FileSearch },
+  { value: 'research' as Mode, label: 'AI Legal Research' },
   { value: 'analyzer' as Mode, label: 'Document Analyzer', icon: FileText },
   { value: 'reasoning' as Mode, label: 'Reasoning Mode', icon: BrainCircuit },
 ];
@@ -323,7 +322,7 @@ export function ResearchClient({ selectedMode, onModeChange }: ResearchClientPro
                         return (
                         <SelectItem key={mode.value} value={mode.value}>
                             <div className="flex items-center gap-2">
-                            <Icon className="h-4 w-4" />
+                            {Icon && <Icon className="h-4 w-4" />}
                             <span>{mode.label}</span>
                             </div>
                         </SelectItem>
@@ -336,7 +335,6 @@ export function ResearchClient({ selectedMode, onModeChange }: ResearchClientPro
           <Separator />
           <CardHeader className="pb-4">
             <div className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-primary" />
               <CardTitle className="font-headline">AI Legal Research</CardTitle>
             </div>
             <CardDescription>

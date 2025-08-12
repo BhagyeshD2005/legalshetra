@@ -30,7 +30,7 @@ interface ReasoningModeProps {
 }
 
 const modes = [
-  { value: 'research' as Mode, label: 'AI Legal Research', icon: FileSearch },
+  { value: 'research' as Mode, label: 'AI Legal Research' },
   { value: 'analyzer' as Mode, label: 'Document Analyzer', icon: FileText },
   { value: 'reasoning' as Mode, label: 'Reasoning Mode', icon: BrainCircuit },
 ];
@@ -116,7 +116,7 @@ export function ReasoningMode({ selectedMode, onModeChange }: ReasoningModeProps
                         return (
                         <SelectItem key={mode.value} value={mode.value}>
                             <div className="flex items-center gap-2">
-                            <Icon className="h-4 w-4" />
+                            {Icon && <Icon className="h-4 w-4" />}
                             <span>{mode.label}</span>
                             </div>
                         </SelectItem>
