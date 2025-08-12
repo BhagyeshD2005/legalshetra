@@ -42,8 +42,7 @@ interface AnalysisSection {
 
 const parseAnalysis = (analysis: string): AnalysisSection[] => {
     const sections: AnalysisSection[] = [];
-    // This regex looks for lines starting with ##, optionally followed by a number and a dot.
-    const parts = analysis.split(/^##\s*(?:\d+\.\s*)?/m).filter(p => p.trim());
+    const parts = analysis.split(/\n*##\s*(?:\d+\.\s*)?/m).filter(p => p.trim());
 
     parts.forEach(part => {
         const lines = part.trim().split('\n');
@@ -52,7 +51,7 @@ const parseAnalysis = (analysis: string): AnalysisSection[] => {
         
         if (title) {
             const points = lines
-                .map(line => line.trim().replace(/^\*\s*/, '')) // Handles list items starting with *
+                .map(line => line.trim().replace(/^\*\s*/, ''))
                 .filter(point => point.length > 0);
             
             sections.push({ title, points });
@@ -213,13 +212,13 @@ export function ReasoningMode({ selectedMode, onModeChange }: ReasoningModeProps
                     >
                         <Card>
                             <CardHeader>
-                                <CardTitle className="text-lg">{section.title}</CardTitle>
+                                <CardTitle className="text-lg font-headline">{section.title}</CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-2">
                                 {section.points.map((point, pIndex) => (
                                     <div key={pIndex} className="flex items-start gap-2">
                                         <Dot className="h-4 w-4 mt-1 flex-shrink-0 text-primary" />
-                                        <p className="text-sm text-muted-foreground">{point}</p>
+                                        <p className="text-sm text-muted-foreground" dangerouslySetInnerHTML={{ __html: point.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                                     </div>
                                 ))}
                             </CardContent>
@@ -229,7 +228,7 @@ export function ReasoningMode({ selectedMode, onModeChange }: ReasoningModeProps
               ) : (
                 <Card>
                     <CardHeader>
-                        <CardTitle className="font-headline">Analysis</CardTitle>
+                        <CardTitle className="font-headline">Logical Analysis</CardTitle>
                     </CardHeader>
                     <CardContent className="pt-6">
                         <p className="whitespace-pre-wrap">{analysisResult}</p>
