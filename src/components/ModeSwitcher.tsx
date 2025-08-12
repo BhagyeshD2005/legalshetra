@@ -93,6 +93,7 @@ export function ModeSwitcher({
   
   const onResearchSubmit: SubmitHandler<z.infer<typeof researchFormSchema>> = async (data) => {
     onAnalysisStart(data);
+    researchForm.reset();
   };
   
   const onAnalyzerSubmit: SubmitHandler<z.infer<typeof analyzerFormSchema>> = async (data) => {
@@ -120,6 +121,7 @@ export function ModeSwitcher({
         const result = await analyzeDocument(analysisInput);
         
         onAnalysisComplete(result);
+        analyzerForm.reset();
         toast({
           title: "Analysis Complete",
           description: "The AI has provided a summary of the document.",
@@ -139,6 +141,7 @@ export function ModeSwitcher({
     try {
         const result = await reasonAboutScenario(data);
         onAnalysisComplete(result);
+        reasoningForm.reset();
         toast({
           title: "Analysis Complete",
           description: "The AI has provided a step-by-step reasoning for the scenario.",
@@ -153,11 +156,6 @@ export function ModeSwitcher({
     }
     setIsSubmitting(false);
   };
-
-  const ActiveIcon = selectedMode === 'research' ? Sparkles :
-                     selectedMode === 'analyzer' ? FileText :
-                     selectedMode === 'reasoning' ? BrainCircuit :
-                     null;
 
   const getModeIcon = (modeValue: Mode) => {
     if (modeValue === 'research') return FileSearch;
@@ -225,10 +223,10 @@ export function ModeSwitcher({
                                 className="hidden"
                                 ref={fileInputRef}
                                 onChange={(e) => {
-                                  const file = e.target.files?.[0] ?? null;
-                                  analyzerForm.setValue('file', file);
+                                  const file = e.target.files?.[0];
                                   if (file) {
-                                      analyzerForm.setValue('documentText', '');
+                                    field.onChange(file);
+                                    analyzerForm.setValue('documentText', '');
                                   }
                                 }}
                                 accept=".pdf,.doc,.docx,.txt"
@@ -254,6 +252,7 @@ export function ModeSwitcher({
                                             onClick={(e) => {
                                                 e.stopPropagation();
                                                 analyzerForm.setValue('file', null);
+                                                field.onChange(null);
                                                 if(fileInputRef.current) fileInputRef.current.value = "";
                                             }}
                                         >
@@ -392,7 +391,7 @@ export function ModeSwitcher({
         <Select onValueChange={(value) => onModeChange(value as Mode)} defaultValue={selectedMode}>
           <SelectTrigger className="w-full h-11 text-base font-medium">
             <div className="flex items-center gap-3">
-              <SelectValue placeholder="Select a mode..." />
+                <SelectValue placeholder="Select a mode..." />
             </div>
           </SelectTrigger>
           <SelectContent>
@@ -433,5 +432,3 @@ export function ModeSwitcher({
     </Card>
   );
 }
-
-    

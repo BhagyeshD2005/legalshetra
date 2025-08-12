@@ -31,7 +31,7 @@ interface ResearchClientProps {
   isLoading: boolean;
   reportData: GenerateLegalSummaryOutput | null;
   onAnalysisComplete: (result: GenerateLegalSummaryOutput) => void;
-  onAnalysisStart: (query: {query: string}) => void;
+  onAnalysisStart: (data?: {query: string}) => void;
   onAnalysisError: () => void;
   initialQuery?: { query: string };
 }
@@ -73,10 +73,17 @@ export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnaly
     setProcessingSteps(PROCESSING_STEPS.map(step => ({ ...step, status: 'pending' })));
     setChatHistory([]);
   }, []);
+
+  const updateStepStatus = useCallback((stepId: string, status: ProcessingStep['status']) => {
+    setProcessingSteps(prev => prev.map(step => 
+      step.id === stepId ? { ...step, status } : step
+    ));
+  }, []);
   
   const startResearch = useCallback(async (query: string) => {
     resetStates();
-
+    onAnalysisStart();
+    
     try {
       setCurrentStep('enhance');
       updateStepStatus('enhance', 'active');
@@ -127,14 +134,7 @@ export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnaly
       });
       onAnalysisError();
     }
-  }, [onAnalysisComplete, onAnalysisError, resetStates]);
-
-
-  const updateStepStatus = useCallback((stepId: string, status: ProcessingStep['status']) => {
-    setProcessingSteps(prev => prev.map(step => 
-      step.id === stepId ? { ...step, status } : step
-    ));
-  }, []);
+  }, [onAnalysisComplete, onAnalysisError, resetStates, onAnalysisStart, updateStepStatus]);
 
   useEffect(() => {
     if (isLoading && startTime) {
@@ -158,10 +158,9 @@ export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnaly
   
    useEffect(() => {
     if (initialQuery?.query) {
-      onAnalysisStart(initialQuery);
       startResearch(initialQuery.query);
     }
-  }, [initialQuery, startResearch, onAnalysisStart]);
+  }, [initialQuery, startResearch]);
 
 
   const handleSendMessage = async (message: string) => {
@@ -343,7 +342,7 @@ export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnaly
             >
               <ReportDisplay 
                 reportData={reportData} 
-                query={enhancedQuery || ''} 
+                query={enhancedQuery || (initialQuery?.query) || ''} 
               />
             </motion.div>
           )}
