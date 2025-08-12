@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from "@/hooks/use-toast";
-import { BrainCircuit, RefreshCw, Sparkles, Wand2, FileSearch, FileText } from 'lucide-react';
+import { BrainCircuit, RefreshCw, Sparkles, Wand2, FileSearch, FileText, Dot } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { reasonAboutScenario } from '@/ai/flows/reason-about-scenario';
 import { Separator } from './ui/separator';
@@ -34,6 +34,29 @@ const modes = [
   { value: 'analyzer' as Mode, label: 'Document Analyzer', icon: FileText },
   { value: 'reasoning' as Mode, label: 'Reasoning Mode', icon: BrainCircuit },
 ];
+
+interface AnalysisSection {
+    title: string;
+    points: string[];
+}
+
+const parseAnalysis = (analysis: string): AnalysisSection[] => {
+    const sections: AnalysisSection[] = [];
+    const parts = analysis.split(/## \d+\. /).slice(1); // Split by "## 1. ", "## 2. ", etc. and remove the first empty element
+
+    parts.forEach(part => {
+        const lines = part.trim().split('\n');
+        const title = lines[0].replace(/:$/, '').trim();
+        const points = lines.slice(1)
+            .map(line => line.trim().replace(/^\*\s*/, '')) // Remove leading "* "
+            .filter(point => point.length > 0);
+        
+        sections.push({ title, points });
+    });
+
+    return sections;
+}
+
 
 export function ReasoningMode({ selectedMode, onModeChange }: ReasoningModeProps) {
   const [isLoading, setIsLoading] = useState(false);
@@ -68,6 +91,7 @@ export function ReasoningMode({ selectedMode, onModeChange }: ReasoningModeProps
   };
   
   const ActiveIcon = modes.find(m => m.value === selectedMode)?.icon;
+  const parsedAnalysis = analysisResult ? parseAnalysis(analysisResult) : [];
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start mt-6">
@@ -165,27 +189,44 @@ export function ReasoningMode({ selectedMode, onModeChange }: ReasoningModeProps
           </CardContent>
         </Card>
       </div>
-      <div className="lg:col-span-2">
+      <div className="lg:col-span-2 space-y-4">
         <AnimatePresence>
-          {analysisResult && (
+          {analysisResult && parsedAnalysis.length > 0 && (
             <motion.div
               key="result"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
+              className="space-y-4"
             >
               <Card>
-                <CardHeader>
-                  <CardTitle className="font-headline">Logical Analysis</CardTitle>
-                  <CardDescription>A step-by-step breakdown of the legal reasoning.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <Separator />
-                  <div 
-                    className="prose prose-sm max-w-none whitespace-pre-wrap"
-                    dangerouslySetInnerHTML={{ __html: analysisResult.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }}
-                  />
-                </CardContent>
+                  <CardHeader>
+                    <CardTitle className="font-headline">Logical Analysis</CardTitle>
+                    <CardDescription>A step-by-step breakdown of the legal reasoning.</CardDescription>
+                  </CardHeader>
               </Card>
+
+              {parsedAnalysis.map((section, index) => (
+                  <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                  >
+                      <Card>
+                          <CardHeader>
+                              <CardTitle className="text-lg">{section.title}</CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-2">
+                              {section.points.map((point, pIndex) => (
+                                  <div key={pIndex} className="flex items-start gap-2">
+                                      <Dot className="h-4 w-4 mt-1 flex-shrink-0 text-primary" />
+                                      <p className="text-sm text-muted-foreground">{point}</p>
+                                  </div>
+                              ))}
+                          </CardContent>
+                      </Card>
+                  </motion.div>
+              ))}
             </motion.div>
           )}
 
