@@ -159,14 +159,13 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
     try {
       let chartsHtml = '';
       if (charts && charts.length > 0) {
-        const chartElements = document.querySelectorAll('[data-chart-id]');
-        chartElements.forEach((chartEl, index) => {
-          const chartData = charts[index];
-          const svg = chartEl.querySelector('svg');
+        charts.forEach((chartData, index) => {
+          const chartEl = document.getElementById(`chart-container-${index}`);
+          const svg = chartEl?.querySelector('svg');
           if (svg) {
             const serializer = new XMLSerializer();
             const svgString = serializer.serializeToString(svg);
-            const svgDataUri = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgString)))}`;
+            const svgDataUri = `data:image/svg+xml;base64,${btoa(svgString)}`;
             chartsHtml += `
               <div class="section chart-section">
                 <h3 class="section-title">${chartData.title}</h3>
@@ -519,11 +518,10 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
                         </h3>
                       </div>
                       <Separator className="mb-4" />
-                      <div className="pl-11">
+                      <div className="pl-11" id={`chart-container-${index}`}>
                         <ChartContainer 
                           config={chartConfig} 
                           className="mx-auto aspect-square h-[250px]"
-                          data-chart-id={`chart-${index}`}
                         >
                            <RechartsPieChart>
                               <ChartTooltip content={<ChartTooltipContent nameKey="value" hideLabel />} />
@@ -583,4 +581,5 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
       </Card>
     </div>
   );
-}
+
+    
