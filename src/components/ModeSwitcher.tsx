@@ -52,8 +52,8 @@ const researchFormSchema = z.object({
 
 const analyzerFormSchema = z.object({
   documentText: z.string().optional(),
-  file: z.any().optional(),
-}).refine(data => data.documentText || data.file, {
+  documentDataUri: z.string().optional(),
+}).refine(data => data.documentText || data.documentDataUri, {
     message: "Please either paste text or upload a file.",
     path: ['documentText'],
 });
@@ -99,6 +99,7 @@ export function ModeSwitcher({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const researchForm = useForm<z.infer<typeof researchFormSchema>>({
     resolver: zodResolver(researchFormSchema),
@@ -117,12 +118,12 @@ export function ModeSwitcher({
   
   const draftingForm = useForm<z.infer<typeof draftingFormSchema>>({
     resolver: zodResolver(draftingFormSchema),
-    defaultValues: { 
-        documentType: 'contract',
-        prompt: '',
-        tone: 'neutral',
-        jurisdiction: 'generic',
-     },
+    defaultValues: {
+      documentType: 'contract',
+      prompt: 'Draft a simple one-page rental agreement for a residential property. The landlord is "John Doe" and the tenant is "Jane Smith". The property is located at "123 Main St, Anytown". The rent is $1000 per month, due on the 1st of each month. The lease term is for 12 months, starting on the first of next month.',
+      tone: 'neutral',
+      jurisdiction: 'delhi',
+    },
   });
 
   const onResearchSubmit: SubmitHandler<z.infer<typeof researchFormSchema>> = async (data) => {
@@ -134,28 +135,11 @@ export function ModeSwitcher({
     setIsSubmitting(true);
     onAnalysisStart();
     try {
-        let analysisInput: { documentText?: string, documentDataUri?: string } = {};
-
-        if (data.file) {
-            const documentDataUri = await readFileAsDataUri(data.file);
-            analysisInput = { documentDataUri };
-        } else if (data.documentText) {
-            analysisInput = { documentText: data.documentText };
-        } else {
-             toast({
-                variant: 'destructive',
-                title: 'No content provided',
-                description: 'Please paste text or upload a file to analyze.',
-            });
-            onAnalysisError();
-            setIsSubmitting(false);
-            return;
-        }
-
-        const result = await analyzeDocument(analysisInput);
+        const result = await analyzeDocument(data);
         
         onAnalysisComplete(result);
         analyzerForm.reset();
+        setSelectedFile(null);
         if (fileInputRef.current) fileInputRef.current.value = "";
         toast({
           title: "Analysis Complete",
@@ -256,74 +240,69 @@ export function ModeSwitcher({
             </Form>
         );
       case 'analyzer':
-        const selectedFile = analyzerForm.watch('file');
         return (
             <Form {...analyzerForm}>
               <form onSubmit={analyzerForm.handleSubmit(onAnalyzerSubmit)} className="space-y-6">
-                <FormField
-                  control={analyzerForm.control}
-                  name="file"
-                  render={({ field }) => (
-                    <FormItem>
-                       <FormLabel>Upload Document</FormLabel>
-                       <FormControl>
-                          <div>
-                            <Input 
-                                type="file"
-                                className="hidden"
-                                ref={fileInputRef}
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0];
-                                  if (file) {
-                                    analyzerForm.setValue('file', file);
-                                    field.onChange(file);
-                                    analyzerForm.setValue('documentText', '');
-                                  }
-                                }}
-                                accept=".pdf,.doc,.docx,.txt"
-                                disabled={isSubmitting}
-                            />
-                            <div 
-                                className={cn(
-                                    "border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors",
-                                    selectedFile && "border-solid border-primary/50"
-                                )}
-                                onClick={() => fileInputRef.current?.click()}
-                            >
-                                {selectedFile ? (
-                                    <div className="flex items-center justify-between gap-2">
-                                        <div className="flex items-center gap-2 text-sm text-foreground">
-                                            <FileIcon className="h-4 w-4" />
-                                            <span>{selectedFile.name}</span>
-                                        </div>
-                                        <Button 
-                                            variant="ghost" 
-                                            size="icon" 
-                                            className="h-6 w-6"
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                analyzerForm.setValue('file', null);
-                                                field.onChange(null);
-                                                if(fileInputRef.current) fileInputRef.current.value = "";
-                                            }}
-                                        >
-                                            <X className="h-4 w-4" />
-                                        </Button>
+                <FormItem>
+                    <FormLabel>Upload Document</FormLabel>
+                    <FormControl>
+                        <div>
+                        <Input 
+                            type="file"
+                            className="hidden"
+                            ref={fileInputRef}
+                            onChange={async (e) => {
+                                const file = e.target.files?.[0];
+                                if (file) {
+                                  setSelectedFile(file);
+                                  const dataUri = await readFileAsDataUri(file);
+                                  analyzerForm.setValue('documentDataUri', dataUri);
+                                  analyzerForm.setValue('documentText', '');
+                                  analyzerForm.clearErrors('documentText');
+                                }
+                            }}
+                            accept=".pdf,.doc,.docx,.txt"
+                            disabled={isSubmitting}
+                        />
+                        <div 
+                            className={cn(
+                                "border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors",
+                                selectedFile && "border-solid border-primary/50"
+                            )}
+                            onClick={() => fileInputRef.current?.click()}
+                        >
+                            {selectedFile ? (
+                                <div className="flex items-center justify-between gap-2">
+                                    <div className="flex items-center gap-2 text-sm text-foreground">
+                                        <FileIcon className="h-4 w-4" />
+                                        <span>{selectedFile.name}</span>
                                     </div>
-                                ) : (
-                                    <div className="space-y-1">
-                                        <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
-                                        <p className="font-medium">Click to upload or drag & drop</p>
-                                        <p className="text-xs text-muted-foreground">PDF, DOC, DOCX, or TXT</p>
-                                    </div>
-                                )}
-                            </div>
-                          </div>
-                       </FormControl>
-                       <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                                    <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-6 w-6"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            setSelectedFile(null);
+                                            analyzerForm.setValue('documentDataUri', undefined);
+                                            if(fileInputRef.current) fileInputRef.current.value = "";
+                                        }}
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="space-y-1">
+                                    <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
+                                    <p className="font-medium">Click to upload or drag & drop</p>
+                                    <p className="text-xs text-muted-foreground">PDF, DOC, DOCX, or TXT</p>
+                                </div>
+                            )}
+                        </div>
+                        </div>
+                    </FormControl>
+                    <FormMessage />
+                </FormItem>
 
                 <div className="flex items-center gap-2">
                     <Separator className="flex-1" />
@@ -345,7 +324,8 @@ export function ModeSwitcher({
                           onChange={(e) => {
                               field.onChange(e);
                               if(e.target.value) {
-                                  analyzerForm.setValue('file', null);
+                                  setSelectedFile(null);
+                                  analyzerForm.setValue('documentDataUri', undefined);
                                   if (fileInputRef.current) fileInputRef.current.value = "";
                               }
                           }}
