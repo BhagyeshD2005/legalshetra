@@ -155,7 +155,7 @@ export function ModeSwitcher({ selectedMode, onModeChange }: ModeSwitcherProps) 
                     <FormItem>
                        <FormLabel>Upload Document</FormLabel>
                        <FormControl>
-                          <>
+                          <div>
                             <Input 
                                 type="file"
                                 className="hidden"
@@ -198,7 +198,7 @@ export function ModeSwitcher({ selectedMode, onModeChange }: ModeSwitcherProps) 
                                     </div>
                                 )}
                             </div>
-                          </>
+                          </div>
                        </FormControl>
                        <FormMessage />
                     </FormItem>
@@ -355,4 +355,5 @@ export function ModeSwitcher({ selectedMode, onModeChange }: ModeSwitcherProps) 
   );
 }
 
+    
     
