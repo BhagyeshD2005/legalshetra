@@ -50,9 +50,9 @@ const reasoningFormSchema = z.object({
 
 
 const modes = [
-  { value: 'research' as Mode, label: 'AI Legal Research' },
-  { value: 'analyzer' as Mode, label: 'Document Analyzer' },
-  { value: 'reasoning' as Mode, label: 'Reasoning Mode' },
+  { value: 'research' as Mode, label: 'AI Legal Research', icon: FileSearch },
+  { value: 'analyzer' as Mode, label: 'Document Analyzer', icon: FileText },
+  { value: 'reasoning' as Mode, label: 'Reasoning Mode', icon: BrainCircuit },
 ];
 
 const readFileAsDataUri = (file: File): Promise<string> => {
@@ -154,7 +154,7 @@ export function ModeSwitcher({
     setIsSubmitting(false);
   };
 
-  const ActiveIcon = selectedMode === 'research' ? FileSearch :
+  const ActiveIcon = selectedMode === 'research' ? Sparkles :
                      selectedMode === 'analyzer' ? FileText :
                      selectedMode === 'reasoning' ? BrainCircuit :
                      null;
@@ -392,7 +392,6 @@ export function ModeSwitcher({
         <Select onValueChange={(value) => onModeChange(value as Mode)} defaultValue={selectedMode}>
           <SelectTrigger className="w-full h-11 text-base font-medium">
             <div className="flex items-center gap-3">
-              {ActiveIcon && <ActiveIcon className="h-5 w-5" />}
               <SelectValue placeholder="Select a mode..." />
             </div>
           </SelectTrigger>
