@@ -2,13 +2,6 @@
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
-import { useForm, type SubmitHandler } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { enhanceQueryClarity } from '@/ai/flows/enhance-query-clarity';
 import { generateLegalSummary, type GenerateLegalSummaryOutput } from '@/ai/flows/generate-legal-summary';
 import { useToast } from "@/hooks/use-toast";
@@ -25,29 +18,22 @@ import {
   Clock,
   RefreshCw,
   BookOpen,
-  Zap,
-  Lightbulb,
-  BrainCircuit,
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion, AnimatePresence } from 'framer-motion';
 import { chatWithReport } from '@/ai/flows/chat-with-report';
 import { ChatInterface } from './ChatInterface';
 import { type ChatMessage as ChatMessageType } from '@/ai/types';
-import type { Mode } from '@/app/research/page';
-import { Separator } from './ui/separator';
+import { Button } from './ui/button';
+import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
 
-const FormSchema = z.object({
-  query: z.string()
-    .min(10, { message: 'Please enter a legal query of at least 10 characters.' })
-    .max(1000, { message: 'Query must be less than 1000 characters.' })
-    .refine(
-      (val) => val.trim().length > 0,
-      { message: 'Query cannot be empty or contain only whitespace.' }
-    ),
-});
-
-type FormData = z.infer<typeof FormSchema>;
+interface ResearchClientProps {
+  isLoading: boolean;
+  reportData: GenerateLegalSummaryOutput | null;
+  onAnalysisStart: () => void;
+  onAnalysisComplete: (result: GenerateLegalSummaryOutput) => void;
+  onAnalysisError: () => void;
+}
 
 interface ProcessingStep {
   id: string;
@@ -58,35 +44,25 @@ interface ProcessingStep {
 
 const PROCESSING_STEPS: ProcessingStep[] = [
   { id: 'enhance', label: 'Enhancing query', status: 'pending', icon: Sparkles },
-  { id: 'think', label: 'Thinking', status: 'pending', icon: BrainCircuit },
   { id: 'search', label: 'Searching legal databases', status: 'pending', icon: Search },
   { id: 'generate', label: 'Generating comprehensive report', status: 'pending', icon: FileText },
 ];
 
-export function ResearchClient() {
-  const [isLoading, setIsLoading] = useState(false);
+export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnalysisComplete, onAnalysisError }: ResearchClientProps) {
   const [currentStep, setCurrentStep] = useState<string>('');
   const [processingSteps, setProcessingSteps] = useState<ProcessingStep[]>(PROCESSING_STEPS);
-  const [reportData, setReportData] = useState<GenerateLegalSummaryOutput | null>(null);
   const [enhancedQuery, setEnhancedQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [progressValue, setProgressValue] = useState(0);
   const [estimatedTime, setEstimatedTime] = useState<number | null>(null);
   const [startTime, setStartTime] = useState<number | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
   
   const [chatHistory, setChatHistory] = useState<ChatMessageType[]>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
 
   const { toast } = useToast();
 
-  const form = useForm<FormData>({
-    resolver: zodResolver(FormSchema),
-    defaultValues: { query: '' },
-  });
-
   const resetStates = useCallback(() => {
-    setReportData(null);
     setError(null);
     setEnhancedQuery('');
     setCurrentStep('');
@@ -96,6 +72,63 @@ export function ResearchClient() {
     setProcessingSteps(PROCESSING_STEPS.map(step => ({ ...step, status: 'pending' })));
     setChatHistory([]);
   }, []);
+  
+  const startResearch = useCallback(async (query: string) => {
+    onAnalysisStart();
+    resetStates();
+
+    try {
+      setCurrentStep('enhance');
+      updateStepStatus('enhance', 'active');
+      setProgressValue(15);
+
+      const enhanced = await enhanceQueryClarity({ legalQuery: query });
+      
+      setEnhancedQuery(enhanced.rephrasedQuery);
+      updateStepStatus('enhance', 'completed');
+      setProgressValue(30);
+      
+      setCurrentStep('search');
+      updateStepStatus('search', 'active');
+      setProgressValue(60);
+
+      // Simulate search time
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      updateStepStatus('search', 'completed');
+      setCurrentStep('generate');
+      updateStepStatus('generate', 'active');
+      setProgressValue(80);
+
+      const result = await generateLegalSummary({ legalQuery: enhanced.rephrasedQuery });
+
+      updateStepStatus('generate', 'completed');
+      setProgressValue(100);
+      setCurrentStep('completed');
+
+      toast({
+        title: "Research completed successfully!",
+        description: "Your comprehensive legal report is ready.",
+      });
+      onAnalysisComplete(result);
+
+    } catch (error: any) {
+      console.error('Research error:', error);
+      const errorMessage = error?.message || 'An unexpected error occurred during research.';
+      setError(errorMessage);
+      const currentActiveStep = processingSteps.find(s => s.status === 'active');
+      if (currentActiveStep) {
+        updateStepStatus(currentActiveStep.id, 'error');
+      }
+      toast({
+        variant: "destructive",
+        title: "Research failed",
+        description: errorMessage,
+      });
+      onAnalysisError();
+    }
+  }, [onAnalysisStart, onAnalysisComplete, onAnalysisError, resetStates]);
+
 
   const updateStepStatus = useCallback((stepId: string, status: ProcessingStep['status']) => {
     setProcessingSteps(prev => prev.map(step => 
@@ -115,116 +148,26 @@ export function ResearchClient() {
           const remainingSteps = totalSteps - completedSteps;
           setEstimatedTime(Math.ceil(avgTimePerStep * remainingSteps));
         } else {
-          setEstimatedTime(45); // Initial estimate
+          setEstimatedTime(30); // Initial estimate
         }
       }, 1000);
 
       return () => clearInterval(interval);
     }
   }, [isLoading, startTime, processingSteps]);
-
-  const onSubmit: SubmitHandler<FormData> = async (data) => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
+  
+   useEffect(() => {
+    // This effect is triggered when the parent signals a new analysis has started for 'research' mode
+    if (isLoading && reportData === null) {
+      // The `reportData` here would be the initial form submission data.
+      // We need to check if it has a query property.
+      const query = (reportData as any)?.query;
+      if (typeof query === 'string') {
+        startResearch(query);
+      }
     }
+  }, [isLoading, reportData, startResearch]);
 
-    abortControllerRef.current = new AbortController();
-    const signal = abortControllerRef.current.signal;
-
-    setIsLoading(true);
-    resetStates();
-
-    try {
-      setCurrentStep('enhance');
-      updateStepStatus('enhance', 'active');
-      setProgressValue(10);
-
-      const enhanced = await enhanceQueryClarity({ 
-        legalQuery: data.query.trim() 
-      });
-      
-      if (signal.aborted) return;
-
-      setEnhancedQuery(enhanced.rephrasedQuery);
-      updateStepStatus('enhance', 'completed');
-      setProgressValue(25);
-      
-      setCurrentStep('think');
-      updateStepStatus('think', 'active');
-      setProgressValue(40);
-
-      // Simulate the agent "thinking" and deciding to use a tool
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      if (!signal.aborted) {
-        updateStepStatus('think', 'completed');
-        setCurrentStep('search');
-        updateStepStatus('search', 'active');
-        setProgressValue(65);
-      }
-      
-       await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      if (!signal.aborted) {
-        updateStepStatus('search', 'completed');
-        updateStepStatus('generate', 'active');
-        setCurrentStep('generate');
-        setProgressValue(80);
-      }
-
-
-      const result = await generateLegalSummary({ 
-        legalQuery: enhanced.rephrasedQuery 
-      });
-
-      if (signal.aborted) return;
-
-      updateStepStatus('generate', 'completed');
-      setProgressValue(100);
-      setReportData(result);
-      setCurrentStep('completed');
-
-      toast({
-        title: "Research completed successfully!",
-        description: "Your comprehensive legal report is ready.",
-      });
-
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        return;
-      }
-
-      console.error('Research error:', error);
-      
-      const errorMessage = error?.message || 'An unexpected error occurred during research.';
-      setError(errorMessage);
-      
-      const currentActiveStep = processingSteps.find(s => s.status === 'active');
-      if (currentActiveStep) {
-        updateStepStatus(currentActiveStep.id, 'error');
-      }
-
-      toast({
-        variant: "destructive",
-        title: "Research failed",
-        description: errorMessage,
-      });
-    } finally {
-      setIsLoading(false);
-      abortControllerRef.current = null;
-    }
-  };
-
-  const handleCancel = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      setIsLoading(false);
-      toast({
-        title: "Research cancelled",
-        description: "The research process has been stopped.",
-      });
-    }
-  };
 
   const handleSendMessage = async (message: string) => {
     if (!reportData) return;
@@ -250,7 +193,6 @@ export function ResearchClient() {
         title: "Chat Error",
         description: "Could not get a response from the AI. Please try again.",
       });
-      // remove the user message on error to allow retry
       setChatHistory(prev => prev.slice(0, -1));
     } finally {
       setIsChatLoading(false);
@@ -258,28 +200,11 @@ export function ResearchClient() {
   };
   
   const handleAddToReport = (content: string) => {
-    setReportData(prevReportData => {
-      if (!prevReportData) return { summary: content, charts: [] };
-      
-      const newSectionTitle = "\\n\\n**Follow-up Clarifications:**\\n\\n";
-      const newContent = `*   ${content.replace(/\\n/g, '\\n    ')}`;
-
-      if (prevReportData.summary.includes(newSectionTitle)) {
-        return {
-           ...prevReportData,
-           summary: prevReportData.summary + `\\n${newContent}`
-        };
-      } else {
-         return {
-           ...prevReportData,
-           summary: prevReportData.summary + newSectionTitle + newContent
-         };
-      }
-    });
-
+    // This function needs to be passed up to the page if we want to modify the reportData
+    // For now, it will just toast.
     toast({
-      title: "Added to Report",
-      description: "The AI's response has been appended to the report.",
+      title: "Added to Report (WIP)",
+      description: "This feature is being connected.",
     });
   };
 
@@ -415,7 +340,7 @@ export function ResearchClient() {
             </motion.div>
           )}
 
-          {reportData && (
+          {reportData && !isLoading && (
             <motion.div
               key="report"
               initial={{ opacity: 0, y: 20 }}
@@ -423,7 +348,7 @@ export function ResearchClient() {
             >
               <ReportDisplay 
                 reportData={reportData} 
-                query={enhancedQuery || form.getValues('query')} 
+                query={enhancedQuery || (reportData as any)?.query || ''} 
               />
             </motion.div>
           )}

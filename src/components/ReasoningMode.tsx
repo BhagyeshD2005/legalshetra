@@ -2,25 +2,19 @@
 'use client';
 
 import { useState } from 'react';
-import { useForm, type SubmitHandler } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useToast } from "@/hooks/use-toast";
-import { BrainCircuit, RefreshCw, Sparkles, Wand2, FileSearch, FileText, Dot } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BrainCircuit, Dot } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { reasonAboutScenario } from '@/ai/flows/reason-about-scenario';
-import { Separator } from './ui/separator';
+import { Skeleton } from './ui/skeleton';
 
-const FormSchema = z.object({
-  scenario: z.string().min(50, { message: 'Please provide a scenario of at least 50 characters.' }),
-  question: z.string().min(10, { message: 'Please provide a question of at least 10 characters.' }),
-});
+export type ReasoningResult = {
+  analysis: string;
+}
 
-type FormData = z.infer<typeof FormSchema>;
+interface ReasoningModeProps {
+    isLoading: boolean;
+    result: ReasoningResult | null;
+}
 
 interface AnalysisSection {
     title: string;
@@ -45,55 +39,47 @@ const parseAnalysis = (analysis: string): AnalysisSection[] => {
         }
     });
 
+    // Fallback for when the splitting doesn't work
+    if (sections.length === 0 && analysis.trim()) {
+      return [{ title: "Logical Analysis", points: analysis.trim().split('\n').map(p => p.trim().replace(/^\*\s*/, '')) }]
+    }
+
     return sections;
 }
 
-export function ReasoningMode() {
-  const [isLoading, setIsLoading] = useState(false);
-  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
-  const { toast } = useToast();
-
-  const form = useForm<FormData>({
-    resolver: zodResolver(FormSchema),
-    defaultValues: { scenario: '', question: '' },
-  });
-
-  const onSubmit: SubmitHandler<FormData> = async (data) => {
-    setIsLoading(true);
-    setAnalysisResult(null);
-
-    try {
-        const result = await reasonAboutScenario(data);
-        setAnalysisResult(result.analysis);
-         toast({
-          title: "Analysis Complete",
-          description: "The AI has provided a step-by-step reasoning for the scenario.",
-        });
-    } catch (error) {
-         toast({
-            variant: "destructive",
-            title: "Analysis Failed",
-            description: "An error occurred while analyzing the scenario.",
-        });
-    }
-
-    setIsLoading(false);
-  };
+export function ReasoningMode({ isLoading, result }: ReasoningModeProps) {
   
-  const parsedAnalysis = analysisResult ? parseAnalysis(analysisResult) : [];
+  if (isLoading) {
+    return (
+       <Card>
+          <CardHeader>
+              <Skeleton className="h-8 w-3/4" />
+          </CardHeader>
+          <CardContent className="space-y-4">
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+              <br/>
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-4/6" />
+          </CardContent>
+      </Card>
+    )
+  }
+
+  const parsedAnalysis = result?.analysis ? parseAnalysis(result.analysis) : [];
 
   return (
     <div className="space-y-4">
         <AnimatePresence>
-          {analysisResult && (
+          {result && parsedAnalysis.length > 0 ? (
             <motion.div
               key="result"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               className="space-y-4"
             >
-              {parsedAnalysis.length > 0 ? (
-                parsedAnalysis.map((section, index) => (
+              {parsedAnalysis.map((section, index) => (
                     <motion.div
                         key={index}
                         initial={{ opacity: 0, y: 20 }}
@@ -114,21 +100,9 @@ export function ReasoningMode() {
                             </CardContent>
                         </Card>
                     </motion.div>
-                ))
-              ) : (
-                <Card>
-                    <CardHeader>
-                        <CardTitle className="font-headline">Logical Analysis</CardTitle>
-                    </CardHeader>
-                    <CardContent className="pt-6">
-                        <p className="whitespace-pre-wrap">{analysisResult}</p>
-                    </CardContent>
-                </Card>
-              )}
+                ))}
             </motion.div>
-          )}
-
-          {!analysisResult && !isLoading && (
+          ) : (
             <motion.div
               key="initial"
               initial={{ opacity: 0, scale: 0.98 }}

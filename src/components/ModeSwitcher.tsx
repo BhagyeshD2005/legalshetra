@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { Mode } from '@/app/research/page';
+import type { Mode, AnalysisResult } from '@/app/research/page';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from './ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
@@ -18,10 +18,14 @@ import { generateLegalSummary } from '@/ai/flows/generate-legal-summary';
 import { reasonAboutScenario } from '@/ai/flows/reason-about-scenario';
 import { Input } from './ui/input';
 import { cn } from '@/lib/utils';
+import { enhanceQueryClarity } from '@/ai/flows/enhance-query-clarity';
 
 interface ModeSwitcherProps {
   selectedMode: Mode;
   onModeChange: (mode: Mode) => void;
+  onAnalysisStart: () => void;
+  onAnalysisComplete: (result: AnalysisResult) => void;
+  onAnalysisError: () => void;
 }
 
 const researchFormSchema = z.object({
@@ -44,11 +48,6 @@ const reasoningFormSchema = z.object({
   question: z.string().min(10, { message: 'Please provide a question of at least 10 characters.' }),
 });
 
-const formSchemas = {
-  research: researchFormSchema,
-  analyzer: analyzerFormSchema,
-  reasoning: reasoningFormSchema,
-};
 
 const modes = [
   { value: 'research' as Mode, label: 'AI Legal Research', icon: FileSearch },
@@ -56,8 +55,14 @@ const modes = [
   { value: 'reasoning' as Mode, label: 'Reasoning Mode', icon: BrainCircuit },
 ];
 
-export function ModeSwitcher({ selectedMode, onModeChange }: ModeSwitcherProps) {
-  const [isLoading, setIsLoading] = useState(false);
+export function ModeSwitcher({ 
+    selectedMode, 
+    onModeChange, 
+    onAnalysisStart,
+    onAnalysisComplete,
+    onAnalysisError
+}: ModeSwitcherProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -77,28 +82,60 @@ export function ModeSwitcher({ selectedMode, onModeChange }: ModeSwitcherProps) 
   });
   
   const onResearchSubmit: SubmitHandler<z.infer<typeof researchFormSchema>> = async (data) => {
-    setIsLoading(true);
-    // This will be implemented fully later to show results on the right
-    await generateLegalSummary({ legalQuery: data.query });
-    toast({ title: "Research Started (WIP)" });
-    setIsLoading(false);
+    setIsSubmitting(true);
+    onAnalysisStart();
+    try {
+      // The research client will handle its own multi-step flow
+      onAnalysisComplete(data);
+    } catch(e) {
+      console.error(e);
+      toast({ variant: "destructive", title: "An error occurred."});
+      onAnalysisError();
+    }
+    setIsSubmitting(false);
   };
   
   const onAnalyzerSubmit: SubmitHandler<z.infer<typeof analyzerFormSchema>> = async (data) => {
-    setIsLoading(true);
-    // This will be implemented fully later to show results on the right
-    console.log("Analyzer data:", data);
-    await new Promise(res => setTimeout(res, 1000));
-    toast({ title: "Analysis Complete (WIP)" });
-    setIsLoading(false);
+    setIsSubmitting(true);
+    onAnalysisStart();
+    try {
+        // Placeholder for AI call
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        toast({
+          title: "Analysis Complete (Simulated)",
+          description: "This is a placeholder for the real AI analysis.",
+        });
+
+        const result = { summary: "This is a simulated analysis result for the document. The real AI-powered document analysis feature is coming soon!" };
+        onAnalysisComplete(result);
+
+    } catch (error) {
+        toast({ variant: 'destructive', title: 'Analysis Failed' });
+        onAnalysisError();
+    }
+    setIsSubmitting(false);
   };
   
   const onReasoningSubmit: SubmitHandler<z.infer<typeof reasoningFormSchema>> = async (data) => {
-    setIsLoading(true);
-    // This will be implemented fully later to show results on the right
-    await reasonAboutScenario(data);
-    toast({ title: "Reasoning Complete (WIP)" });
-    setIsLoading(false);
+    setIsSubmitting(true);
+    onAnalysisStart();
+    try {
+        const result = await reasonAboutScenario(data);
+        onAnalysisComplete(result);
+        toast({
+          title: "Analysis Complete",
+          description: "The AI has provided a step-by-step reasoning for the scenario.",
+        });
+    } catch (error) {
+         toast({
+            variant: "destructive",
+            title: "Analysis Failed",
+            description: "An error occurred while analyzing the scenario.",
+        });
+        onAnalysisError();
+    }
+    setIsSubmitting(false);
   };
 
   const ActiveIcon = modes.find(m => m.value === selectedMode)?.icon;
@@ -123,7 +160,7 @@ export function ModeSwitcher({ selectedMode, onModeChange }: ModeSwitcherProps) 
                           placeholder="e.g., 'Case laws related to anticipatory bail under Section 438 CrPC' or 'Recent judgments on trademark infringement in e-commerce'"
                           className="min-h-[150px] resize-none focus-visible:ring-2 focus-visible:ring-primary"
                           {...field}
-                          disabled={isLoading}
+                          disabled={isSubmitting}
                           maxLength={1000}
                         />
                       </FormControl>
@@ -136,9 +173,9 @@ export function ModeSwitcher({ selectedMode, onModeChange }: ModeSwitcherProps) 
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full" disabled={isLoading} size="lg">
-                    {isLoading ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Researching...</>
-                               : <><Search className="mr-2 h-4 w-4" /> Generate Report</>}
+                <Button type="submit" className="w-full" disabled={isSubmitting} size="lg">
+                    {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Researching...</>
+                               : <><Search className="mr-2 h-4 w-4" /> Start Research</>}
                 </Button>
               </form>
             </Form>
@@ -166,7 +203,7 @@ export function ModeSwitcher({ selectedMode, onModeChange }: ModeSwitcherProps) 
                                   analyzerForm.setValue('file', file);
                                 }}
                                 accept=".pdf,.doc,.docx,.txt"
-                                disabled={isLoading}
+                                disabled={isSubmitting}
                             />
                             <div 
                                 className={cn(
@@ -226,15 +263,15 @@ export function ModeSwitcher({ selectedMode, onModeChange }: ModeSwitcherProps) 
                           placeholder="Paste the full text of a legal document here..."
                           className="min-h-[150px] resize-y"
                           {...field}
-                          disabled={isLoading}
+                          disabled={isSubmitting}
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
                              : <><Sparkles className="mr-2 h-4 w-4" /> Analyze Document</>}
                 </Button>
               </form>
@@ -255,7 +292,7 @@ export function ModeSwitcher({ selectedMode, onModeChange }: ModeSwitcherProps) 
                           placeholder="Describe the factual matrix of the case..."
                           className="min-h-[200px] resize-y"
                           {...field}
-                          disabled={isLoading}
+                          disabled={isSubmitting}
                         />
                       </FormControl>
                       <FormMessage />
@@ -273,15 +310,15 @@ export function ModeSwitcher({ selectedMode, onModeChange }: ModeSwitcherProps) 
                           placeholder="e.g., 'Is the non-compete clause enforceable under the Indian Contract Act?'"
                           className="min-h-[80px] resize-y"
                           {...field}
-                          disabled={isLoading}
+                          disabled={isSubmitting}
                         />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
                              : <><Wand2 className="mr-2 h-4 w-4" /> Analyze Scenario</>}
                 </Button>
               </form>
