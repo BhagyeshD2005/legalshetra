@@ -160,7 +160,11 @@ export function ModeSwitcher({ selectedMode, onModeChange }: ModeSwitcherProps) 
                                 type="file"
                                 className="hidden"
                                 ref={fileInputRef}
-                                onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)}
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0] ?? null;
+                                  field.onChange(file);
+                                  analyzerForm.setValue('file', file);
+                                }}
                                 accept=".pdf,.doc,.docx,.txt"
                                 disabled={isLoading}
                             />
@@ -354,6 +358,3 @@ export function ModeSwitcher({ selectedMode, onModeChange }: ModeSwitcherProps) 
     </Card>
   );
 }
-
-    
-    
