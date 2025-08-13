@@ -141,30 +141,30 @@ export function ModeSwitcher({
     resolver: zodResolver(draftingFormSchema),
     defaultValues: {
       documentType: 'contract',
-      prompt: 'Draft a simple one-page rental agreement for a residential property. The landlord is "John Doe" and the tenant is "Jane Smith". The property is located at "123 Main St, Anytown". The rent is $1000 per month, due on the 1st of each month. The lease term is for 12 months, starting on the first of next month.',
+      prompt: '',
       tone: 'neutral',
-      jurisdiction: 'delhi',
+      jurisdiction: 'generic',
     },
   });
 
   const predictionForm = useForm<z.infer<typeof predictionFormSchema>>({
     resolver: zodResolver(predictionFormSchema),
     defaultValues: {
-      caseType: 'corporate',
-      jurisdiction: 'delhi_hc',
-      judgeName: 'justice_a_k_sarma',
-      caseSummary: 'The case involves a breach of a software development contract. The client alleges that the delivered software did not meet the agreed-upon specifications and is withholding final payment. Our client, the development firm, argues that the specifications were met and the client requested numerous out-of-scope changes.',
+      caseType: 'civil',
+      jurisdiction: 'generic',
+      judgeName: 'other',
+      caseSummary: '',
     },
   });
 
   const negotiationForm = useForm<z.infer<typeof negotiationFormSchema>>({
     resolver: zodResolver(negotiationFormSchema),
     defaultValues: {
-      currentClause: 'The licensor shall be liable for any and all damages arising from the use of the software, without limitation.',
-      myGoal: 'Limit our liability to the total contract value. We cannot accept unlimited liability.',
-      opponentPosition: 'They are demanding full and unlimited liability for any potential damages.',
-      opponentStyle: 'aggressive',
-      context: 'We are in the final stages of a large software licensing deal. This liability clause is the last major sticking point.',
+      currentClause: '',
+      myGoal: '',
+      opponentPosition: '',
+      opponentStyle: 'default',
+      context: '',
     },
   });
 
