@@ -27,7 +27,7 @@ import {
     TrendingUp,
     Handshake
 } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { reasonAboutScenario } from '@/ai/flows/reason-about-scenario';
 import { analyzeDocument } from '@/ai/flows/analyze-document';
@@ -170,7 +170,6 @@ export function ModeSwitcher({
 
   const onResearchSubmit: SubmitHandler<z.infer<typeof researchFormSchema>> = async (data) => {
     onAnalysisStart(data);
-    researchForm.reset();
   };
   
   const onAnalyzerSubmit: SubmitHandler<z.infer<typeof analyzerFormSchema>> = async (data) => {
@@ -854,3 +853,5 @@ export function ModeSwitcher({
     </Card>
   );
 }
+
+    
