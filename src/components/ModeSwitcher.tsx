@@ -23,13 +23,15 @@ import {
     Upload, 
     File as FileIcon, 
     X,
-    DraftingCompass
+    DraftingCompass,
+    TrendingUp
 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { reasonAboutScenario } from '@/ai/flows/reason-about-scenario';
 import { analyzeDocument } from '@/ai/flows/analyze-document';
 import { draftLegalDocument } from '@/ai/flows/draft-legal-document';
+import { predictCaseOutcome } from '@/ai/flows/predict-case-outcome';
 import { Input } from './ui/input';
 import { cn } from '@/lib/utils';
 import { enhanceQueryClarity } from '@/ai/flows/enhance-query-clarity';
@@ -71,12 +73,20 @@ const draftingFormSchema = z.object({
     jurisdiction: z.enum(['delhi', 'mumbai', 'generic']),
 });
 
+const predictionFormSchema = z.object({
+    caseType: z.enum(['civil', 'criminal', 'corporate', 'family']),
+    jurisdiction: z.enum(['delhi_hc', 'mumbai_hc', 'sci', 'generic']),
+    judgeName: z.enum(['justice_a_k_sarma', 'justice_r_m_lodha', 'other']),
+    caseSummary: z.string().min(50, { message: 'Please provide a case summary of at least 50 characters.' }),
+});
+
 
 const modes = [
   { value: 'research' as Mode, label: 'AI Legal Research', icon: FileSearch },
   { value: 'analyzer' as Mode, label: 'Document Review', icon: FileText },
   { value: 'reasoning' as Mode, label: 'Reasoning Mode', icon: BrainCircuit },
   { value: 'drafting' as Mode, label: 'Drafting Mode', icon: DraftingCompass },
+  { value: 'prediction' as Mode, label: 'Predictive Analytics', icon: TrendingUp },
 ];
 
 const readFileAsDataUri = (file: File): Promise<string> => {
@@ -123,6 +133,16 @@ export function ModeSwitcher({
       prompt: 'Draft a simple one-page rental agreement for a residential property. The landlord is "John Doe" and the tenant is "Jane Smith". The property is located at "123 Main St, Anytown". The rent is $1000 per month, due on the 1st of each month. The lease term is for 12 months, starting on the first of next month.',
       tone: 'neutral',
       jurisdiction: 'delhi',
+    },
+  });
+
+  const predictionForm = useForm<z.infer<typeof predictionFormSchema>>({
+    resolver: zodResolver(predictionFormSchema),
+    defaultValues: {
+      caseType: 'corporate',
+      jurisdiction: 'delhi_hc',
+      judgeName: 'justice_a_k_sarma',
+      caseSummary: 'The case involves a breach of a software development contract. The client alleges that the delivered software did not meet the agreed-upon specifications and is withholding final payment. Our client, the development firm, argues that the specifications were met and the client requested numerous out-of-scope changes.',
     },
   });
 
@@ -192,6 +212,28 @@ export function ModeSwitcher({
             variant: "destructive",
             title: "Drafting Failed",
             description: "An error occurred while generating the document.",
+        });
+        onAnalysisError();
+    }
+    setIsSubmitting(false);
+  };
+  
+  const onPredictionSubmit: SubmitHandler<z.infer<typeof predictionFormSchema>> = async (data) => {
+    setIsSubmitting(true);
+    onAnalysisStart();
+    try {
+        const result = await predictCaseOutcome(data);
+        onAnalysisComplete(result);
+        predictionForm.reset();
+        toast({
+          title: "Prediction Complete",
+          description: "The AI has generated a case outcome analysis.",
+        });
+    } catch (error) {
+         toast({
+            variant: "destructive",
+            title: "Prediction Failed",
+            description: "An error occurred while generating the prediction.",
         });
         onAnalysisError();
     }
@@ -488,6 +530,104 @@ export function ModeSwitcher({
                   </form>
                 </Form>
             );
+        case 'prediction':
+            return (
+                 <Form {...predictionForm}>
+                  <form onSubmit={predictionForm.handleSubmit(onPredictionSubmit)} className="space-y-6">
+                     <FormField
+                      control={predictionForm.control}
+                      name="caseType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Case Type</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a case type" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="civil">Civil</SelectItem>
+                              <SelectItem value="criminal">Criminal</SelectItem>
+                              <SelectItem value="corporate">Corporate</SelectItem>
+                              <SelectItem value="family">Family</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={predictionForm.control}
+                      name="jurisdiction"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Jurisdiction / Court</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a jurisdiction" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="delhi_hc">Delhi High Court</SelectItem>
+                              <SelectItem value="mumbai_hc">Mumbai High Court</SelectItem>
+                              <SelectItem value="sci">Supreme Court of India</SelectItem>
+                              <SelectItem value="generic">Generic / Other</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={predictionForm.control}
+                      name="judgeName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Presiding Judge (if known)</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a judge" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="justice_a_k_sarma">Justice A. K. Sarma</SelectItem>
+                              <SelectItem value="justice_r_m_lodha">Justice R. M. Lodha</SelectItem>
+                              <SelectItem value="other">Other / Unknown</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={predictionForm.control}
+                      name="caseSummary"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Case Summary</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Provide a detailed summary of the facts, arguments, and context of the case..."
+                              className="min-h-[150px] resize-y"
+                              {...field}
+                              disabled={isSubmitting}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
+                                 : <><Sparkles className="mr-2 h-4 w-4" /> Generate Prediction</>}
+                    </Button>
+                  </form>
+                </Form>
+            );
       default:
         return null;
     }
@@ -551,6 +691,7 @@ export function ModeSwitcher({
                 selectedMode === 'research' ? 'Enter your legal query to start comprehensive AI-powered research.' :
                 selectedMode === 'analyzer' ? 'Upload a document or paste text for an AI-powered review of anomalies and risks.' :
                 selectedMode === 'drafting' ? 'Create contracts, petitions, and more with AI assistance.' :
+                selectedMode === 'prediction' ? 'Get probability-based case strategy insights using historical data and trends.' :
                 'Provide a legal scenario and a question for the AI to reason about.'
             }
         </CardDescription>
