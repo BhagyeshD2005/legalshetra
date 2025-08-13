@@ -350,3 +350,5 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
     </div>
   );
 }
+
+    
