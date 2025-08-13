@@ -2,9 +2,9 @@
 'use server';
 
 /**
- * @fileOverview This file contains a Genkit flow that analyzes a legal document from text or a file.
+ * @fileOverview This file contains a Genkit flow that analyzes a legal document for anomalies, risks, and key dates.
  *
- * - analyzeDocument - A function that summarizes the provided legal document.
+ * - analyzeDocument - A function that reviews the provided legal document.
  * - AnalyzeDocumentInput - The input type for the analyzeDocument function.
  * - AnalyzeDocumentOutput - The return type for the analyzeDocument function.
  */
@@ -18,8 +18,23 @@ const AnalyzeDocumentInputSchema = z.object({
 });
 export type AnalyzeDocumentInput = z.infer<typeof AnalyzeDocumentInputSchema>;
 
+
+const AnomalySchema = z.object({
+    clause: z.string().describe('The specific clause or section where the anomaly is found. If a clause is missing, describe what is missing.'),
+    description: z.string().describe('A plain-English explanation of the anomaly, risk, or unusual term.'),
+    severity: z.enum(['high', 'medium', 'low']).describe('The potential risk level associated with the anomaly.'),
+    recommendation: z.string().describe('A suggested action or edit to mitigate the risk.'),
+});
+
+const KeyDateSchema = z.object({
+    date: z.string().describe('The date identified in the document (e.g., "2024-12-31").'),
+    description: z.string().describe('What this date signifies (e.g., "Contract Expiration Date", "Notice Period Start").'),
+});
+
 const AnalyzeDocumentOutputSchema = z.object({
-  summary: z.string().describe('A concise summary of the key points, arguments, and conclusions from the legal document.'),
+  summary: z.string().describe('A concise, high-level summary of the document\'s purpose and key terms.'),
+  anomalies: z.array(AnomalySchema).describe('A list of highlighted anomalies, missing clauses, or unusual terms.'),
+  keyDates: z.array(KeyDateSchema).describe('A list of important dates and deadlines identified in the document.'),
 });
 export type AnalyzeDocumentOutput = z.infer<typeof AnalyzeDocumentOutputSchema>;
 
@@ -33,14 +48,20 @@ const prompt = ai.definePrompt({
   name: 'analyzeDocumentPrompt',
   input: {schema: AnalyzeDocumentInputSchema},
   output: {schema: AnalyzeDocumentOutputSchema},
-  prompt: `You are an expert legal AI assistant. Your task is to analyze the provided legal document and generate a clear, concise summary.
+  prompt: `You are an expert legal AI assistant with a specialization in contract and document review for the Indian legal system. Your task is to perform a deep analysis of the provided legal document.
 
-Focus on the following:
-- Key legal arguments or principles discussed.
-- The main facts of the case or issue.
-- The final judgment, conclusion, or main takeaway.
+**Instructions:**
 
-Keep the summary objective and based *only* on the content provided.
+1.  **Summarize the Document**: Provide a brief, high-level summary of the document's overall purpose.
+
+2.  **Identify Anomalies & Risks**:
+    *   Scrutinize the document for any unusual terms, potential loopholes, or missing standard clauses that would be expected for a document of this type.
+    *   For each anomaly found, identify the relevant clause, describe the issue in simple terms, assess its severity ('high', 'medium', or 'low'), and provide a concrete recommendation for improvement.
+    *   This is the most critical part of your analysis. Be thorough. Examples include ambiguous liability clauses, lack of a clear jurisdiction clause, or an unusually short notice period.
+
+3.  **Extract Key Dates**:
+    *   Identify all critical dates and deadlines mentioned in the document.
+    *   For each date, specify what it represents (e.g., Effective Date, Expiration Date, Deadline for Notice).
 
 **Document to Analyze:**
 ---
@@ -52,7 +73,7 @@ Keep the summary objective and based *only* on the content provided.
 {{/if}}
 ---
 
-Provide your summary below.`,
+Provide your structured analysis below.`,
 });
 
 const analyzeDocumentFlow = ai.defineFlow(

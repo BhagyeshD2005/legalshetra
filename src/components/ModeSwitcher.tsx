@@ -74,7 +74,7 @@ const draftingFormSchema = z.object({
 
 const modes = [
   { value: 'research' as Mode, label: 'AI Legal Research', icon: FileSearch },
-  { value: 'analyzer' as Mode, label: 'Document Analyzer', icon: FileText },
+  { value: 'analyzer' as Mode, label: 'Document Review', icon: FileText },
   { value: 'reasoning' as Mode, label: 'Reasoning Mode', icon: BrainCircuit },
   { value: 'drafting' as Mode, label: 'Drafting Mode', icon: DraftingCompass },
 ];
@@ -337,8 +337,8 @@ export function ModeSwitcher({
                   )}
                 />
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
-                             : <><Sparkles className="mr-2 h-4 w-4" /> Analyze Document</>}
+                  {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Reviewing...</> 
+                             : <><Sparkles className="mr-2 h-4 w-4" /> Review Document</>}
                 </Button>
               </form>
             </Form>
@@ -549,7 +549,7 @@ export function ModeSwitcher({
         <CardDescription>
             {
                 selectedMode === 'research' ? 'Enter your legal query to start comprehensive AI-powered research.' :
-                selectedMode === 'analyzer' ? 'Upload a document or paste text for an AI-powered analysis.' :
+                selectedMode === 'analyzer' ? 'Upload a document or paste text for an AI-powered review of anomalies and risks.' :
                 selectedMode === 'drafting' ? 'Create contracts, petitions, and more with AI assistance.' :
                 'Provide a legal scenario and a question for the AI to reason about.'
             }

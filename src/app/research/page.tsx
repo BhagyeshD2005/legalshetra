@@ -4,7 +4,7 @@
 import { useState } from 'react';
 import { MainLayout } from '@/components/MainLayout';
 import { ResearchClient } from '@/components/ResearchClient';
-import { DocumentAnalyzer, type DocumentAnalysisResult } from '@/components/DocumentAnalyzer';
+import { DocumentReviewMode, type DocumentReviewResult } from '@/components/DocumentReviewMode';
 import { ReasoningMode, type ReasoningResult } from '@/components/ReasoningMode';
 import { DraftingMode, type DraftResult } from '@/components/DraftingMode';
 import { ModeSwitcher } from '@/components/ModeSwitcher';
@@ -13,7 +13,7 @@ import { type GenerateLegalSummaryOutput } from '@/ai/flows/generate-legal-summa
 
 export type Mode = 'research' | 'analyzer' | 'reasoning' | 'drafting';
 
-export type AnalysisResult = GenerateLegalSummaryOutput | DocumentAnalysisResult | ReasoningResult | DraftResult | null;
+export type AnalysisResult = GenerateLegalSummaryOutput | DocumentReviewResult | ReasoningResult | DraftResult | null;
 
 export default function ResearchPage() {
   const [selectedMode, setSelectedMode] = useState<Mode>('research');
@@ -52,7 +52,7 @@ export default function ResearchPage() {
                   initialQuery={initialQuery}
                 />;
       case 'analyzer':
-        return <DocumentAnalyzer isLoading={isLoading} result={analysisResult as DocumentAnalysisResult | null} />;
+        return <DocumentReviewMode isLoading={isLoading} result={analysisResult as DocumentReviewResult | null} />;
       case 'reasoning':
         return <ReasoningMode isLoading={isLoading} result={analysisResult as ReasoningResult | null} />;
       case 'drafting':
