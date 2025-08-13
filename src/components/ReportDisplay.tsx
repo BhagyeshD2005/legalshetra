@@ -160,19 +160,21 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
                 <FileText className="h-5 w-5 text-primary" />
                 <CardTitle className="font-headline text-2xl">Legal Research Report</CardTitle>
               </div>
-              <CardDescription className="flex items-center gap-4 flex-wrap">
-                <span className="flex items-center gap-1">
-                  <Calendar className="h-3 w-3" />
-                  {new Date().toLocaleDateString()}
-                </span>
-                <span className="flex items-center gap-1">
-                  <Clock className="h-3 w-3" />
-                  ~{readingTime} min read
-                </span>
-                <Badge variant="secondary" className="flex items-center gap-1">
-                  <CheckCircle2 className="h-3 w-3" />
-                  AI Generated
-                </Badge>
+              <CardDescription asChild>
+                  <div className="flex items-center gap-4 flex-wrap">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" />
+                      {new Date().toLocaleDateString()}
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      ~{readingTime} min read
+                    </span>
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <CheckCircle2 className="h-3 w-3" />
+                      AI Generated
+                    </Badge>
+                  </div>
               </CardDescription>
             </div>
             
@@ -350,5 +352,7 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
     </div>
   );
 }
+
+    
 
     
