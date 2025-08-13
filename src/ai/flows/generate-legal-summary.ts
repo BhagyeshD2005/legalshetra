@@ -219,5 +219,3 @@ const generateLegalSummaryFlow = ai.defineFlow(
     return output;
   }
 );
-
-    
