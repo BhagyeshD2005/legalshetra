@@ -70,3 +70,30 @@ export const PredictCaseOutcomeOutputSchema = z.object({
 });
 export type PredictCaseOutcomeOutput = z.infer<typeof PredictCaseOutcomeOutputSchema>;
 
+
+const AlternativeClauseSchema = z.object({
+    content: z.string().describe('The full text of the suggested alternative clause.'),
+    explanation: z.string().describe('An explanation of how this clause serves the user\'s interest and why it might be acceptable to the opponent.'),
+});
+
+const OpponentAnalysisSchema = z.object({
+    likelyReaction: z.string().describe('An analysis of the opponent\'s likely reaction to the user\'s position.'),
+    acceptanceProbability: z.number().describe('A numerical estimate (0-100) of the opponent accepting a reasonable offer.'),
+});
+
+export const NegotiationSupportInputSchema = z.object({
+    currentClause: z.string().describe('The text of the clause currently under negotiation.'),
+    myGoal: z.string().describe('A clear statement of the user\'s primary objective for this clause.'),
+    opponentPosition: z.string().describe('A summary of the opponent\'s stated position or likely goal.'),
+    opponentStyle: z.enum(['aggressive', 'collaborative', 'compromising', 'avoiding', 'default']).describe('The perceived negotiation style of the opponent.'),
+    context: z.string().describe('Any additional context about the overall negotiation (e.g., deal stage, relationship with opponent).'),
+});
+export type NegotiationSupportInput = z.infer<typeof NegotiationSupportInputSchema>;
+
+
+export const NegotiationSupportOutputSchema = z.object({
+    alternativeClauses: z.array(AlternativeClauseSchema).describe('A list of suggested alternative clauses with explanations.'),
+    opponentAnalysis: OpponentAnalysisSchema.describe('An analysis of the opponent\'s likely reaction and acceptance probability.'),
+    batnaSummary: z.string().describe('A summary of the user\'s Best Alternative to a Negotiated Agreement (BATNA).'),
+});
+export type NegotiationSupportOutput = z.infer<typeof NegotiationSupportOutputSchema>;

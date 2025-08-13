@@ -24,7 +24,8 @@ import {
     File as FileIcon, 
     X,
     DraftingCompass,
-    TrendingUp
+    TrendingUp,
+    Handshake
 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
@@ -32,6 +33,7 @@ import { reasonAboutScenario } from '@/ai/flows/reason-about-scenario';
 import { analyzeDocument } from '@/ai/flows/analyze-document';
 import { draftLegalDocument } from '@/ai/flows/draft-legal-document';
 import { predictCaseOutcome } from '@/ai/flows/predict-case-outcome';
+import { negotiationSupport } from '@/ai/flows/negotiation-support';
 import { Input } from './ui/input';
 import { cn } from '@/lib/utils';
 import { enhanceQueryClarity } from '@/ai/flows/enhance-query-clarity';
@@ -80,6 +82,14 @@ const predictionFormSchema = z.object({
     caseSummary: z.string().min(50, { message: 'Please provide a case summary of at least 50 characters.' }),
 });
 
+const negotiationFormSchema = z.object({
+    currentClause: z.string().min(20, { message: 'Please provide the clause text (at least 20 characters).' }),
+    myGoal: z.string().min(10, { message: 'Please describe your goal (at least 10 characters).' }),
+    opponentPosition: z.string().min(10, { message: 'Please describe the opponent\'s position (at least 10 characters).' }),
+    opponentStyle: z.enum(['aggressive', 'collaborative', 'compromising', 'avoiding', 'default']),
+    context: z.string().min(20, { message: 'Please provide context (at least 20 characters).' }),
+});
+
 
 const modes = [
   { value: 'research' as Mode, label: 'AI Legal Research', icon: FileSearch },
@@ -87,6 +97,7 @@ const modes = [
   { value: 'reasoning' as Mode, label: 'Reasoning Mode', icon: BrainCircuit },
   { value: 'drafting' as Mode, label: 'Drafting Mode', icon: DraftingCompass },
   { value: 'prediction' as Mode, label: 'Predictive Analytics', icon: TrendingUp },
+  { value: 'negotiation' as Mode, label: 'Negotiation Mode', icon: Handshake },
 ];
 
 const readFileAsDataUri = (file: File): Promise<string> => {
@@ -143,6 +154,17 @@ export function ModeSwitcher({
       jurisdiction: 'delhi_hc',
       judgeName: 'justice_a_k_sarma',
       caseSummary: 'The case involves a breach of a software development contract. The client alleges that the delivered software did not meet the agreed-upon specifications and is withholding final payment. Our client, the development firm, argues that the specifications were met and the client requested numerous out-of-scope changes.',
+    },
+  });
+
+  const negotiationForm = useForm<z.infer<typeof negotiationFormSchema>>({
+    resolver: zodResolver(negotiationFormSchema),
+    defaultValues: {
+      currentClause: 'The licensor shall be liable for any and all damages arising from the use of the software, without limitation.',
+      myGoal: 'Limit our liability to the total contract value. We cannot accept unlimited liability.',
+      opponentPosition: 'They are demanding full and unlimited liability for any potential damages.',
+      opponentStyle: 'aggressive',
+      context: 'We are in the final stages of a large software licensing deal. This liability clause is the last major sticking point.',
     },
   });
 
@@ -234,6 +256,29 @@ export function ModeSwitcher({
             variant: "destructive",
             title: "Prediction Failed",
             description: "An error occurred while generating the prediction.",
+        });
+        onAnalysisError();
+    }
+    setIsSubmitting(false);
+  };
+  
+  const onNegotiationSubmit: SubmitHandler<z.infer<typeof negotiationFormSchema>> = async (data) => {
+    setIsSubmitting(true);
+    onAnalysisStart();
+    try {
+        const result = await negotiationSupport(data);
+        onAnalysisComplete(result);
+        // Do not reset form, user may want to tweak it
+        // negotiationForm.reset();
+        toast({
+          title: "Negotiation Support Ready",
+          description: "The AI has generated negotiation strategies and clauses.",
+        });
+    } catch (error) {
+         toast({
+            variant: "destructive",
+            title: "Analysis Failed",
+            description: "An error occurred while generating negotiation support.",
         });
         onAnalysisError();
     }
@@ -628,6 +673,111 @@ export function ModeSwitcher({
                   </form>
                 </Form>
             );
+        case 'negotiation':
+            return (
+                <Form {...negotiationForm}>
+                  <form onSubmit={negotiationForm.handleSubmit(onNegotiationSubmit)} className="space-y-6">
+                    <FormField
+                      control={negotiationForm.control}
+                      name="currentClause"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Clause Under Negotiation</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Paste the full text of the clause being negotiated."
+                              className="min-h-[100px] resize-y font-mono text-xs"
+                              {...field}
+                              disabled={isSubmitting}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={negotiationForm.control}
+                      name="myGoal"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>My Goal</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g., 'Limit our liability to the contract value.'"
+                              {...field}
+                              disabled={isSubmitting}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={negotiationForm.control}
+                      name="opponentPosition"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Opponent's Position</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="e.g., 'They want us to accept unlimited liability.'"
+                              {...field}
+                              disabled={isSubmitting}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={negotiationForm.control}
+                      name="opponentStyle"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Opponent's Negotiation Style</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a style" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="aggressive">Aggressive</SelectItem>
+                              <SelectItem value="collaborative">Collaborative</SelectItem>
+                              <SelectItem value="compromising">Compromising</SelectItem>
+                              <SelectItem value="avoiding">Avoiding</SelectItem>
+                              <SelectItem value="default">Default / Unknown</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={negotiationForm.control}
+                      name="context"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Additional Context</FormLabel>
+                          <FormControl>
+                             <Textarea
+                              placeholder="e.g., 'Final stages of a large software deal. This clause is the last sticking point.'"
+                              className="min-h-[80px] resize-y"
+                              {...field}
+                              disabled={isSubmitting}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
+                                 : <><Sparkles className="mr-2 h-4 w-4" /> Get Negotiation Advice</>}
+                    </Button>
+                  </form>
+                </Form>
+            );
       default:
         return null;
     }
@@ -692,6 +842,7 @@ export function ModeSwitcher({
                 selectedMode === 'analyzer' ? 'Upload a document or paste text for an AI-powered review of anomalies and risks.' :
                 selectedMode === 'drafting' ? 'Create contracts, petitions, and more with AI assistance.' :
                 selectedMode === 'prediction' ? 'Get probability-based case strategy insights using historical data and trends.' :
+                selectedMode === 'negotiation' ? 'Get AI-powered advice for contract and settlement discussions.' :
                 'Provide a legal scenario and a question for the AI to reason about.'
             }
         </CardDescription>

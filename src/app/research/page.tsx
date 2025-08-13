@@ -8,13 +8,14 @@ import { DocumentReviewMode, type DocumentReviewResult } from '@/components/Docu
 import { ReasoningMode, type ReasoningResult } from '@/components/ReasoningMode';
 import { DraftingMode, type DraftResult } from '@/components/DraftingMode';
 import { PredictiveAnalyticsMode, type PredictiveAnalyticsResult } from '@/components/PredictiveAnalyticsMode';
+import { NegotiationMode, type NegotiationResult } from '@/components/NegotiationMode';
 import { ModeSwitcher } from '@/components/ModeSwitcher';
 import { type GenerateLegalSummaryOutput } from '@/ai/flows/generate-legal-summary';
 
 
-export type Mode = 'research' | 'analyzer' | 'reasoning' | 'drafting' | 'prediction';
+export type Mode = 'research' | 'analyzer' | 'reasoning' | 'drafting' | 'prediction' | 'negotiation';
 
-export type AnalysisResult = GenerateLegalSummaryOutput | DocumentReviewResult | ReasoningResult | DraftResult | PredictiveAnalyticsResult | null;
+export type AnalysisResult = GenerateLegalSummaryOutput | DocumentReviewResult | ReasoningResult | DraftResult | PredictiveAnalyticsResult | NegotiationResult | null;
 
 export default function ResearchPage() {
   const [selectedMode, setSelectedMode] = useState<Mode>('research');
@@ -60,6 +61,8 @@ export default function ResearchPage() {
         return <DraftingMode isLoading={isLoading} result={analysisResult as DraftResult | null} />;
       case 'prediction':
         return <PredictiveAnalyticsMode isLoading={isLoading} result={analysisResult as PredictiveAnalyticsResult | null} />;
+      case 'negotiation':
+        return <NegotiationMode isLoading={isLoading} result={analysisResult as NegotiationResult | null} />;
       default:
         return null;
     }
