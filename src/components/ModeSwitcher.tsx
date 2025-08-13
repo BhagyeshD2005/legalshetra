@@ -168,6 +168,16 @@ export function ModeSwitcher({
     },
   });
 
+  // Reset forms when mode changes to prevent state leakage
+  useEffect(() => {
+    researchForm.reset();
+    analyzerForm.reset();
+    reasoningForm.reset();
+    draftingForm.reset();
+    predictionForm.reset();
+    negotiationForm.reset();
+  }, [selectedMode, researchForm, analyzerForm, reasoningForm, draftingForm, predictionForm, negotiationForm]);
+
   const onResearchSubmit: SubmitHandler<z.infer<typeof researchFormSchema>> = async (data) => {
     onAnalysisStart(data);
   };
@@ -290,7 +300,7 @@ export function ModeSwitcher({
       case 'research':
         return (
             <Form {...researchForm}>
-              <form onSubmit={researchForm.handleSubmit(onResearchSubmit)} className="space-y-6">
+              <form onSubmit={researchForm.handleSubmit(onResearchSubmit)} className="space-y-6" key="research-form">
                 <FormField
                   control={researchForm.control}
                   name="query"
@@ -328,7 +338,7 @@ export function ModeSwitcher({
       case 'analyzer':
         return (
             <Form {...analyzerForm}>
-              <form onSubmit={analyzerForm.handleSubmit(onAnalyzerSubmit)} className="space-y-6">
+              <form onSubmit={analyzerForm.handleSubmit(onAnalyzerSubmit)} className="space-y-6" key="analyzer-form">
                 <FormItem>
                     <FormLabel>Upload Document</FormLabel>
                     <FormControl>
@@ -432,7 +442,7 @@ export function ModeSwitcher({
       case 'reasoning':
         return (
             <Form {...reasoningForm}>
-              <form onSubmit={reasoningForm.handleSubmit(onReasoningSubmit)} className="space-y-6">
+              <form onSubmit={reasoningForm.handleSubmit(onReasoningSubmit)} className="space-y-6" key="reasoning-form">
                 <FormField
                   control={reasoningForm.control}
                   name="scenario"
@@ -479,7 +489,7 @@ export function ModeSwitcher({
         case 'drafting':
             return (
                 <Form {...draftingForm}>
-                  <form onSubmit={draftingForm.handleSubmit(onDraftingSubmit)} className="space-y-6">
+                  <form onSubmit={draftingForm.handleSubmit(onDraftingSubmit)} className="space-y-6" key="drafting-form">
                     <FormField
                       control={draftingForm.control}
                       name="documentType"
@@ -577,7 +587,7 @@ export function ModeSwitcher({
         case 'prediction':
             return (
                  <Form {...predictionForm}>
-                  <form onSubmit={predictionForm.handleSubmit(onPredictionSubmit)} className="space-y-6">
+                  <form onSubmit={predictionForm.handleSubmit(onPredictionSubmit)} className="space-y-6" key="prediction-form">
                      <FormField
                       control={predictionForm.control}
                       name="caseType"
@@ -675,7 +685,7 @@ export function ModeSwitcher({
         case 'negotiation':
             return (
                 <Form {...negotiationForm}>
-                  <form onSubmit={negotiationForm.handleSubmit(onNegotiationSubmit)} className="space-y-6">
+                  <form onSubmit={negotiationForm.handleSubmit(onNegotiationSubmit)} className="space-y-6" key="negotiation-form">
                     <FormField
                       control={negotiationForm.control}
                       name="currentClause"
