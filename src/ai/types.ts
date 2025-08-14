@@ -97,3 +97,41 @@ export const NegotiationSupportOutputSchema = z.object({
     batnaSummary: z.string().describe('A summary of the user\'s Best Alternative to a Negotiated Agreement (BATNA).'),
 });
 export type NegotiationSupportOutput = z.infer<typeof NegotiationSupportOutputSchema>;
+
+// Schemas for Cross-Examination Prep Mode
+const InconsistencySchema = z.object({
+    statementText: z.string().describe('The specific part of the witness statement that is inconsistent.'),
+    contradictingEvidence: z.string().describe('The evidence that contradicts the statement.'),
+    explanation: z.string().describe('A brief explanation of the inconsistency.'),
+});
+
+const StrategicQuestionSchema = z.object({
+    question: z.string().describe('The suggested question to ask the witness.'),
+    purpose: z.string().describe('The strategic purpose behind asking this question.'),
+});
+
+const OpposingArgumentSchema = z.object({
+    argument: z.string().describe('The likely argument or objection from the opposing counsel.'),
+    response: z.string().describe('A suggested way to respond to or counter the argument.'),
+});
+
+const RolePlayDialogueSchema = z.object({
+    speaker: z.string().describe('The speaker in the dialogue (e.g., "You", "Witness", "Opposing Counsel").'),
+    line: z.string().describe('The dialogue line.'),
+});
+
+export const CrossExaminationPrepInputSchema = z.object({
+    witnessStatement: z.string().describe("The full text of the witness's statement."),
+    evidenceSummary: z.string().describe('A summary of the key evidence you possess.'),
+    myRole: z.enum(['prosecution', 'defense']).describe('Your role in the case.'),
+    simulationRole: z.enum(['witness', 'opposing_counsel']).describe('The role the AI should play in the simulation.'),
+});
+export type CrossExaminationPrepInput = z.infer<typeof CrossExaminationPrepInputSchema>;
+
+export const CrossExaminationPrepOutputSchema = z.object({
+    inconsistencies: z.array(InconsistencySchema).describe('A list of identified inconsistencies.'),
+    strategicQuestions: z.array(StrategicQuestionSchema).describe('A list of strategic questions to ask.'),
+    opposingArguments: z.array(OpposingArgumentSchema).describe('A list of potential arguments from the opposing side.'),
+    rolePlaySimulation: z.array(RolePlayDialogueSchema).describe('A sample dialogue simulation.'),
+});
+export type CrossExaminationPrepOutput = z.infer<typeof CrossExaminationPrepOutputSchema>;

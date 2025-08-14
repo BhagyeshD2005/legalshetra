@@ -25,7 +25,8 @@ import {
     X,
     DraftingCompass,
     TrendingUp,
-    Handshake
+    Handshake,
+    Swords,
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +35,7 @@ import { analyzeDocument } from '@/ai/flows/analyze-document';
 import { draftLegalDocument } from '@/ai/flows/draft-legal-document';
 import { predictCaseOutcome } from '@/ai/flows/predict-case-outcome';
 import { negotiationSupport } from '@/ai/flows/negotiation-support';
+import { crossExaminationPrep } from '@/ai/flows/cross-examination-prep';
 import { Input } from './ui/input';
 import { cn } from '@/lib/utils';
 import { enhanceQueryClarity } from '@/ai/flows/enhance-query-clarity';
@@ -90,6 +92,13 @@ const negotiationFormSchema = z.object({
     context: z.string().min(20, { message: 'Please provide context (at least 20 characters).' }),
 });
 
+const crossExaminationFormSchema = z.object({
+    witnessStatement: z.string().min(50, { message: 'Please provide the witness statement (at least 50 characters).' }),
+    evidenceSummary: z.string().min(50, { message: 'Please provide an evidence summary (at least 50 characters).' }),
+    myRole: z.enum(['prosecution', 'defense']),
+    simulationRole: z.enum(['witness', 'opposing_counsel']),
+});
+
 
 const modes = [
   { value: 'research' as Mode, label: 'AI Legal Research', icon: FileSearch },
@@ -98,6 +107,7 @@ const modes = [
   { value: 'drafting' as Mode, label: 'Drafting Mode', icon: DraftingCompass },
   { value: 'prediction' as Mode, label: 'Predictive Analytics', icon: TrendingUp },
   { value: 'negotiation' as Mode, label: 'Negotiation Mode', icon: Handshake },
+  { value: 'cross-examination' as Mode, label: 'Cross-Examination Prep', icon: Swords },
 ];
 
 const readFileAsDataUri = (file: File): Promise<string> => {
@@ -168,6 +178,16 @@ export function ModeSwitcher({
     },
   });
 
+  const crossExaminationForm = useForm<z.infer<typeof crossExaminationFormSchema>>({
+    resolver: zodResolver(crossExaminationFormSchema),
+    defaultValues: {
+        witnessStatement: '',
+        evidenceSummary: '',
+        myRole: 'prosecution',
+        simulationRole: 'witness',
+    },
+  });
+
   // Reset forms when mode changes to prevent state leakage
   useEffect(() => {
     researchForm.reset();
@@ -176,7 +196,8 @@ export function ModeSwitcher({
     draftingForm.reset();
     predictionForm.reset();
     negotiationForm.reset();
-  }, [selectedMode, researchForm, analyzerForm, reasoningForm, draftingForm, predictionForm, negotiationForm]);
+    crossExaminationForm.reset();
+  }, [selectedMode, researchForm, analyzerForm, reasoningForm, draftingForm, predictionForm, negotiationForm, crossExaminationForm]);
 
   const onResearchSubmit: SubmitHandler<z.infer<typeof researchFormSchema>> = async (data) => {
     onAnalysisStart(data);
@@ -288,6 +309,28 @@ export function ModeSwitcher({
             variant: "destructive",
             title: "Analysis Failed",
             description: "An error occurred while generating negotiation support.",
+        });
+        onAnalysisError();
+    }
+    setIsSubmitting(false);
+  };
+
+  const onCrossExaminationSubmit: SubmitHandler<z.infer<typeof crossExaminationFormSchema>> = async (data) => {
+    setIsSubmitting(true);
+    onAnalysisStart();
+    try {
+        const result = await crossExaminationPrep(data);
+        onAnalysisComplete(result);
+        // crossExaminationForm.reset();
+        toast({
+          title: "Preparation Ready",
+          description: "The AI has generated your cross-examination materials.",
+        });
+    } catch (error) {
+         toast({
+            variant: "destructive",
+            title: "Preparation Failed",
+            description: "An error occurred while generating the prep materials.",
         });
         onAnalysisError();
     }
@@ -787,6 +830,97 @@ export function ModeSwitcher({
                   </form>
                 </Form>
             );
+        case 'cross-examination':
+            return (
+                 <Form {...crossExaminationForm}>
+                  <form onSubmit={crossExaminationForm.handleSubmit(onCrossExaminationSubmit)} className="space-y-6" key="cross-examination-form">
+                     <FormField
+                      control={crossExaminationForm.control}
+                      name="witnessStatement"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Witness Statement</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Paste the full text of the witness's statement here."
+                              className="min-h-[150px] resize-y"
+                              {...field}
+                              disabled={isSubmitting}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={crossExaminationForm.control}
+                      name="evidenceSummary"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Your Evidence Summary</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Summarize the key pieces of evidence you have that relate to this witness."
+                              className="min-h-[100px] resize-y"
+                              {...field}
+                              disabled={isSubmitting}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                            control={crossExaminationForm.control}
+                            name="myRole"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>My Role</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
+                                    <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select your role" />
+                                    </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                    <SelectItem value="prosecution">Prosecution / Plaintiff</SelectItem>
+                                    <SelectItem value="defense">Defense</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                         <FormField
+                            control={crossExaminationForm.control}
+                            name="simulationRole"
+                            render={({ field }) => (
+                                <FormItem>
+                                <FormLabel>AI Simulation Role</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isSubmitting}>
+                                    <FormControl>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select AI role" />
+                                    </SelectTrigger>
+                                    </FormControl>
+                                    <SelectContent>
+                                    <SelectItem value="witness">As the Witness</SelectItem>
+                                    <SelectItem value="opposing_counsel">As Opposing Counsel</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                                <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Preparing...</> 
+                                 : <><Swords className="mr-2 h-4 w-4" /> Prepare for Examination</>}
+                    </Button>
+                  </form>
+                </Form>
+            );
       default:
         return null;
     }
@@ -842,7 +976,8 @@ export function ModeSwitcher({
       <Separator />
       <CardHeader>
         <CardTitle className="font-headline flex items-center gap-2">
-            {selectedMode === 'research' && <Sparkles className="h-5 w-5 text-primary" />}
+            {modes.find(m => m.value === selectedMode)?.icon && 
+                React.createElement(modes.find(m => m.value === selectedMode)!.icon, { className: "h-5 w-5 text-primary" })}
             {modes.find(m => m.value === selectedMode)?.label}
         </CardTitle>
         <CardDescription>
@@ -852,6 +987,7 @@ export function ModeSwitcher({
                 selectedMode === 'drafting' ? 'Create contracts, petitions, and more with AI assistance.' :
                 selectedMode === 'prediction' ? 'Get probability-based case strategy insights using historical data and trends.' :
                 selectedMode === 'negotiation' ? 'Get AI-powered advice for contract and settlement discussions.' :
+                selectedMode === 'cross-examination' ? 'Prepare for court by analyzing statements, generating questions, and simulating scenarios.' :
                 'Provide a legal scenario and a question for the AI to reason about.'
             }
         </CardDescription>
@@ -863,5 +999,3 @@ export function ModeSwitcher({
     </Card>
   );
 }
-
-    
