@@ -1,6 +1,7 @@
 
 'use client';
 
+import * as React from 'react';
 import type { Mode, AnalysisResult } from '@/app/research/page';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from './ui/card';
@@ -999,3 +1000,5 @@ export function ModeSwitcher({
     </Card>
   );
 }
+
+    
