@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Bot, FileText, Scale, Gavel } from 'lucide-react';
+import { AutomatedDemo } from '@/components/AutomatedDemo';
 
 const FeatureCard = ({ title, description, delay, index, icon: Icon }: { 
   title: string, 
@@ -167,7 +168,7 @@ export default function HomePage() {
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.2 }}
           >
-             <span className="font-bold font-headline text-lg">LegalshetraAI</span>
+             <span className="font-bold font-headline text-lg">IndiLaw AI Research</span>
           </motion.div>
           <div className="flex items-center gap-4">
             <motion.div
@@ -236,6 +237,38 @@ export default function HomePage() {
           </div>
         </section>
 
+        <section className="py-20 sm:py-32 bg-background/50">
+          <div className="container">
+             <motion.div 
+              className="text-center mb-12"
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <motion.h2 
+                className="text-3xl font-headline font-bold sm:text-4xl"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                viewport={{ once: true }}
+              >
+                See the AI in Action
+              </motion.h2>
+              <motion.p 
+                className="mt-4 max-w-3xl mx-auto text-muted-foreground"
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                viewport={{ once: true }}
+              >
+                Explore the powerful modes of our AI Legal Assistant. The carousel below demonstrates real-world use cases, automatically rotating to show you the full scope of our platform's capabilities.
+              </motion.p>
+            </motion.div>
+            <AutomatedDemo />
+          </div>
+        </section>
+
         <motion.section 
           className="py-20 sm:py-32 bg-muted/40 relative"
           initial={{ opacity: 0 }}
@@ -258,7 +291,7 @@ export default function HomePage() {
                 transition={{ duration: 0.6, delay: 0.1 }}
                 viewport={{ once: true }}
               >
-                Why LegalshetraAI?
+                Why IndiLaw AI Research?
               </motion.h2>
               <motion.p 
                 className="mt-4 max-w-2xl mx-auto text-muted-foreground"
@@ -310,7 +343,6 @@ export default function HomePage() {
           </div>
         </motion.section>
 
-        {/* Additional animated section for more visual appeal */}
         <motion.section 
           className="py-20 relative overflow-hidden"
           initial={{ opacity: 0 }}
@@ -343,7 +375,7 @@ export default function HomePage() {
                 transition={{ duration: 0.6, delay: 0.4 }}
                 viewport={{ once: true }}
               >
-                Join thousands of legal professionals who trust LegalshetraAI for their research needs.
+                Join thousands of legal professionals who trust IndiLaw AI Research for their research needs.
               </motion.p>
               
               <motion.div
@@ -365,7 +397,6 @@ export default function HomePage() {
             </motion.div>
           </div>
           
-          {/* Floating elements for visual interest */}
           <motion.div
             className="absolute top-1/2 left-10 w-20 h-20 bg-primary/5 rounded-full blur-xl"
             animate={{ 
@@ -407,12 +438,11 @@ export default function HomePage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            &copy; {new Date().getFullYear()} LegalshetraAI. All Rights Reserved.
+            &copy; {new Date().getFullYear()} IndiLaw AI Research. All Rights Reserved.
           </motion.p>
         </div>
       </motion.footer>
 
-      {/* Scroll indicator */}
       <motion.div
         className="fixed top-0 left-0 right-0 h-1 bg-primary z-50 origin-left"
         style={{ scaleX: useScroll().scrollYProgress }}

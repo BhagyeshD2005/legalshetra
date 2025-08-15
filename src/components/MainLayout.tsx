@@ -24,7 +24,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                 <nav className="flex flex-col items-center gap-4 px-2 py-4">
                     <Link href="/research" className="group flex h-9 w-9 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:h-8 md:w-8 md:text-base">
                         <Home className="h-4 w-4 transition-all group-hover:scale-110" />
-                        <span className="sr-only">LegalshetraAI</span>
+                        <span className="sr-only">IndiLaw AI Research</span>
                     </Link>
                     <TooltipProvider>
                         {navItems.map((item) => (
@@ -55,7 +55,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                                 <nav className="grid gap-6 text-lg font-medium">
                                     <Link href="/research" className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base">
                                         <Home className="h-5 w-5 transition-all group-hover:scale-110" />
-                                        <span className="sr-only">LegalshetraAI</span>
+                                        <span className="sr-only">IndiLaw AI Research</span>
                                     </Link>
                                     {navItems.map((item) => (
                                         <Link key={item.label} href={item.href} className={`flex items-center gap-4 px-2.5 ${pathname === item.href ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
@@ -67,7 +67,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                             </SheetContent>
                         </Sheet>
                          <h1 className="font-headline text-xl font-bold text-primary">
-                           LegalshetraAI
+                           IndiLaw AI Research
                         </h1>
                     </div>
                     <div className="flex items-center gap-4">

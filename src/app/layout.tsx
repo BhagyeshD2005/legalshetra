@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster"
 import { ThemeProvider } from '@/components/ThemeProvider';
 
 export const metadata: Metadata = {
-  title: 'LegalshetraAI',
+  title: 'IndiLaw AI Research',
   description: 'AI-powered legal research assistant',
 };
 
