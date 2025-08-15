@@ -10,7 +10,7 @@ import { type CrossExaminationPrepOutput } from '@/ai/types';
 import { Badge } from './ui/badge';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
-import { useToast } from './hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 
 
 export type CrossExaminationResult = CrossExaminationPrepOutput;
