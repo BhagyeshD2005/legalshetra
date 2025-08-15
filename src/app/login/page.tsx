@@ -1,7 +1,5 @@
-import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AuthLogo } from '@/components/AuthLogo';
-import { Auth } from '@/components/Auth';
 
 export default function LoginPage() {
   return (
@@ -10,10 +8,12 @@ export default function LoginPage() {
         <CardHeader className="space-y-4 text-center">
           <AuthLogo />
           <CardTitle className="font-headline text-2xl">Welcome Back</CardTitle>
-          <CardDescription>Sign in with your Google account to continue</CardDescription>
+          <CardDescription>Authentication has been removed. You can now access the app directly.</CardDescription>
         </CardHeader>
         <CardContent>
-          <Auth />
+          <p className="text-center text-sm text-muted-foreground">
+            Please navigate to the research page.
+          </p>
         </CardContent>
       </Card>
     </div>

@@ -2,15 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '@/hooks/use-auth';
 import { MainLayout } from '@/components/MainLayout';
 import { UserManagementTable } from '@/components/UserManagementTable';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
-
-const ADMIN_EMAIL = 'bhagyeshdedmuthe256@gmail.com';
 
 type User = {
   id: string;
@@ -55,44 +52,15 @@ async function getUsers(): Promise<User[]> {
 }
 
 export default function AdminPage() {
-  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAuthorized, setIsAuthorized] = useState(false);
 
   useEffect(() => {
-    if (!authLoading) {
-      if (!user || user.email !== ADMIN_EMAIL) {
-        // If user is not logged in or not an admin, wait a bit and then redirect
-        setTimeout(() => router.push('/'), 1000);
-      } else {
-        setIsAuthorized(true);
-        getUsers()
-          .then(setUsers)
-          .finally(() => setLoading(false));
-      }
-    }
-  }, [user, authLoading, router]);
-
-  if (authLoading || (!isAuthorized && !authLoading)) {
-    return (
-      <MainLayout>
-        <div className="flex justify-center items-center h-full">
-            <Card className="w-full max-w-md">
-                <CardHeader className="text-center">
-                </CardHeader>
-                <CardContent className="text-center">
-                    <h2 className="text-xl font-bold">Access Denied</h2>
-                    <p className="text-muted-foreground">
-                        You are not authorized to view this page. Redirecting...
-                    </p>
-                </CardContent>
-            </Card>
-        </div>
-      </MainLayout>
-    );
-  }
+    getUsers()
+      .then(setUsers)
+      .finally(() => setLoading(false));
+  }, []);
 
   if (loading) {
     return (

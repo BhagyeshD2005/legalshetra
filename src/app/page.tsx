@@ -4,7 +4,6 @@ import { motion, useScroll, useTransform, useInView } from 'framer-motion';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { AuthLogo } from '@/components/AuthLogo';
-import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef } from 'react';
 import { ThemeToggle } from '@/components/ThemeToggle';
@@ -106,7 +105,6 @@ const AnimatedBackground = () => {
 };
 
 export default function HomePage() {
-  const { user, loading } = useAuth();
   const router = useRouter();
   const heroRef = useRef(null);
   const featuresRef = useRef(null);
@@ -114,10 +112,8 @@ export default function HomePage() {
   const isFeaturesInView = useInView(featuresRef, { once: true, amount: 0.2 });
 
   useEffect(() => {
-    if (!loading && user) {
-      router.push('/research');
-    }
-  }, [user, loading, router]);
+    router.push('/research');
+  }, [router]);
 
   const headerVariants = {
     hidden: { y: -100, opacity: 0 },
@@ -184,16 +180,8 @@ export default function HomePage() {
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
-              <Button variant="ghost" asChild>
-                <Link href="/login">Log In</Link>
-              </Button>
-            </motion.div>
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-            >
               <Button asChild className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <Link href="/signup">
+                <Link href="/research">
                   Get Started
                 </Link>
               </Button>
@@ -235,7 +223,7 @@ export default function HomePage() {
                   transition={{ duration: 0.2 }}
                 >
                   <Button size="lg" asChild className="shadow-lg hover:shadow-2xl transition-all duration-500 group">
-                    <Link href="/signup" className="relative overflow-hidden">
+                    <Link href="/research" className="relative overflow-hidden">
                       <motion.span
                         className="absolute inset-0 bg-gradient-to-r from-primary/20 to-accent/20 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700"
                       />
@@ -370,16 +358,7 @@ export default function HomePage() {
                   whileTap={{ scale: 0.98 }}
                 >
                   <Button size="lg" asChild className="shadow-lg hover:shadow-xl transition-all duration-300">
-                    <Link href="/signup">Start Free Trial</Link>
-                  </Button>
-                </motion.div>
-                
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Button size="lg" variant="outline" asChild className="hover:bg-primary hover:text-primary-foreground transition-all duration-300">
-                    <Link href="/login">Sign In</Link>
+                    <Link href="/research">Start Free Trial</Link>
                   </Button>
                 </motion.div>
               </motion.div>
