@@ -157,3 +157,34 @@ export const OrchestrateWorkflowOutputSchema = z.object({
     finalOutput: z.string().describe('A final, synthesized output combining the results of all steps.'),
 });
 export type OrchestrateWorkflowOutput = z.infer<typeof OrchestrateWorkflowOutputSchema>;
+
+
+// Schemas for Litigation Timeline Mode
+export const LitigationTimelineInputSchema = z.object({
+    jurisdiction: z.string().describe('The court or jurisdiction (e.g., "Delhi High Court", "US Federal Court").'),
+    caseType: z.string().describe('The type of case (e.g., "Civil Commercial Suit", "Criminal Appeal").'),
+    startDate: z.string().describe('The filing date or incident date for the case (YYYY-MM-DD).'),
+    knownDates: z.string().optional().describe('A comma-separated list of known, fixed dates for events (e.g., "First Hearing: 2025-09-10").'),
+});
+export type LitigationTimelineInput = z.infer<typeof LitigationTimelineInputSchema>;
+
+const TimelineEntrySchema = z.object({
+    stepNumber: z.number().describe('The sequential number of the step.'),
+    task: z.string().describe('The procedural task or filing required.'),
+    deadline: z.string().describe('The calculated deadline for the task (YYYY-MM-DD).'),
+    notes: z.string().describe('Any dependencies or important notes related to the task.'),
+});
+
+const ExportContentSchema = z.object({
+    csv: z.string().describe('The full timeline table formatted as a CSV string, including a header row.'),
+    pdf: z.string().describe('The timeline and notes formatted as a markdown string suitable for PDF conversion.'),
+    text: z.string().describe('The timeline and notes formatted as a plain text string.'),
+});
+
+export const LitigationTimelineOutputSchema = z.object({
+    dueToday: z.array(z.string()).describe('A list of tasks whose deadline is today. If empty, nothing is due.'),
+    timeline: z.array(TimelineEntrySchema).describe('The generated procedural timeline.'),
+    assumptions: z.array(z.string()).describe('A list of assumptions made during the timeline generation.'),
+    exportContent: ExportContentSchema.describe('The timeline data pre-formatted for various export options.'),
+});
+export type LitigationTimelineOutput = z.infer<typeof LitigationTimelineOutputSchema>;

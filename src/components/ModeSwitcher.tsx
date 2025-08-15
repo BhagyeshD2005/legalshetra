@@ -29,6 +29,7 @@ import {
     Handshake,
     Swords,
     Component,
+    CalendarClock,
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
@@ -38,10 +39,14 @@ import { draftLegalDocument } from '@/ai/flows/draft-legal-document';
 import { predictCaseOutcome } from '@/ai/flows/predict-case-outcome';
 import { negotiationSupport } from '@/ai/flows/negotiation-support';
 import { crossExaminationPrep } from '@/ai/flows/cross-examination-prep';
+import { generateLitigationTimeline } from '@/ai/flows/generate-litigation-timeline';
 import { Input } from './ui/input';
 import { cn } from '@/lib/utils';
 import { enhanceQueryClarity } from '@/ai/flows/enhance-query-clarity';
 import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
+import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
+import { Calendar } from './ui/calendar';
+import { format } from 'date-fns';
 
 
 interface ModeSwitcherProps {
@@ -107,6 +112,15 @@ const orchestrateFormSchema = z.object({
     .max(1500, { message: 'Objective must be less than 1500 characters.' })
 });
 
+const timelineFormSchema = z.object({
+    jurisdiction: z.string().min(3, { message: "Please specify a jurisdiction."}),
+    caseType: z.string().min(3, { message: "Please specify a case type."}),
+    startDate: z.date({
+        required_error: "A start date is required.",
+    }),
+    knownDates: z.string().optional(),
+});
+
 
 const modes = [
   { value: 'orchestrate' as Mode, label: 'Orchestrate AI', icon: Component },
@@ -117,6 +131,7 @@ const modes = [
   { value: 'prediction' as Mode, label: 'Predictive Analytics', icon: TrendingUp },
   { value: 'negotiation' as Mode, label: 'Negotiation Mode', icon: Handshake },
   { value: 'cross-examination' as Mode, label: 'Cross-Examination Prep', icon: Swords },
+  { value: 'timeline' as Mode, label: 'Litigation Timeline', icon: CalendarClock },
 ];
 
 const readFileAsDataUri = (file: File): Promise<string> => {
@@ -202,6 +217,15 @@ export function ModeSwitcher({
     defaultValues: { objective: '' },
   });
 
+  const timelineForm = useForm<z.infer<typeof timelineFormSchema>>({
+    resolver: zodResolver(timelineFormSchema),
+    defaultValues: {
+      jurisdiction: '',
+      caseType: '',
+      knownDates: '',
+    },
+  });
+
   // Reset forms when mode changes to prevent state leakage
   useEffect(() => {
     researchForm.reset();
@@ -212,7 +236,8 @@ export function ModeSwitcher({
     negotiationForm.reset();
     crossExaminationForm.reset();
     orchestrateForm.reset();
-  }, [selectedMode, researchForm, analyzerForm, reasoningForm, draftingForm, predictionForm, negotiationForm, crossExaminationForm, orchestrateForm]);
+    timelineForm.reset();
+  }, [selectedMode, researchForm, analyzerForm, reasoningForm, draftingForm, predictionForm, negotiationForm, crossExaminationForm, orchestrateForm, timelineForm]);
 
   const onResearchSubmit: SubmitHandler<z.infer<typeof researchFormSchema>> = async (data) => {
     onAnalysisStart(data);
@@ -356,6 +381,32 @@ export function ModeSwitcher({
     // This will be handled by the OrchestrateMode component, which will call the flow
     // and provide step-by-step updates. Here, we just initiate it.
     onAnalysisStart({ query: data.objective });
+  };
+  
+  const onTimelineSubmit: SubmitHandler<z.infer<typeof timelineFormSchema>> = async (data) => {
+    setIsSubmitting(true);
+    onAnalysisStart();
+    try {
+        const input = {
+            ...data,
+            startDate: format(data.startDate, 'yyyy-MM-dd'),
+        };
+        const result = await generateLitigationTimeline(input);
+        onAnalysisComplete(result);
+        // timelineForm.reset();
+        toast({
+          title: "Timeline Generated",
+          description: "The AI has generated a procedural timeline for your case.",
+        });
+    } catch (error) {
+         toast({
+            variant: "destructive",
+            title: "Timeline Generation Failed",
+            description: "An error occurred while generating the timeline.",
+        });
+        onAnalysisError();
+    }
+    setIsSubmitting(false);
   };
 
 
@@ -980,6 +1031,112 @@ export function ModeSwitcher({
                   </form>
                 </Form>
             );
+        case 'timeline':
+            return (
+                 <Form {...timelineForm}>
+                  <form onSubmit={timelineForm.handleSubmit(onTimelineSubmit)} className="space-y-6" key="timeline-form">
+                     <FormField
+                      control={timelineForm.control}
+                      name="jurisdiction"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Jurisdiction</FormLabel>
+                          <FormControl>
+                             <Input
+                              placeholder="e.g., 'Delhi High Court', 'US Federal Court'"
+                              {...field}
+                              disabled={isSubmitting}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={timelineForm.control}
+                      name="caseType"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Case Type</FormLabel>
+                          <FormControl>
+                             <Input
+                              placeholder="e.g., 'Civil Commercial Suit', 'Criminal Appeal'"
+                              {...field}
+                              disabled={isSubmitting}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                     <FormField
+                      control={timelineForm.control}
+                      name="startDate"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Start Date (Filing/Incident)</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                    "w-full pl-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                   disabled={isSubmitting}
+                                >
+                                  {field.value ? (
+                                    format(field.value, "PPP")
+                                  ) : (
+                                    <span>Pick a date</span>
+                                  )}
+                                  <CalendarClock className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                disabled={(date) =>
+                                  date > new Date() || date < new Date("1900-01-01")
+                                }
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={timelineForm.control}
+                      name="knownDates"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Known Dates (Optional)</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="e.g., 'First Hearing: 2025-09-10, Evidence Submission: 2025-11-15'"
+                              className="min-h-[80px] resize-y"
+                              {...field}
+                              disabled={isSubmitting}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button type="submit" className="w-full" disabled={isSubmitting}>
+                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Generating...</> 
+                                 : <><Sparkles className="mr-2 h-4 w-4" /> Generate Timeline</>}
+                    </Button>
+                  </form>
+                </Form>
+            );
       default:
         return null;
     }
@@ -1065,6 +1222,7 @@ export function ModeSwitcher({
                 selectedMode === 'negotiation' ? 'Get AI-powered advice for contract and settlement discussions.' :
                 selectedMode === 'cross-examination' ? 'Prepare for court by analyzing statements, generating questions, and simulating scenarios.' :
                 selectedMode === 'orchestrate' ? 'Describe a complex legal workflow, and the AI will coordinate multiple agents to complete it.' :
+                selectedMode === 'timeline' ? 'Generate a procedural timeline for a case based on jurisdiction, case type, and key dates.' :
                 'Provide a legal scenario and a question for the AI to reason about.'
             }
         </CardDescription>

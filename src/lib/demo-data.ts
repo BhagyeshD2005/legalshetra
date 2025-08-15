@@ -1,3 +1,4 @@
+
 import { 
     FileSearch, 
     FileText, 
@@ -9,7 +10,8 @@ import {
     Component,
     Camera,
     FolderKanban,
-    Bot
+    Bot,
+    CalendarClock,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
@@ -43,6 +45,21 @@ export const demoData: DemoMode[] = [
 <strong>Summary:</strong> The Supreme Court held that arrest should be the last resort, especially in cases where the accused is cooperating with the investigation...
 <strong>Key Principle:</strong> Emphasized individual liberty and cautioned against mechanical arrests.`,
     tryThisLink: '/research?mode=research'
+  },
+  {
+    mode: 'Litigation Timeline',
+    icon: CalendarClock,
+    sampleInput: `Jurisdiction: Delhi High Court
+Case Type: Civil Commercial Suit
+Filing Date: 2025-08-18
+Known Date: First Listing on 2025-09-10`,
+    sampleOutput: `<strong>Timeline Generated:</strong>
+- <span class="text-primary">Step 1:</span> Filing of Plaint (Done)
+- <span class="text-primary">Step 2:</span> Service of Summons (Due: 2025-08-22)
+- <span class="text-primary">Step 3:</span> First Listing (Fixed: 2025-09-10)
+- <span class="text-primary">Step 4:</span> Filing of Written Statement (Due: 2025-10-10)
+<strong>Note:</strong> Deadlines calculated based on working days.`,
+    tryThisLink: '/research?mode=timeline'
   },
   {
     mode: 'Document Review',
