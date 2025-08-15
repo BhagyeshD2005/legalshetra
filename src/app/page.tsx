@@ -112,10 +112,6 @@ export default function HomePage() {
   const isHeroInView = useInView(heroRef, { once: true });
   const isFeaturesInView = useInView(featuresRef, { once: true, amount: 0.2 });
 
-  useEffect(() => {
-    router.push('/research');
-  }, [router]);
-
   const headerVariants = {
     hidden: { y: -100, opacity: 0 },
     visible: { 
