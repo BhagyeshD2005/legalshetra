@@ -34,7 +34,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                                     <Link href={item.href} className={`flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:text-foreground md:h-8 md:w-8 ${pathname === item.href ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'}`}>
                                         <item.icon className="h-5 w-5" />
                                         <span className="sr-only">{item.label}</span>
-                                    </A_SECOND_ONE>
+                                    </Link>
                                 </TooltipTrigger>
                                 <TooltipContent side="right">{item.label}</TooltipContent>
                             </Tooltip>
@@ -57,7 +57,7 @@ export function MainLayout({ children }: { children: React.ReactNode }) {
                                     <Link href="/" className="group flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-full bg-primary text-lg font-semibold text-primary-foreground md:text-base">
                                         <FileSearch className="h-5 w-5 transition-all group-hover:scale-110" />
                                         <span className="sr-only">IndiLaw AI Research</span>
-                                    </A_SECOND_ONE>
+                                    </Link>
                                     {navItems.map((item) => (
                                         <Link key={item.label} href={item.href} className={`flex items-center gap-4 px-2.5 ${pathname === item.href ? 'text-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
                                             <item.icon className="h-5 w-5" />
