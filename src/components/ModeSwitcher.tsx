@@ -512,11 +512,11 @@ export function ModeSwitcher({
   };
 
   const renderLoadSampleButton = () => (
-    <div className="text-center my-4">
+    <div className="text-right my-2">
         <Button 
             type="button" 
             variant="link" 
-            className="text-xs text-muted-foreground"
+            className="text-xs text-muted-foreground h-auto p-0"
             onClick={handleLoadSampleData}
         >
             Load Sample
