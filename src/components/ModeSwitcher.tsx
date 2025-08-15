@@ -1349,41 +1349,51 @@ export function ModeSwitcher({
   }
 
   const renderFooter = () => {
-    if (selectedMode === 'research') {
-        return (
-            <CardFooter>
-                <div className="p-4 bg-muted/50 rounded-lg w-full">
-                    <h4 className="text-sm font-medium mb-2 flex items-center gap-1">
-                    <Lightbulb className="h-3 w-3 text-yellow-500" />
-                    Research Tips
-                    </h4>
-                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                    <li>Be specific with section numbers and acts.</li>
-                    <li>Include jurisdiction if relevant.</li>
-                    <li>Mention a time period for recent cases.</li>
-                    </ul>
+    const tips = {
+      research: (
+        <>
+          <h4 className="text-sm font-medium mb-2 flex items-center gap-1">
+            <Lightbulb className="h-3 w-3 text-yellow-500" />
+            Research Tips
+          </h4>
+          <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+            <li>Be specific with section numbers and acts.</li>
+            <li>Include jurisdiction if relevant.</li>
+            <li>Mention a time period for recent cases.</li>
+          </ul>
+        </>
+      ),
+      orchestrate: (
+        <>
+          <h4 className="text-sm font-medium mb-2 flex items-center gap-1">
+            <Lightbulb className="h-3 w-3 text-yellow-500" />
+            Orchestration Tips
+          </h4>
+          <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+            <li>Clearly state your final goal (e.g., "draft a contract," "prepare for a hearing").</li>
+            <li>Provide all necessary context in your prompt.</li>
+            <li>The AI will break it down into steps and execute them for you.</li>
+          </ul>
+        </>
+      )
+    };
+
+    const tipContent = tips[selectedMode as keyof typeof tips];
+    
+    if (!tipContent) return null;
+
+    return (
+        <CardFooter>
+            <div className="p-4 bg-muted/50 rounded-lg w-full">
+                <div className="flex justify-between items-center mb-2">
+                    {tipContent}
                 </div>
-            </CardFooter>
-        )
-    }
-     if (selectedMode === 'orchestrate') {
-        return (
-            <CardFooter>
-                <div className="p-4 bg-muted/50 rounded-lg w-full">
-                    <h4 className="text-sm font-medium mb-2 flex items-center gap-1">
-                    <Lightbulb className="h-3 w-3 text-yellow-500" />
-                    Orchestration Tips
-                    </h4>
-                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
-                        <li>Clearly state your final goal (e.g., "draft a contract," "prepare for a hearing").</li>
-                        <li>Provide all necessary context in your prompt.</li>
-                        <li>The AI will break it down into steps and execute them for you.</li>
-                    </ul>
-                </div>
-            </CardFooter>
-        )
-    }
-    return null;
+                 <Button variant="link" size="sm" onClick={handleLoadSampleData} className="p-0 h-auto">
+                    Load Sample
+                </Button>
+            </div>
+        </CardFooter>
+    )
   }
 
   return (
