@@ -1,5 +1,6 @@
 'use client';
 
+import { memo } from 'react';
 import { type ChatMessage as ChatMessageType } from '@/ai/types';
 import { cn } from '@/lib/utils';
 import { Bot, User, PlusSquare } from 'lucide-react';
@@ -12,7 +13,7 @@ interface ChatMessageProps {
   onAddToReport?: (content: string) => void;
 }
 
-export function ChatMessage({ message, isLoading = false, onAddToReport }: ChatMessageProps) {
+const ChatMessageComponent = ({ message, isLoading = false, onAddToReport }: ChatMessageProps) => {
   const isUser = message.role === 'user';
   
   const TypingIndicator = () => (
@@ -96,3 +97,5 @@ export function ChatMessage({ message, isLoading = false, onAddToReport }: ChatM
     </motion.div>
   );
 }
+
+export const ChatMessage = memo(ChatMessageComponent);

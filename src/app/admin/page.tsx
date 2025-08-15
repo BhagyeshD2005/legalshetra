@@ -1,13 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { MainLayout } from '@/components/MainLayout';
+import { useEffect, useState, useCallback } from 'react';
 import { UserManagementTable } from '@/components/UserManagementTable';
 import { db } from '@/lib/firebase';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 
 type User = {
   id: string;
@@ -20,7 +18,6 @@ type User = {
 };
 
 async function getUsers(): Promise<User[]> {
-  try {
     const usersCollection = collection(db, 'users');
     const q = query(usersCollection, orderBy('name'));
     const usersSnapshot = await getDocs(q);
@@ -45,52 +42,69 @@ async function getUsers(): Promise<User[]> {
       } as User;
     });
     return usersList;
-  } catch (error) {
-    console.error('Error fetching users: ', error);
-    return [];
-  }
 }
 
+const LoadingSkeleton = () => (
+    <Card>
+        <CardHeader>
+            <CardTitle>User Management</CardTitle>
+            <CardDescription>Manage user access to LegalshetraAI. Data is live from Firestore.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <div className="space-y-4">
+                {[...Array(5)].map((_, i) => (
+                    <div className="flex items-center space-x-4 p-4 border-b" key={i}>
+                        <Skeleton className="h-10 w-10 rounded-full" />
+                        <div className="flex-1 space-y-2">
+                            <Skeleton className="h-4 w-3/5" />
+                            <Skeleton className="h-3 w-4/5" />
+                        </div>
+                        <div className="w-24">
+                           <Skeleton className="h-6 w-full rounded-md" />
+                        </div>
+                    </div>
+                ))}
+            </div>
+        </CardContent>
+    </Card>
+);
+
 export default function AdminPage() {
-  const router = useRouter();
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    getUsers()
-      .then(setUsers)
-      .finally(() => setLoading(false));
+  const fetchUsers = useCallback(async () => {
+    try {
+        setLoading(true);
+        setError(null);
+        const userList = await getUsers();
+        setUsers(userList);
+    } catch (error) {
+        console.error('Error fetching users: ', error);
+        setError("Failed to load user data. Please try refreshing the page.");
+    } finally {
+        setLoading(false);
+    }
   }, []);
 
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
+  
   if (loading) {
+    return <LoadingSkeleton />;
+  }
+
+  if (error) {
     return (
-        <MainLayout>
-            <Card>
-                <CardHeader>
-                    <Skeleton className="h-8 w-48" />
-                    <Skeleton className="h-4 w-96" />
-                </CardHeader>
-                <CardContent>
-                    <div className="space-y-4">
-                        {[...Array(5)].map((_, i) => (
-                            <div className="flex items-center space-x-4" key={i}>
-                                <Skeleton className="h-12 w-12 rounded-full" />
-                                <div className="space-y-2">
-                                    <Skeleton className="h-4 w-[250px]" />
-                                    <Skeleton className="h-4 w-[200px]" />
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </CardContent>
-            </Card>
-        </MainLayout>
+        <div className="flex items-center justify-center h-full">
+            <p className="text-destructive">{error}</p>
+        </div>
     );
   }
 
   return (
-    <MainLayout>
-      <UserManagementTable initialUsers={users} />
-    </MainLayout>
+    <UserManagementTable initialUsers={users} />
   );
 }
