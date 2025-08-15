@@ -179,7 +179,7 @@ export function CrossExaminationMode({ isLoading, result }: CrossExaminationMode
                                         <p className="text-sm">
                                             <span className="font-semibold text-foreground">Contradicts with: </span> {item.contradictingEvidence}.
                                         </p>
-                                        <p className="text-xs text-muted-foreground mt-1">{item.explanation}</p>
+                                        <p className="text-xs text-muted-foreground mt-1" dangerouslySetInnerHTML={{ __html: item.explanation.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                                     </div>
                                 ))}
                             </CardContent>
@@ -202,7 +202,8 @@ export function CrossExaminationMode({ isLoading, result }: CrossExaminationMode
                                     <div key={index} className="p-3 border-l-2 border-primary">
                                         <p className="font-medium">{item.question}</p>
                                         <p className="text-xs text-muted-foreground mt-1">
-                                            <span className="font-semibold">Purpose: </span>{item.purpose}
+                                            <span className="font-semibold">Purpose: </span>
+                                            <span dangerouslySetInnerHTML={{ __html: item.purpose.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                                         </p>
                                     </div>
                                 ))}
@@ -224,9 +225,9 @@ export function CrossExaminationMode({ isLoading, result }: CrossExaminationMode
                             <CardContent className="space-y-3">
                                 {opposingArguments.map((item, index) => (
                                     <div key={index} className="p-4 border rounded-lg">
-                                        <p className="font-semibold text-foreground">Argument: <span className="font-normal text-muted-foreground">{item.argument}</span></p>
+                                        <p className="font-semibold text-foreground">Argument: <span className="font-normal text-muted-foreground" dangerouslySetInnerHTML={{ __html: item.argument.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} /></p>
                                         <Separator className="my-2" />
-                                        <p className="font-semibold text-foreground">Suggested Response: <span className="font-normal text-muted-foreground">{item.response}</span></p>
+                                        <p className="font-semibold text-foreground">Suggested Response: <span className="font-normal text-muted-foreground" dangerouslySetInnerHTML={{ __html: item.response.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} /></p>
                                     </div>
                                 ))}
                             </CardContent>
@@ -249,7 +250,7 @@ export function CrossExaminationMode({ isLoading, result }: CrossExaminationMode
                                     <div key={index} className={cn("flex gap-2", line.speaker === 'You' ? "justify-end" : "justify-start")}>
                                         {line.speaker !== 'You' && <Badge variant="secondary">{line.speaker}</Badge>}
                                         <div className={cn("max-w-md rounded-lg px-3 py-2 text-sm", line.speaker === 'You' ? 'bg-primary text-primary-foreground' : 'bg-muted')}>
-                                            <p>{line.line}</p>
+                                            <p dangerouslySetInnerHTML={{ __html: line.line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                                         </div>
                                          {line.speaker === 'You' && <Badge>{line.speaker}</Badge>}
                                     </div>

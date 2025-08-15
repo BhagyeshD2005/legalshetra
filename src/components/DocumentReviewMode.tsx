@@ -176,7 +176,7 @@ export function DocumentReviewMode({ isLoading, result }: DocumentReviewModeProp
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="whitespace-pre-wrap text-muted-foreground">{result.summary}</p>
+                  <p className="whitespace-pre-wrap text-muted-foreground" dangerouslySetInnerHTML={{ __html: result.summary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                 </CardContent>
               </Card>
 
@@ -204,11 +204,11 @@ export function DocumentReviewMode({ isLoading, result }: DocumentReviewModeProp
                                             {anomaly.severity} Risk
                                         </Badge>
                                     </div>
-                                    <p className="text-sm text-muted-foreground mb-3">{anomaly.description}</p>
+                                    <p className="text-sm text-muted-foreground mb-3" dangerouslySetInnerHTML={{ __html: anomaly.description.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                                     <Separator className="my-2" />
                                     <div>
                                         <p className="text-xs font-semibold text-foreground">Recommendation:</p>
-                                        <p className="text-xs text-muted-foreground italic">{anomaly.recommendation}</p>
+                                        <p className="text-xs text-muted-foreground italic" dangerouslySetInnerHTML={{ __html: anomaly.recommendation.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                                     </div>
                                 </div>
                              )

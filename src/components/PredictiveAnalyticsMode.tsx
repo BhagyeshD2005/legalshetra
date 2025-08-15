@@ -132,7 +132,7 @@ export function PredictiveAnalyticsMode({ isLoading, result }: PredictiveAnalyti
                             <div className="space-y-4">
                                 <div>
                                     <h4 className="font-semibold mb-2 flex items-center gap-2"><Lightbulb className="h-4 w-4"/>Prediction Summary</h4>
-                                    <p className="text-sm text-muted-foreground">{result.predictionSummary}</p>
+                                    <p className="text-sm text-muted-foreground" dangerouslySetInnerHTML={{ __html: result.predictionSummary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                                 </div>
                                 <div>
                                     <h4 className="font-semibold mb-2 flex items-center gap-2"><Target className="h-4 w-4"/>Recommended Strategies</h4>
@@ -143,7 +143,7 @@ export function PredictiveAnalyticsMode({ isLoading, result }: PredictiveAnalyti
                                                     <p className="font-medium text-sm">{s.strategy}</p>
                                                     <Badge variant="secondary">{s.predictedSuccessRate}% Success</Badge>
                                                 </div>
-                                                <p className="text-xs text-muted-foreground">{s.justification}</p>
+                                                <p className="text-xs text-muted-foreground" dangerouslySetInnerHTML={{ __html: s.justification.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                                             </div>
                                         ))}
                                     </div>
@@ -165,7 +165,7 @@ export function PredictiveAnalyticsMode({ isLoading, result }: PredictiveAnalyti
                         <CardContent className="space-y-4">
                              <div>
                                 <h4 className="font-semibold mb-2 flex items-center gap-2">Bias & Pattern Summary</h4>
-                                <p className="text-sm text-muted-foreground p-3 border rounded-md bg-muted/20">{result.judgeAnalysis.biasSummary}</p>
+                                <p className="text-sm text-muted-foreground p-3 border rounded-md bg-muted/20" dangerouslySetInnerHTML={{ __html: result.judgeAnalysis.biasSummary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                             </div>
 
                             {result.judgeAnalysis.pastJudgments.length > 0 && (

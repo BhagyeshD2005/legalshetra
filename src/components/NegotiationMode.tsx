@@ -109,7 +109,7 @@ export function NegotiationMode({ isLoading, result }: NegotiationModeProps) {
                                     <Separator className="my-3" />
                                     <p className="text-sm text-muted-foreground italic">
                                         <span className="font-semibold text-foreground not-italic">AI Explanation: </span>
-                                        {clause.explanation}
+                                        <span dangerouslySetInnerHTML={{ __html: clause.explanation.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                                     </p>
                                 </div>
                             ))}
@@ -131,7 +131,7 @@ export function NegotiationMode({ isLoading, result }: NegotiationModeProps) {
                                 <h4 className="font-semibold flex items-center gap-2 mb-2">
                                     <MessageSquareWarning className="h-4 w-4"/> Likely Reaction
                                 </h4>
-                                <p className="text-sm text-muted-foreground">{result.opponentAnalysis.likelyReaction}</p>
+                                <p className="text-sm text-muted-foreground" dangerouslySetInnerHTML={{ __html: result.opponentAnalysis.likelyReaction.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                            </div>
                            <div className="p-4 border rounded-lg bg-muted/30">
                                 <h4 className="font-semibold mb-3">Acceptance Probability</h4>
@@ -161,9 +161,7 @@ export function NegotiationMode({ isLoading, result }: NegotiationModeProps) {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                           <p className="text-sm text-muted-foreground p-4 border rounded-lg bg-muted/30">
-                            {result.batnaSummary}
-                           </p>
+                           <p className="text-sm text-muted-foreground p-4 border rounded-lg bg-muted/30" dangerouslySetInnerHTML={{ __html: result.batnaSummary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                         </CardContent>
                     </Card>
 
@@ -172,4 +170,3 @@ export function NegotiationMode({ isLoading, result }: NegotiationModeProps) {
         </div>
     );
 }
-

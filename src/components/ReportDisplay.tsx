@@ -284,7 +284,7 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
               <motion.div id="section-summary" className="scroll-mt-4" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>
                 <div className="flex items-center gap-3 mb-4"><motion.span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10" whileHover={{ scale: 1.2, rotate: 15 }}><FileText className="h-4 w-4 text-primary" /></motion.span><h3 className="text-xl font-semibold font-headline text-foreground m-0">Summary</h3></div>
                 <Separator className="mb-4" />
-                <div className="whitespace-pre-wrap leading-relaxed text-foreground/90 pl-11">{summary}</div>
+                <div className="whitespace-pre-wrap leading-relaxed text-foreground/90 pl-11" dangerouslySetInnerHTML={{ __html: summary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
               </motion.div>
             )}
 
@@ -306,7 +306,7 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
                                     <span>{item.date}</span>
                                     <a href={item.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary">Read Full Text <ExternalLink className="h-3 w-3"/></a>
                                 </div>
-                                <p className="text-sm text-foreground/80">{item.summary}</p>
+                                <p className="text-sm text-foreground/80" dangerouslySetInnerHTML={{ __html: item.summary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                             </div>
                         ))}
                     </div>
@@ -321,7 +321,7 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
                     <div className="space-y-4 pl-11">
                         {keyPrinciples.map((item, index) => (
                             <div key={index}>
-                                <h4 className="font-semibold text-md">{item.principle}</h4>
+                                <h4 className="font-semibold text-md" dangerouslySetInnerHTML={{ __html: item.principle.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                                 <p className="text-sm text-muted-foreground">Established in: {item.cases.join(', ')}</p>
                             </div>
                         ))}
