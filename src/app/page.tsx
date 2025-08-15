@@ -99,7 +99,7 @@ export default function HomePage() {
             whileHover={{ scale: 1.05 }}
             transition={{ duration: 0.2 }}
           >
-             <span className="font-bold font-headline text-lg">IndiLaw AI Research</span>
+             <span className="font-bold font-headline text-lg">LegalshetraAI</span>
           </motion.div>
           <div className="flex items-center gap-4">
             <motion.div
@@ -222,7 +222,7 @@ export default function HomePage() {
                 transition={{ duration: 0.6, delay: 0.1 }}
                 viewport={{ once: true }}
               >
-                Why IndiLaw AI Research?
+                Why LegalshetraAI?
               </motion.h2>
               <motion.p 
                 className="mt-4 max-w-2xl mx-auto text-muted-foreground"
@@ -306,7 +306,7 @@ export default function HomePage() {
                 transition={{ duration: 0.6, delay: 0.4 }}
                 viewport={{ once: true }}
               >
-                Join thousands of legal professionals who trust IndiLaw AI Research for their research needs.
+                Join thousands of legal professionals who trust LegalshetraAI for their research needs.
               </motion.p>
               
               <motion.div
@@ -369,7 +369,7 @@ export default function HomePage() {
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
           >
-            &copy; {new Date().getFullYear()} IndiLaw AI Research. All Rights Reserved.
+            &copy; {new Date().getFullYear()} LegalshetraAI. All Rights Reserved.
           </motion.p>
         </div>
       </motion.footer>

@@ -8,7 +8,7 @@ export function AuthLogo() {
         <Gavel className="h-8 w-8 text-primary" />
       </div>
       <h1 className="text-3xl font-bold font-headline mt-4">
-        IndiLaw AI Research
+        LegalshetraAI
       </h1>
     </div>
   );
