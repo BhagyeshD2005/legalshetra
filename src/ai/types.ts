@@ -159,6 +159,12 @@ export const OrchestrateWorkflowOutputSchema = z.object({
 export type OrchestrateWorkflowOutput = z.infer<typeof OrchestrateWorkflowOutputSchema>;
 
 
+const ExportContentSchema = z.object({
+    csv: z.string().describe('The full timeline table formatted as a CSV string, including a header row.'),
+    pdf: z.string().describe('The timeline and notes formatted as a markdown string suitable for PDF conversion.'),
+    text: z.string().describe('The timeline and notes formatted as a plain text string.'),
+});
+
 // Schemas for Litigation Timeline Mode
 export const LitigationTimelineInputSchema = z.object({
     jurisdiction: z.string().describe('The court or jurisdiction (e.g., "Delhi High Court", "US Federal Court").'),
@@ -173,12 +179,6 @@ const TimelineEntrySchema = z.object({
     task: z.string().describe('The procedural task or filing required.'),
     deadline: z.string().describe('The calculated deadline for the task (YYYY-MM-DD).'),
     notes: z.string().describe('Any dependencies or important notes related to the task.'),
-});
-
-const ExportContentSchema = z.object({
-    csv: z.string().describe('The full timeline table formatted as a CSV string, including a header row.'),
-    pdf: z.string().describe('The timeline and notes formatted as a markdown string suitable for PDF conversion.'),
-    text: z.string().describe('The timeline and notes formatted as a plain text string.'),
 });
 
 export const LitigationTimelineOutputSchema = z.object({
