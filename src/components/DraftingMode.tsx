@@ -146,11 +146,11 @@ export function DraftingMode({ isLoading, result }: DraftingModeProps) {
                                                     </div>
                                                 </CardHeader>
                                                 <CardContent>
-                                                    <p className="text-sm text-muted-foreground mb-3">{clause.content}</p>
+                                                    <p className="text-sm text-muted-foreground mb-3" dangerouslySetInnerHTML={{ __html: clause.content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                                                     <Separator className="my-3"/>
                                                     <div className="text-xs p-3 bg-muted/50 rounded-md">
                                                         <p className="font-semibold text-foreground mb-1">AI Risk Explanation:</p>
-                                                        <p className="text-muted-foreground">{clause.riskExplanation}</p>
+                                                        <p className="text-muted-foreground" dangerouslySetInnerHTML={{ __html: clause.riskExplanation.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                                                     </div>
                                                 </CardContent>
                                             </Card>
