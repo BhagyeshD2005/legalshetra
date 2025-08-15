@@ -181,7 +181,7 @@ export function EvidenceAnalysisMode({ isLoading, result }: EvidenceAnalysisMode
                                 <TabsList>
                                     {detailedAnalysis.map(item => (
                                          <TabsTrigger key={item.fileName} value={item.fileName}>
-                                            {getFileIcon(item.analysisType)} {item.fileName}
+                                            {getFileIcon(item.analysisType === 'transcript' && item.transcript ? 'audio' : 'text/plain')} {item.fileName}
                                         </TabsTrigger>
                                     ))}
                                 </TabsList>
@@ -190,7 +190,7 @@ export function EvidenceAnalysisMode({ isLoading, result }: EvidenceAnalysisMode
                                         <Card className="bg-muted/30">
                                             <CardHeader>
                                                 <CardTitle className="text-base">{item.analysisType === 'transcript' ? 'Full Transcript' : 'OCR Output'}</CardTitle>
-                                                {item.documentType && <CardDescription>Detected Document Type: <Badge variant="secondary">{item.documentType}</Badge></CardDescription>}
+                                                {item.documentType && <div className="text-sm text-muted-foreground">Detected Document Type: <Badge variant="secondary">{item.documentType}</Badge></div>}
                                             </CardHeader>
                                             <CardContent>
                                                 <pre className="text-sm whitespace-pre-wrap font-sans p-4 bg-background rounded-md max-h-[400px] overflow-y-auto">
