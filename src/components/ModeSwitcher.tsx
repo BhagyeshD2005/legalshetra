@@ -1386,7 +1386,7 @@ export function ModeSwitcher({
         <CardFooter>
             <div className="p-4 bg-muted/50 rounded-lg w-full">
                 <div className="flex justify-between items-center mb-2">
-                    {tipContent}
+                    <div>{tipContent}</div>
                 </div>
                  <Button variant="link" size="sm" onClick={handleLoadSampleData} className="p-0 h-auto">
                     Load Sample
@@ -1431,7 +1431,6 @@ export function ModeSwitcher({
                 {modes.find(m => m.value === selectedMode)?.label}
             </CardTitle>
             <Button variant="outline" size="sm" onClick={handleLoadSampleData}>
-                <TestTube2 className="mr-2 h-4 w-4" />
                 Load Sample
             </Button>
         </div>
