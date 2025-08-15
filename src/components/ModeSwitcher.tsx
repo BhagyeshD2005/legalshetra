@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -512,16 +513,14 @@ export function ModeSwitcher({
   };
 
   const renderLoadSampleButton = () => (
-    <div className="text-right my-2">
-        <Button 
-            type="button" 
-            variant="link" 
-            className="text-xs text-muted-foreground h-auto p-0"
-            onClick={handleLoadSampleData}
-        >
-            Load Sample
-        </Button>
-    </div>
+    <Button 
+        type="button" 
+        variant="link" 
+        className="text-xs text-muted-foreground h-auto p-0"
+        onClick={handleLoadSampleData}
+    >
+        Load Sample
+    </Button>
   );
 
 
@@ -530,7 +529,7 @@ export function ModeSwitcher({
       case 'orchestrate':
          return (
             <Form {...orchestrateForm}>
-              <form onSubmit={orchestrateForm.handleSubmit(onOrchestrateSubmit)} className="space-y-2" key="orchestrate-form">
+              <form onSubmit={orchestrateForm.handleSubmit(onOrchestrateSubmit)} className="space-y-4" key="orchestrate-form">
                 <FormField
                   control={orchestrateForm.control}
                   name="objective"
@@ -551,14 +550,16 @@ export function ModeSwitcher({
                       </FormControl>
                       <div className="flex justify-between items-center">
                         <FormMessage />
-                        <span className="text-xs text-muted-foreground">
-                          {field.value?.length || 0}/1500
-                        </span>
+                         <div className="flex items-center gap-4">
+                            <span className="text-xs text-muted-foreground">
+                            {field.value?.length || 0}/1500
+                            </span>
+                            {renderLoadSampleButton()}
+                        </div>
                       </div>
                     </FormItem>
                   )}
                 />
-                {renderLoadSampleButton()}
                 <Button type="submit" className="w-full" disabled={isSubmitting} size="lg">
                     {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Orchestrating...</>
                                : <><Sparkles className="mr-2 h-4 w-4" /> Begin Workflow</>}
@@ -569,7 +570,7 @@ export function ModeSwitcher({
       case 'research':
         return (
             <Form {...researchForm}>
-              <form onSubmit={researchForm.handleSubmit(onResearchSubmit)} className="space-y-2" key="research-form">
+              <form onSubmit={researchForm.handleSubmit(onResearchSubmit)} className="space-y-4" key="research-form">
                 <FormField
                   control={researchForm.control}
                   name="query"
@@ -590,14 +591,16 @@ export function ModeSwitcher({
                       </FormControl>
                       <div className="flex justify-between items-center">
                         <FormMessage />
-                        <span className="text-xs text-muted-foreground">
-                          {field.value?.length || 0}/1000
-                        </span>
+                         <div className="flex items-center gap-4">
+                            <span className="text-xs text-muted-foreground">
+                            {field.value?.length || 0}/1000
+                            </span>
+                            {renderLoadSampleButton()}
+                        </div>
                       </div>
                     </FormItem>
                   )}
                 />
-                {renderLoadSampleButton()}
                 <Button type="submit" className="w-full" disabled={isSubmitting} size="lg">
                     {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Researching...</>
                                : <><Search className="mr-2 h-4 w-4" /> Start Research</>}
@@ -608,7 +611,7 @@ export function ModeSwitcher({
       case 'analyzer':
         return (
             <Form {...analyzerForm}>
-              <form onSubmit={analyzerForm.handleSubmit(onAnalyzerSubmit)} className="space-y-2" key="analyzer-form">
+              <form onSubmit={analyzerForm.handleSubmit(onAnalyzerSubmit)} className="space-y-4" key="analyzer-form">
                 <FormItem>
                     <FormLabel>Upload Document</FormLabel>
                     <FormControl>
@@ -698,11 +701,13 @@ export function ModeSwitcher({
                           disabled={isSubmitting}
                         />
                       </FormControl>
-                      <FormMessage />
+                      <div className="flex justify-between items-center">
+                        <FormMessage />
+                        {renderLoadSampleButton()}
+                      </div>
                     </FormItem>
                   )}
                 />
-                 {renderLoadSampleButton()}
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Reviewing...</> 
                              : <><Sparkles className="mr-2 h-4 w-4" /> Review Document</>}
@@ -713,7 +718,7 @@ export function ModeSwitcher({
       case 'reasoning':
         return (
             <Form {...reasoningForm}>
-              <form onSubmit={reasoningForm.handleSubmit(onReasoningSubmit)} className="space-y-2" key="reasoning-form">
+              <form onSubmit={reasoningForm.handleSubmit(onReasoningSubmit)} className="space-y-4" key="reasoning-form">
                 <FormField
                   control={reasoningForm.control}
                   name="scenario"
@@ -728,7 +733,9 @@ export function ModeSwitcher({
                           disabled={isSubmitting}
                         />
                       </FormControl>
-                      <FormMessage />
+                       <div className="flex justify-between items-center">
+                        <FormMessage />
+                      </div>
                     </FormItem>
                   )}
                 />
@@ -746,11 +753,13 @@ export function ModeSwitcher({
                           disabled={isSubmitting}
                         />
                       </FormControl>
-                      <FormMessage />
+                       <div className="flex justify-between items-center">
+                        <FormMessage />
+                        {renderLoadSampleButton()}
+                      </div>
                     </FormItem>
                   )}
                 />
-                 {renderLoadSampleButton()}
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
                              : <><Wand2 className="mr-2 h-4 w-4" /> Analyze Scenario</>}
@@ -761,7 +770,7 @@ export function ModeSwitcher({
         case 'drafting':
             return (
                 <Form {...draftingForm}>
-                  <form onSubmit={draftingForm.handleSubmit(onDraftingSubmit)} className="space-y-2" key="drafting-form">
+                  <form onSubmit={draftingForm.handleSubmit(onDraftingSubmit)} className="space-y-4" key="drafting-form">
                     <FormField
                       control={draftingForm.control}
                       name="documentType"
@@ -799,7 +808,10 @@ export function ModeSwitcher({
                               disabled={isSubmitting}
                             />
                           </FormControl>
-                          <FormMessage />
+                          <div className="flex justify-between items-center">
+                            <FormMessage />
+                            {renderLoadSampleButton()}
+                          </div>
                         </FormItem>
                       )}
                     />
@@ -848,7 +860,6 @@ export function ModeSwitcher({
                         </FormItem>
                       )}
                     />
-                     {renderLoadSampleButton()}
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
                       {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Drafting...</> 
                                  : <><Sparkles className="mr-2 h-4 w-4" /> Start Drafting</>}
@@ -859,7 +870,7 @@ export function ModeSwitcher({
         case 'prediction':
             return (
                  <Form {...predictionForm}>
-                  <form onSubmit={predictionForm.handleSubmit(onPredictionSubmit)} className="space-y-2" key="prediction-form">
+                  <form onSubmit={predictionForm.handleSubmit(onPredictionSubmit)} className="space-y-4" key="prediction-form">
                      <FormField
                       control={predictionForm.control}
                       name="caseType"
@@ -942,11 +953,13 @@ export function ModeSwitcher({
                               disabled={isSubmitting}
                             />
                           </FormControl>
-                          <FormMessage />
+                           <div className="flex justify-between items-center">
+                            <FormMessage />
+                            {renderLoadSampleButton()}
+                          </div>
                         </FormItem>
                       )}
                     />
-                    {renderLoadSampleButton()}
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
                       {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
                                  : <><Sparkles className="mr-2 h-4 w-4" /> Generate Prediction</>}
@@ -957,7 +970,7 @@ export function ModeSwitcher({
         case 'negotiation':
             return (
                 <Form {...negotiationForm}>
-                  <form onSubmit={negotiationForm.handleSubmit(onNegotiationSubmit)} className="space-y-2" key="negotiation-form">
+                  <form onSubmit={negotiationForm.handleSubmit(onNegotiationSubmit)} className="space-y-4" key="negotiation-form">
                     <FormField
                       control={negotiationForm.control}
                       name="currentClause"
@@ -1048,11 +1061,13 @@ export function ModeSwitcher({
                               disabled={isSubmitting}
                             />
                           </FormControl>
-                          <FormMessage />
+                           <div className="flex justify-between items-center">
+                            <FormMessage />
+                            {renderLoadSampleButton()}
+                          </div>
                         </FormItem>
                       )}
                     />
-                    {renderLoadSampleButton()}
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
                       {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
                                  : <><Sparkles className="mr-2 h-4 w-4" /> Get Negotiation Advice</>}
@@ -1063,7 +1078,7 @@ export function ModeSwitcher({
         case 'cross-examination':
             return (
                  <Form {...crossExaminationForm}>
-                  <form onSubmit={crossExaminationForm.handleSubmit(onCrossExaminationSubmit)} className="space-y-2" key="cross-examination-form">
+                  <form onSubmit={crossExaminationForm.handleSubmit(onCrossExaminationSubmit)} className="space-y-4" key="cross-examination-form">
                      <FormField
                       control={crossExaminationForm.control}
                       name="witnessStatement"
@@ -1096,7 +1111,10 @@ export function ModeSwitcher({
                               disabled={isSubmitting}
                             />
                           </FormControl>
-                          <FormMessage />
+                           <div className="flex justify-between items-center">
+                            <FormMessage />
+                            {renderLoadSampleButton()}
+                          </div>
                         </FormItem>
                       )}
                     />
@@ -1144,7 +1162,6 @@ export function ModeSwitcher({
                             )}
                         />
                     </div>
-                    {renderLoadSampleButton()}
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
                       {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Preparing...</> 
                                  : <><Swords className="mr-2 h-4 w-4" /> Prepare for Examination</>}
@@ -1155,7 +1172,7 @@ export function ModeSwitcher({
         case 'timeline':
             return (
                  <Form {...timelineForm}>
-                  <form onSubmit={timelineForm.handleSubmit(onTimelineSubmit)} className="space-y-2" key="timeline-form">
+                  <form onSubmit={timelineForm.handleSubmit(onTimelineSubmit)} className="space-y-4" key="timeline-form">
                      <FormField
                       control={timelineForm.control}
                       name="jurisdiction"
@@ -1246,11 +1263,13 @@ export function ModeSwitcher({
                               disabled={isSubmitting}
                             />
                           </FormControl>
-                          <FormMessage />
+                           <div className="flex justify-between items-center">
+                                <FormMessage />
+                                {renderLoadSampleButton()}
+                           </div>
                         </FormItem>
                       )}
                     />
-                    {renderLoadSampleButton()}
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
                       {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Generating...</> 
                                  : <><Sparkles className="mr-2 h-4 w-4" /> Generate Timeline</>}
@@ -1261,7 +1280,7 @@ export function ModeSwitcher({
       case 'evidence':
         return (
              <Form {...evidenceForm}>
-              <form onSubmit={evidenceForm.handleSubmit(onEvidenceSubmit)} className="space-y-2" key="evidence-form">
+              <form onSubmit={evidenceForm.handleSubmit(onEvidenceSubmit)} className="space-y-4" key="evidence-form">
                 <FormField
                   control={evidenceForm.control}
                   name="caseContext"
@@ -1276,7 +1295,10 @@ export function ModeSwitcher({
                           disabled={isSubmitting}
                         />
                       </FormControl>
-                      <FormMessage />
+                       <div className="flex justify-between items-center">
+                        <FormMessage />
+                        {renderLoadSampleButton()}
+                      </div>
                     </FormItem>
                   )}
                 />
@@ -1352,7 +1374,6 @@ export function ModeSwitcher({
                         </FormItem>
                     )}
                 />
-                {renderLoadSampleButton()}
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
                              : <><Sparkles className="mr-2 h-4 w-4" /> Analyze Evidence</>}
