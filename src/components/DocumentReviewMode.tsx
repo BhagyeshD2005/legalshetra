@@ -4,10 +4,12 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Skeleton } from './ui/skeleton';
-import { FileText, AlertTriangle, Calendar, ClipboardList } from 'lucide-react';
+import { FileText, AlertTriangle, Calendar, ClipboardList, Printer } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
+import { Button } from './ui/button';
+import { useToast } from './hooks/use-toast';
 
 type Anomaly = {
     clause: string;
@@ -51,6 +53,68 @@ const severityConfig = {
 };
 
 export function DocumentReviewMode({ isLoading, result }: DocumentReviewModeProps) {
+    const { toast } = useToast();
+
+    const handlePrint = () => {
+        if (!result) return;
+        
+        const { summary, anomalies, keyDates } = result;
+
+        const printContent = `
+            <style>
+                body { font-family: 'PT Sans', sans-serif; font-size: 12px; line-height: 1.5; }
+                h1 { font-size: 24px; font-weight: bold; margin-bottom: 16px; font-family: 'Playfair Display', serif; }
+                h2 { font-size: 18px; font-weight: bold; margin-top: 24px; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+                p { margin-bottom: 8px; }
+                .section { margin-bottom: 24px; }
+                .item { margin-bottom: 12px; padding: 8px; border: 1px solid #f0f0f0; border-radius: 4px; }
+                .item p { margin: 0; }
+                .bold { font-weight: bold; }
+                .pre { white-space: pre-wrap; font-family: monospace; }
+            </style>
+            <h1>Document Review Report</h1>
+            
+            <div class="section">
+                <h2>Overall Summary</h2>
+                <p class="pre">${summary}</p>
+            </div>
+            
+            <div class="section">
+                <h2>Anomalies & Risks</h2>
+                ${anomalies.map(anomaly => `
+                    <div class="item">
+                        <p><span class="bold">Clause:</span> ${anomaly.clause}</p>
+                        <p><span class="bold">Severity:</span> ${anomaly.severity.toUpperCase()}</p>
+                        <p><span class="bold">Description:</span> ${anomaly.description}</p>
+                        <p><span class="bold">Recommendation:</span> ${anomaly.recommendation}</p>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div class="section">
+                <h2>Key Dates & Timelines</h2>
+                ${keyDates.map(kd => `
+                    <div class="item">
+                        <p><span class="bold">Date:</span> ${kd.date}</p>
+                        <p><span class="bold">Description:</span> ${kd.description}</p>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        
+        try {
+            const printWindow = window.open('', '_blank');
+            if(printWindow) {
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+                printWindow.print();
+                toast({ title: 'Printing...', description: 'Your report is being sent to the printer.' });
+            }
+        } catch (e) {
+            toast({ variant: 'destructive', title: 'Print Failed', description: 'Could not open print dialog.' });
+        }
+    };
+
 
   if (isLoading) {
     return (
@@ -89,6 +153,21 @@ export function DocumentReviewMode({ isLoading, result }: DocumentReviewModeProp
               animate={{ opacity: 1, y: 0 }}
               className="space-y-6"
             >
+              <Card>
+                <CardHeader>
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <CardTitle className="font-headline">Document Review Report</CardTitle>
+                            <CardDescription>An AI-powered analysis of your document.</CardDescription>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={handlePrint}>
+                            <Printer className="mr-2 h-4 w-4" />
+                            Print Report
+                        </Button>
+                    </div>
+                </CardHeader>
+              </Card>
+
               <Card>
                 <CardHeader>
                   <CardTitle className="font-headline flex items-center gap-2">
@@ -182,4 +261,3 @@ export function DocumentReviewMode({ isLoading, result }: DocumentReviewModeProp
     </div>
   );
 }
-

@@ -49,20 +49,40 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
   const reportRef = useRef<HTMLDivElement>(null);
 
   const { summary, rankedCases, keyPrinciples, charts } = reportData;
-  const fullReportText = [summary, rankedCases?.map(c => `${c.title}\n${c.summary}`).join('\n\n'), keyPrinciples?.map(p => `${p.principle}\n${p.cases.join(', ')}`).join('\n\n')].join('\n\n');
+  
+  const getFullReportText = () => {
+      let text = `Legal Research Report\nQuery: ${query}\n\n`;
+      text += `--- SUMMARY ---\n${summary}\n\n`;
+      if (rankedCases?.length) {
+        text += `--- RANKED CASE ANALYSIS ---\n`;
+        rankedCases.forEach(c => {
+            text += `Rank ${c.rank}: ${c.title} (${c.citation})\n`;
+            text += `Jurisdiction: ${c.jurisdiction}, Date: ${c.date}\n`;
+            text += `Summary: ${c.summary}\n\n`;
+        });
+      }
+      if (keyPrinciples?.length) {
+         text += `--- KEY LEGAL PRINCIPLES ---\n`;
+         keyPrinciples.forEach(p => {
+            text += `Principle: ${p.principle}\n`;
+            text += `Established in: ${p.cases.join(', ')}\n\n`;
+         });
+      }
+      return text;
+  };
 
 
   useEffect(() => {
-    const wordCount = fullReportText.split(/\s+/).length;
+    const wordCount = getFullReportText().split(/\s+/).length;
     const avgReadingSpeed = 200;
     setReadingTime(Math.ceil(wordCount / avgReadingSpeed));
-  }, [fullReportText]);
+  }, [reportData]);
 
 
   const handleCopy = async () => {
     setIsCopying(true);
     try {
-      await navigator.clipboard.writeText(fullReportText);
+      await navigator.clipboard.writeText(getFullReportText());
       
       toast({
         title: "Copied successfully!",
@@ -81,29 +101,59 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
 
   const handlePrint = () => {
     setIsPrinting(true);
-    // This is a simplified print handler. A real one would need more complex styling.
-    try {
-      const printContent = `
+    
+    const printContent = `
+        <style>
+            body { font-family: 'PT Sans', sans-serif; font-size: 12px; line-height: 1.5; }
+            h1 { font-size: 24px; font-weight: bold; margin-bottom: 8px; font-family: 'Playfair Display', serif; }
+            h2 { font-size: 16px; font-weight: bold; }
+            h3 { font-size: 18px; font-weight: bold; margin-top: 24px; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+            h4 { font-size: 14px; font-weight: bold; margin-top: 16px; margin-bottom: 4px; }
+            p { margin-bottom: 8px; }
+            .query { background: #f9f9f9; padding: 8px; border-radius: 4px; margin-bottom: 16px; }
+            .pre { white-space: pre-wrap; }
+            .case { margin-bottom: 16px; padding-left: 16px; border-left: 2px solid #f0f0f0; }
+            .principle { margin-bottom: 12px; }
+        </style>
         <h1>Legal Research Report</h1>
-        <h2>Query: ${query}</h2>
-        <hr/>
+        <div class="query">
+            <h2>Query:</h2>
+            <p>${query}</p>
+        </div>
+        
         <h3>Summary</h3>
-        <p>${summary.replace(/\n/g, '<br/>')}</p>
-        <h3>Ranked Cases</h3>
-        ${rankedCases?.map(c => `<h4>${c.rank}. ${c.title} (${c.citation})</h4><p>${c.summary.replace(/\n/g, '<br/>')}</p>`).join('')}
-        <h3>Key Principles</h3>
-         ${keyPrinciples?.map(p => `<h4>${p.principle}</h4><p>Established in: ${p.cases.join(', ')}</p>`).join('')}
-      `;
+        <p class="pre">${summary}</p>
+        
+        ${rankedCases?.length ? `<h3>Ranked Case Analysis</h3>` : ''}
+        ${rankedCases?.map(c => `
+            <div class="case">
+                <h4>${c.rank}. ${c.title} (${c.citation})</h4>
+                <p><strong>Jurisdiction:</strong> ${c.jurisdiction} | <strong>Date:</strong> ${c.date}</p>
+                <p class="pre">${c.summary}</p>
+                <a href="${c.url}" target="_blank">Read Full Text</a>
+            </div>
+        `).join('')}
+        
+        ${keyPrinciples?.length ? `<h3>Key Legal Principles</h3>` : ''}
+        ${keyPrinciples?.map(p => `
+            <div class="principle">
+                <h4>${p.principle}</h4>
+                <p><strong>Established in:</strong> ${p.cases.join(', ')}</p>
+            </div>
+        `).join('')}
+    `;
+    
+    try {
       const printWindow = window.open('', '_blank');
       if(printWindow) {
         printWindow.document.write(printContent);
         printWindow.document.close();
         printWindow.print();
+        toast({ title: 'Printing...', description: 'Your report is being sent to the printer.' });
       }
     } catch(e) {
-        toast({ variant: 'destructive', title: 'Print failed' });
-    }
-    finally {
+        toast({ variant: 'destructive', title: 'Print Failed', description: 'Could not open print dialog.' });
+    } finally {
         setIsPrinting(false);
     }
   };
@@ -352,7 +402,3 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
     </div>
   );
 }
-
-    
-
-    

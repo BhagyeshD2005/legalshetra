@@ -4,11 +4,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Swords, MessageCircleWarning, Lightbulb, Users, UserCheck } from 'lucide-react';
+import { Swords, MessageCircleWarning, Lightbulb, Users, UserCheck, Printer } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { type CrossExaminationPrepOutput } from '@/ai/types';
 import { Badge } from './ui/badge';
 import { cn } from '@/lib/utils';
+import { Button } from './ui/button';
+import { useToast } from './hooks/use-toast';
 
 
 export type CrossExaminationResult = CrossExaminationPrepOutput;
@@ -19,6 +21,85 @@ interface CrossExaminationModeProps {
 }
 
 export function CrossExaminationMode({ isLoading, result }: CrossExaminationModeProps) {
+    const { toast } = useToast();
+
+    const handlePrint = () => {
+        if (!result) return;
+        
+        const { inconsistencies, strategicQuestions, opposingArguments, rolePlaySimulation } = result;
+
+        const printContent = `
+            <style>
+                body { font-family: 'PT Sans', sans-serif; font-size: 12px; line-height: 1.5; }
+                h1 { font-size: 24px; font-weight: bold; margin-bottom: 16px; font-family: 'Playfair Display', serif; }
+                h2 { font-size: 18px; font-weight: bold; margin-top: 24px; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+                p { margin-bottom: 8px; }
+                .section { margin-bottom: 24px; }
+                .item { margin-bottom: 12px; padding: 8px; border: 1px solid #f0f0f0; border-radius: 4px; }
+                .item p { margin: 0; }
+                .italic { font-style: italic; }
+                .bold { font-weight: bold; }
+                .dialogue { margin-left: 20px; }
+            </style>
+            <h1>Cross-Examination Preparation Report</h1>
+            
+            <div class="section">
+                <h2>Identified Inconsistencies</h2>
+                ${inconsistencies.map(item => `
+                    <div class="item">
+                        <p class="italic">"${item.statementText}"</p>
+                        <hr style="margin: 8px 0;" />
+                        <p><span class="bold">Contradicts with:</span> ${item.contradictingEvidence}</p>
+                        <p><span class="bold">Explanation:</span> ${item.explanation}</p>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <div class="section">
+                <h2>Strategic Questions</h2>
+                ${strategicQuestions.map(item => `
+                    <div class="item">
+                        <p class="bold">Question:</p>
+                        <p>${item.question}</p>
+                        <p class="bold" style="margin-top: 8px;">Purpose:</p>
+                        <p>${item.purpose}</p>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div class="section">
+                <h2>Opposing Counsel's Arguments</h2>
+                ${opposingArguments.map(item => `
+                    <div class="item">
+                        <p class="bold">Argument:</p>
+                        <p>${item.argument}</p>
+                        <p class="bold" style="margin-top: 8px;">Suggested Response:</p>
+                        <p>${item.response}</p>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <div class="section">
+                <h2>Role-Play Simulation</h2>
+                ${rolePlaySimulation.map(line => `
+                    <p class="dialogue"><span class="bold">${line.speaker}:</span> ${line.line}</p>
+                `).join('')}
+            </div>
+        `;
+        
+        try {
+            const printWindow = window.open('', '_blank');
+            if(printWindow) {
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+                printWindow.print();
+                toast({ title: 'Printing...', description: 'Your report is being sent to the printer.' });
+            }
+        } catch (e) {
+            toast({ variant: 'destructive', title: 'Print Failed', description: 'Could not open print dialog.' });
+        }
+    };
+
 
     if (isLoading) {
         return (
@@ -64,6 +145,21 @@ export function CrossExaminationMode({ isLoading, result }: CrossExaminationMode
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-6"
                 >
+                    <Card>
+                        <CardHeader>
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <CardTitle className="font-headline">Cross-Examination Report</CardTitle>
+                                    <CardDescription>A complete breakdown for your preparation.</CardDescription>
+                                </div>
+                                <Button variant="outline" size="sm" onClick={handlePrint}>
+                                    <Printer className="mr-2 h-4 w-4" />
+                                    Print Report
+                                </Button>
+                            </div>
+                        </CardHeader>
+                    </Card>
+
                     {inconsistencies.length > 0 && (
                         <Card>
                             <CardHeader>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -7,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileSignature, Bot, ClipboardCheck, AlertTriangle, Shield, CheckCircle2, ChevronRight, DraftingCompass } from 'lucide-react';
+import { FileSignature, Bot, ClipboardCheck, AlertTriangle, Shield, CheckCircle2, ChevronRight, DraftingCompass, Printer } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { type DraftLegalDocumentOutput } from '@/ai/types';
 import { cn } from '@/lib/utils';
@@ -51,6 +52,31 @@ export function DraftingMode({ isLoading, result }: DraftingModeProps) {
             description: "The document text has been copied.",
         });
     }
+
+    const handlePrint = () => {
+        if (!result) return;
+        const printContent = `
+            <style>
+                body { font-family: 'PT Sans', sans-serif; font-size: 12px; line-height: 1.6; }
+                h1 { font-size: 24px; font-weight: bold; margin-bottom: 24px; text-align: center; font-family: 'Playfair Display', serif; }
+                pre { white-space: pre-wrap; font-family: 'PT Sans', sans-serif; }
+            </style>
+            <h1>${result.title}</h1>
+            <pre>${result.fullDraft}</pre>
+        `;
+
+         try {
+            const printWindow = window.open('', '_blank');
+            if(printWindow) {
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+                printWindow.print();
+                toast({ title: 'Printing...', description: 'Your document is being sent to the printer.' });
+            }
+        } catch (e) {
+            toast({ variant: 'destructive', title: 'Print Failed', description: 'Could not open print dialog.' });
+        }
+    };
 
     if (isLoading) {
         return (
@@ -140,15 +166,21 @@ export function DraftingMode({ isLoading, result }: DraftingModeProps) {
                     <div className="space-y-4">
                         <CardTitle className="font-headline text-xl">Finalized Document</CardTitle>
                          <CardDescription>
-                            This is the clean, finalized version of your document. You can copy it to your clipboard.
+                            This is the clean, finalized version of your document. You can copy or print it.
                         </CardDescription>
                         <ScrollArea className="h-[60vh] p-4 border rounded-lg bg-muted/30">
                            <pre className="text-sm whitespace-pre-wrap font-sans">{result.fullDraft}</pre>
                         </ScrollArea>
-                        <Button onClick={() => handleCopyToClipboard(result.fullDraft)}>
-                            <ClipboardCheck className="mr-2 h-4 w-4" />
-                            Copy to Clipboard
-                        </Button>
+                        <div className="flex items-center gap-2">
+                            <Button onClick={() => handleCopyToClipboard(result.fullDraft)}>
+                                <ClipboardCheck className="mr-2 h-4 w-4" />
+                                Copy to Clipboard
+                            </Button>
+                             <Button variant="outline" onClick={handlePrint}>
+                                <Printer className="mr-2 h-4 w-4" />
+                                Print to PDF
+                            </Button>
+                        </div>
                     </div>
                 );
             default: // 'draft'
