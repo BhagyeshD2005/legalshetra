@@ -22,7 +22,7 @@ export type Mode = 'research' | 'analyzer' | 'reasoning' | 'drafting' | 'predict
 export type AnalysisResult = GenerateLegalSummaryOutput | DocumentReviewResult | ReasoningResult | DraftResult | PredictiveAnalyticsResult | NegotiationResult | CrossExaminationResult | OrchestrationResult | LitigationTimelineResult | EvidenceAnalysisResult | null;
 
 export default function ResearchPage() {
-  const [selectedMode, setSelectedMode] = useState<Mode>('evidence');
+  const [selectedMode, setSelectedMode] = useState<Mode>('orchestrate');
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult>(null);
   const [initialQuery, setInitialQuery] = useState<{ query: string } | undefined>(undefined);
