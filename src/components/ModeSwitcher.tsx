@@ -511,13 +511,26 @@ export function ModeSwitcher({
     toast({ title: 'Sample data loaded!', description: 'The form has been populated with sample input.' });
   };
 
+  const renderLoadSampleButton = () => (
+    <div className="text-center my-4">
+        <Button 
+            type="button" 
+            variant="link" 
+            className="text-xs text-muted-foreground"
+            onClick={handleLoadSampleData}
+        >
+            Load Sample
+        </Button>
+    </div>
+  );
+
 
   const renderForm = () => {
     switch(selectedMode) {
       case 'orchestrate':
          return (
             <Form {...orchestrateForm}>
-              <form onSubmit={orchestrateForm.handleSubmit(onOrchestrateSubmit)} className="space-y-6" key="orchestrate-form">
+              <form onSubmit={orchestrateForm.handleSubmit(onOrchestrateSubmit)} className="space-y-2" key="orchestrate-form">
                 <FormField
                   control={orchestrateForm.control}
                   name="objective"
@@ -545,6 +558,7 @@ export function ModeSwitcher({
                     </FormItem>
                   )}
                 />
+                {renderLoadSampleButton()}
                 <Button type="submit" className="w-full" disabled={isSubmitting} size="lg">
                     {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Orchestrating...</>
                                : <><Sparkles className="mr-2 h-4 w-4" /> Begin Workflow</>}
@@ -555,7 +569,7 @@ export function ModeSwitcher({
       case 'research':
         return (
             <Form {...researchForm}>
-              <form onSubmit={researchForm.handleSubmit(onResearchSubmit)} className="space-y-6" key="research-form">
+              <form onSubmit={researchForm.handleSubmit(onResearchSubmit)} className="space-y-2" key="research-form">
                 <FormField
                   control={researchForm.control}
                   name="query"
@@ -583,6 +597,7 @@ export function ModeSwitcher({
                     </FormItem>
                   )}
                 />
+                {renderLoadSampleButton()}
                 <Button type="submit" className="w-full" disabled={isSubmitting} size="lg">
                     {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Researching...</>
                                : <><Search className="mr-2 h-4 w-4" /> Start Research</>}
@@ -593,7 +608,7 @@ export function ModeSwitcher({
       case 'analyzer':
         return (
             <Form {...analyzerForm}>
-              <form onSubmit={analyzerForm.handleSubmit(onAnalyzerSubmit)} className="space-y-6" key="analyzer-form">
+              <form onSubmit={analyzerForm.handleSubmit(onAnalyzerSubmit)} className="space-y-2" key="analyzer-form">
                 <FormItem>
                     <FormLabel>Upload Document</FormLabel>
                     <FormControl>
@@ -687,6 +702,7 @@ export function ModeSwitcher({
                     </FormItem>
                   )}
                 />
+                 {renderLoadSampleButton()}
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Reviewing...</> 
                              : <><Sparkles className="mr-2 h-4 w-4" /> Review Document</>}
@@ -697,7 +713,7 @@ export function ModeSwitcher({
       case 'reasoning':
         return (
             <Form {...reasoningForm}>
-              <form onSubmit={reasoningForm.handleSubmit(onReasoningSubmit)} className="space-y-6" key="reasoning-form">
+              <form onSubmit={reasoningForm.handleSubmit(onReasoningSubmit)} className="space-y-2" key="reasoning-form">
                 <FormField
                   control={reasoningForm.control}
                   name="scenario"
@@ -734,6 +750,7 @@ export function ModeSwitcher({
                     </FormItem>
                   )}
                 />
+                 {renderLoadSampleButton()}
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
                              : <><Wand2 className="mr-2 h-4 w-4" /> Analyze Scenario</>}
@@ -744,7 +761,7 @@ export function ModeSwitcher({
         case 'drafting':
             return (
                 <Form {...draftingForm}>
-                  <form onSubmit={draftingForm.handleSubmit(onDraftingSubmit)} className="space-y-6" key="drafting-form">
+                  <form onSubmit={draftingForm.handleSubmit(onDraftingSubmit)} className="space-y-2" key="drafting-form">
                     <FormField
                       control={draftingForm.control}
                       name="documentType"
@@ -831,7 +848,7 @@ export function ModeSwitcher({
                         </FormItem>
                       )}
                     />
-
+                     {renderLoadSampleButton()}
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
                       {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Drafting...</> 
                                  : <><Sparkles className="mr-2 h-4 w-4" /> Start Drafting</>}
@@ -842,7 +859,7 @@ export function ModeSwitcher({
         case 'prediction':
             return (
                  <Form {...predictionForm}>
-                  <form onSubmit={predictionForm.handleSubmit(onPredictionSubmit)} className="space-y-6" key="prediction-form">
+                  <form onSubmit={predictionForm.handleSubmit(onPredictionSubmit)} className="space-y-2" key="prediction-form">
                      <FormField
                       control={predictionForm.control}
                       name="caseType"
@@ -929,7 +946,7 @@ export function ModeSwitcher({
                         </FormItem>
                       )}
                     />
-
+                    {renderLoadSampleButton()}
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
                       {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
                                  : <><Sparkles className="mr-2 h-4 w-4" /> Generate Prediction</>}
@@ -940,7 +957,7 @@ export function ModeSwitcher({
         case 'negotiation':
             return (
                 <Form {...negotiationForm}>
-                  <form onSubmit={negotiationForm.handleSubmit(onNegotiationSubmit)} className="space-y-6" key="negotiation-form">
+                  <form onSubmit={negotiationForm.handleSubmit(onNegotiationSubmit)} className="space-y-2" key="negotiation-form">
                     <FormField
                       control={negotiationForm.control}
                       name="currentClause"
@@ -1035,6 +1052,7 @@ export function ModeSwitcher({
                         </FormItem>
                       )}
                     />
+                    {renderLoadSampleButton()}
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
                       {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
                                  : <><Sparkles className="mr-2 h-4 w-4" /> Get Negotiation Advice</>}
@@ -1045,7 +1063,7 @@ export function ModeSwitcher({
         case 'cross-examination':
             return (
                  <Form {...crossExaminationForm}>
-                  <form onSubmit={crossExaminationForm.handleSubmit(onCrossExaminationSubmit)} className="space-y-6" key="cross-examination-form">
+                  <form onSubmit={crossExaminationForm.handleSubmit(onCrossExaminationSubmit)} className="space-y-2" key="cross-examination-form">
                      <FormField
                       control={crossExaminationForm.control}
                       name="witnessStatement"
@@ -1126,6 +1144,7 @@ export function ModeSwitcher({
                             )}
                         />
                     </div>
+                    {renderLoadSampleButton()}
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
                       {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Preparing...</> 
                                  : <><Swords className="mr-2 h-4 w-4" /> Prepare for Examination</>}
@@ -1136,7 +1155,7 @@ export function ModeSwitcher({
         case 'timeline':
             return (
                  <Form {...timelineForm}>
-                  <form onSubmit={timelineForm.handleSubmit(onTimelineSubmit)} className="space-y-6" key="timeline-form">
+                  <form onSubmit={timelineForm.handleSubmit(onTimelineSubmit)} className="space-y-2" key="timeline-form">
                      <FormField
                       control={timelineForm.control}
                       name="jurisdiction"
@@ -1231,7 +1250,7 @@ export function ModeSwitcher({
                         </FormItem>
                       )}
                     />
-
+                    {renderLoadSampleButton()}
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
                       {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Generating...</> 
                                  : <><Sparkles className="mr-2 h-4 w-4" /> Generate Timeline</>}
@@ -1242,7 +1261,7 @@ export function ModeSwitcher({
       case 'evidence':
         return (
              <Form {...evidenceForm}>
-              <form onSubmit={evidenceForm.handleSubmit(onEvidenceSubmit)} className="space-y-6" key="evidence-form">
+              <form onSubmit={evidenceForm.handleSubmit(onEvidenceSubmit)} className="space-y-2" key="evidence-form">
                 <FormField
                   control={evidenceForm.control}
                   name="caseContext"
@@ -1333,7 +1352,7 @@ export function ModeSwitcher({
                         </FormItem>
                     )}
                 />
-                
+                {renderLoadSampleButton()}
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
                   {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
                              : <><Sparkles className="mr-2 h-4 w-4" /> Analyze Evidence</>}
