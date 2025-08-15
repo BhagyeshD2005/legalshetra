@@ -28,6 +28,7 @@ import {
     TrendingUp,
     Handshake,
     Swords,
+    Component,
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
@@ -100,8 +101,15 @@ const crossExaminationFormSchema = z.object({
     simulationRole: z.enum(['witness', 'opposing_counsel']),
 });
 
+const orchestrateFormSchema = z.object({
+  objective: z.string()
+    .min(20, { message: 'Please describe your objective in at least 20 characters.' })
+    .max(1500, { message: 'Objective must be less than 1500 characters.' })
+});
+
 
 const modes = [
+  { value: 'orchestrate' as Mode, label: 'Orchestrate AI', icon: Component },
   { value: 'research' as Mode, label: 'AI Legal Research', icon: FileSearch },
   { value: 'analyzer' as Mode, label: 'Document Review', icon: FileText },
   { value: 'reasoning' as Mode, label: 'Reasoning Mode', icon: BrainCircuit },
@@ -189,6 +197,11 @@ export function ModeSwitcher({
     },
   });
 
+   const orchestrateForm = useForm<z.infer<typeof orchestrateFormSchema>>({
+    resolver: zodResolver(orchestrateFormSchema),
+    defaultValues: { objective: '' },
+  });
+
   // Reset forms when mode changes to prevent state leakage
   useEffect(() => {
     researchForm.reset();
@@ -198,7 +211,8 @@ export function ModeSwitcher({
     predictionForm.reset();
     negotiationForm.reset();
     crossExaminationForm.reset();
-  }, [selectedMode, researchForm, analyzerForm, reasoningForm, draftingForm, predictionForm, negotiationForm, crossExaminationForm]);
+    orchestrateForm.reset();
+  }, [selectedMode, researchForm, analyzerForm, reasoningForm, draftingForm, predictionForm, negotiationForm, crossExaminationForm, orchestrateForm]);
 
   const onResearchSubmit: SubmitHandler<z.infer<typeof researchFormSchema>> = async (data) => {
     onAnalysisStart(data);
@@ -338,9 +352,53 @@ export function ModeSwitcher({
     setIsSubmitting(false);
   };
 
+  const onOrchestrateSubmit: SubmitHandler<z.infer<typeof orchestrateFormSchema>> = async (data) => {
+    // This will be handled by the OrchestrateMode component, which will call the flow
+    // and provide step-by-step updates. Here, we just initiate it.
+    onAnalysisStart({ query: data.objective });
+  };
+
 
   const renderForm = () => {
     switch(selectedMode) {
+      case 'orchestrate':
+         return (
+            <Form {...orchestrateForm}>
+              <form onSubmit={orchestrateForm.handleSubmit(onOrchestrateSubmit)} className="space-y-6" key="orchestrate-form">
+                <FormField
+                  control={orchestrateForm.control}
+                  name="objective"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="flex items-center gap-2">
+                        <FileText className="h-4 w-4" />
+                        Overall Objective
+                      </FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="e.g., 'Research precedents for contract disputes involving force majeure due to floods in Mumbai, then draft a legal notice to the defaulting party.'"
+                          className="min-h-[150px] resize-none focus-visible:ring-2 focus-visible:ring-primary"
+                          {...field}
+                          disabled={isSubmitting}
+                          maxLength={1500}
+                        />
+                      </FormControl>
+                      <div className="flex justify-between items-center">
+                        <FormMessage />
+                        <span className="text-xs text-muted-foreground">
+                          {field.value?.length || 0}/1500
+                        </span>
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full" disabled={isSubmitting} size="lg">
+                    {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Orchestrating...</>
+                               : <><Sparkles className="mr-2 h-4 w-4" /> Begin Workflow</>}
+                </Button>
+              </form>
+            </Form>
+        );
       case 'research':
         return (
             <Form {...researchForm}>
@@ -945,6 +1003,23 @@ export function ModeSwitcher({
             </CardFooter>
         )
     }
+     if (selectedMode === 'orchestrate') {
+        return (
+            <CardFooter>
+                <div className="p-4 bg-muted/50 rounded-lg w-full">
+                    <h4 className="text-sm font-medium mb-2 flex items-center gap-1">
+                    <Lightbulb className="h-3 w-3 text-yellow-500" />
+                    Orchestration Tips
+                    </h4>
+                    <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+                        <li>Clearly state your final goal (e.g., "draft a contract," "prepare for a hearing").</li>
+                        <li>Provide all necessary context in your prompt.</li>
+                        <li>The AI will break it down into steps and execute them for you.</li>
+                    </ul>
+                </div>
+            </CardFooter>
+        )
+    }
     return null;
   }
 
@@ -989,6 +1064,7 @@ export function ModeSwitcher({
                 selectedMode === 'prediction' ? 'Get probability-based case strategy insights using historical data and trends.' :
                 selectedMode === 'negotiation' ? 'Get AI-powered advice for contract and settlement discussions.' :
                 selectedMode === 'cross-examination' ? 'Prepare for court by analyzing statements, generating questions, and simulating scenarios.' :
+                selectedMode === 'orchestrate' ? 'Describe a complex legal workflow, and the AI will coordinate multiple agents to complete it.' :
                 'Provide a legal scenario and a question for the AI to reason about.'
             }
         </CardDescription>
@@ -1000,5 +1076,3 @@ export function ModeSwitcher({
     </Card>
   );
 }
-
-    

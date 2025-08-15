@@ -11,5 +11,7 @@ import '@/ai/flows/draft-legal-document.ts';
 import '@/ai/flows/predict-case-outcome.ts';
 import '@/ai/flows/negotiation-support.ts';
 import '@/ai/flows/cross-examination-prep.ts';
+import '@/ai/flows/orchestrate-workflow.ts';
+
 
 
