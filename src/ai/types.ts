@@ -188,3 +188,54 @@ export const LitigationTimelineOutputSchema = z.object({
     exportContent: ExportContentSchema.describe('The timeline data pre-formatted for various export options.'),
 });
 export type LitigationTimelineOutput = z.infer<typeof LitigationTimelineOutputSchema>;
+
+// Schemas for Evidence Analysis Mode
+const EvidenceFileSchema = z.object({
+    fileName: z.string(),
+    fileType: z.string(),
+    dataUri: z.string().describe("The file content as a data URI."),
+});
+
+export const AnalyzeEvidenceInputSchema = z.object({
+    caseContext: z.string().describe("A brief summary of the case context."),
+    evidenceFiles: z.array(EvidenceFileSchema).describe("An array of evidence files to be analyzed."),
+});
+export type AnalyzeEvidenceInput = z.infer<typeof AnalyzeEvidenceInputSchema>;
+
+const EvidenceSummarySchema = z.object({
+    fileName: z.string().describe("The name of the analyzed file."),
+    fileType: z.string().describe("The detected type of file (e.g., audio, image, pdf)."),
+    quality: z.string().describe("A brief assessment of the evidence quality (e.g., 'clear audio', 'blurry image')."),
+    summary: z.string().describe("A concise summary of the evidence content."),
+});
+
+const KeyStatementSchema = z.object({
+    timestamp: z.string().describe("The timestamp of the statement in HH:MM:SS format."),
+    statement: z.string().describe("The transcribed key statement."),
+    relevance: z.string().describe("Why this statement is considered legally relevant."),
+});
+
+const DetailedAnalysisSchema = z.object({
+    fileName: z.string(),
+    analysisType: z.enum(['transcript', 'ocr']),
+    documentType: z.string().optional().describe("The classified type of document (e.g., 'Affidavit', 'Contract')."),
+    transcript: z.string().optional().describe("The full verbatim transcript of the audio/video file."),
+    keyStatements: z.array(KeyStatementSchema).optional().describe("A list of legally significant statements with timestamps."),
+    ocrText: z.string().optional().describe("The full text extracted from an image or document."),
+});
+
+const ContradictionSchema = z.object({
+    reference: z.string().describe("The timestamp (HH:MM:SS) or page/line number of the first statement."),
+    statement: z.string().describe("The original statement from the first piece of evidence."),
+    contradictingSource: z.string().describe("The file name of the contradicting evidence."),
+    contradictingStatement: z.string().describe("The statement from the second piece of evidence that causes the contradiction."),
+    notes: z.string().describe("A brief explanation of the discrepancy."),
+});
+
+export const AnalyzeEvidenceOutputSchema = z.object({
+    evidenceSummary: z.array(EvidenceSummarySchema).describe("A high-level summary of each piece of evidence."),
+    detailedAnalysis: z.array(DetailedAnalysisSchema).describe("The detailed transcripts and OCR outputs."),
+    contradictionReport: z.array(ContradictionSchema).describe("A report of all identified contradictions between evidence sources."),
+    exportContent: ExportContentSchema.describe('The analysis data pre-formatted for various export options.'),
+});
+export type AnalyzeEvidenceOutput = z.infer<typeof AnalyzeEvidenceOutputSchema>;

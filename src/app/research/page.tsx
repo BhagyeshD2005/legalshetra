@@ -12,16 +12,17 @@ import { NegotiationMode, type NegotiationResult } from '@/components/Negotiatio
 import { CrossExaminationMode, type CrossExaminationResult } from '@/components/CrossExaminationMode';
 import { OrchestrateMode, type OrchestrationResult } from '@/components/OrchestrateMode';
 import { LitigationTimelineMode, type LitigationTimelineResult } from '@/components/LitigationTimelineMode';
+import { EvidenceAnalysisMode, type EvidenceAnalysisResult } from '@/components/EvidenceAnalysisMode';
 import { ModeSwitcher } from '@/components/ModeSwitcher';
 import { type GenerateLegalSummaryOutput } from '@/ai/flows/generate-legal-summary';
 
 
-export type Mode = 'research' | 'analyzer' | 'reasoning' | 'drafting' | 'prediction' | 'negotiation' | 'cross-examination' | 'orchestrate' | 'timeline';
+export type Mode = 'research' | 'analyzer' | 'reasoning' | 'drafting' | 'prediction' | 'negotiation' | 'cross-examination' | 'orchestrate' | 'timeline' | 'evidence';
 
-export type AnalysisResult = GenerateLegalSummaryOutput | DocumentReviewResult | ReasoningResult | DraftResult | PredictiveAnalyticsResult | NegotiationResult | CrossExaminationResult | OrchestrationResult | LitigationTimelineResult | null;
+export type AnalysisResult = GenerateLegalSummaryOutput | DocumentReviewResult | ReasoningResult | DraftResult | PredictiveAnalyticsResult | NegotiationResult | CrossExaminationResult | OrchestrationResult | LitigationTimelineResult | EvidenceAnalysisResult | null;
 
 export default function ResearchPage() {
-  const [selectedMode, setSelectedMode] = useState<Mode>('timeline');
+  const [selectedMode, setSelectedMode] = useState<Mode>('evidence');
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult>(null);
   const [initialQuery, setInitialQuery] = useState<{ query: string } | undefined>(undefined);
@@ -86,6 +87,8 @@ export default function ResearchPage() {
                 />;
       case 'timeline':
         return <LitigationTimelineMode isLoading={isLoading} result={analysisResult as LitigationTimelineResult | null} />;
+      case 'evidence':
+        return <EvidenceAnalysisMode isLoading={isLoading} result={analysisResult as EvidenceAnalysisResult | null} />;
       default:
         return null;
     }

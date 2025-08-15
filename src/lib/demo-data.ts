@@ -62,6 +62,16 @@ Known Date: First Listing on 2025-09-10`,
     tryThisLink: '/research?mode=timeline'
   },
   {
+    mode: 'Evidence Analysis',
+    icon: Camera,
+    sampleInput: `Task: Analyze attached audio (witness_statement.mp3) and a scanned affidavit (affidavit_scan.pdf) to find contradictions.`,
+    sampleOutput: `<strong>Analysis Complete:</strong>
+- <strong>Transcript:</strong> Witness stated event occurred at "approx 10 PM".
+- <strong>OCR on Affidavit:</strong> Sworn statement says event occurred at "9:15 PM".
+- <strong><span class="text-red-500">Contradiction Found:</span></strong> 45-minute time discrepancy between audio testimony and sworn affidavit.`,
+    tryThisLink: '/research?mode=evidence'
+  },
+  {
     mode: 'Document Review',
     icon: FileText,
     sampleInput: `Contract Snippet: ...The Lessee shall be responsible for all damages, without limit. The notice period for termination is 7 days for either party. This agreement is governed by the laws of India.`,
@@ -114,16 +124,6 @@ Your Evidence: Security footage shows exit at 9:45 PM. City maintenance log show
     tryThisLink: '/research?mode=cross-examination'
   },
    {
-    mode: 'Evidence Analysis',
-    icon: Camera,
-    sampleInput: `Task: Analyze attached photograph of a damaged vehicle for a motor accident claim. Extract details like license plate, extent of damage, and any visible external factors.`,
-    sampleOutput: `<strong>Analysis Complete:</strong>
-- <strong>License Plate:</strong> MH 12 AB 3456
-- <strong>Damage Assessment:</strong> Severe impact to the front-left bumper and headlight assembly. Moderate denting on the driver-side door.
-- <strong>External Factors:</strong> Wet road surface visible, suggesting rain. No other vehicles in immediate vicinity.`,
-    tryThisLink: '/research?mode=evidence'
-  },
-  {
     mode: 'Client Portfolio',
     icon: FolderKanban,
     sampleInput: `Client Name: Rajesh Kumar

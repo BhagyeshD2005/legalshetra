@@ -30,6 +30,7 @@ import {
     Swords,
     Component,
     CalendarClock,
+    Camera,
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
@@ -40,6 +41,7 @@ import { predictCaseOutcome } from '@/ai/flows/predict-case-outcome';
 import { negotiationSupport } from '@/ai/flows/negotiation-support';
 import { crossExaminationPrep } from '@/ai/flows/cross-examination-prep';
 import { generateLitigationTimeline } from '@/ai/flows/generate-litigation-timeline';
+import { analyzeEvidence } from '@/ai/flows/analyze-evidence';
 import { Input } from './ui/input';
 import { cn } from '@/lib/utils';
 import { enhanceQueryClarity } from '@/ai/flows/enhance-query-clarity';
@@ -121,17 +123,26 @@ const timelineFormSchema = z.object({
     knownDates: z.string().optional(),
 });
 
+const evidenceFormSchema = z.object({
+    caseContext: z.string().min(20, { message: 'Please provide a brief case context (at least 20 characters).' }),
+    evidenceFiles: z.array(z.object({
+        fileName: z.string(),
+        fileType: z.string(),
+        dataUri: z.string(),
+    })).min(1, { message: "Please upload at least one evidence file." }),
+});
 
 const modes = [
   { value: 'orchestrate' as Mode, label: 'Orchestrate AI', icon: Component },
   { value: 'research' as Mode, label: 'AI Legal Research', icon: FileSearch },
+  { value: 'timeline' as Mode, label: 'Litigation Timeline', icon: CalendarClock },
+  { value: 'evidence' as Mode, label: 'Evidence Analysis', icon: Camera },
   { value: 'analyzer' as Mode, label: 'Document Review', icon: FileText },
   { value: 'reasoning' as Mode, label: 'Reasoning Mode', icon: BrainCircuit },
   { value: 'drafting' as Mode, label: 'Drafting Mode', icon: DraftingCompass },
   { value: 'prediction' as Mode, label: 'Predictive Analytics', icon: TrendingUp },
   { value: 'negotiation' as Mode, label: 'Negotiation Mode', icon: Handshake },
   { value: 'cross-examination' as Mode, label: 'Cross-Examination Prep', icon: Swords },
-  { value: 'timeline' as Mode, label: 'Litigation Timeline', icon: CalendarClock },
 ];
 
 const readFileAsDataUri = (file: File): Promise<string> => {
@@ -154,7 +165,9 @@ export function ModeSwitcher({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const evidenceFileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedEvidenceFiles, setSelectedEvidenceFiles] = useState<File[]>([]);
 
   const researchForm = useForm<z.infer<typeof researchFormSchema>>({
     resolver: zodResolver(researchFormSchema),
@@ -226,6 +239,14 @@ export function ModeSwitcher({
     },
   });
 
+   const evidenceForm = useForm<z.infer<typeof evidenceFormSchema>>({
+    resolver: zodResolver(evidenceFormSchema),
+    defaultValues: {
+      caseContext: '',
+      evidenceFiles: [],
+    },
+  });
+
   // Reset forms when mode changes to prevent state leakage
   useEffect(() => {
     researchForm.reset();
@@ -237,7 +258,9 @@ export function ModeSwitcher({
     crossExaminationForm.reset();
     orchestrateForm.reset();
     timelineForm.reset();
-  }, [selectedMode, researchForm, analyzerForm, reasoningForm, draftingForm, predictionForm, negotiationForm, crossExaminationForm, orchestrateForm, timelineForm]);
+    evidenceForm.reset();
+    setSelectedEvidenceFiles([]);
+  }, [selectedMode, researchForm, analyzerForm, reasoningForm, draftingForm, predictionForm, negotiationForm, crossExaminationForm, orchestrateForm, timelineForm, evidenceForm]);
 
   const onResearchSubmit: SubmitHandler<z.infer<typeof researchFormSchema>> = async (data) => {
     onAnalysisStart(data);
@@ -403,6 +426,29 @@ export function ModeSwitcher({
             variant: "destructive",
             title: "Timeline Generation Failed",
             description: "An error occurred while generating the timeline.",
+        });
+        onAnalysisError();
+    }
+    setIsSubmitting(false);
+  };
+
+  const onEvidenceSubmit: SubmitHandler<z.infer<typeof evidenceFormSchema>> = async (data) => {
+    setIsSubmitting(true);
+    onAnalysisStart();
+    try {
+        const result = await analyzeEvidence(data);
+        onAnalysisComplete(result);
+        evidenceForm.reset();
+        setSelectedEvidenceFiles([]);
+        toast({
+          title: "Analysis Complete",
+          description: "The AI has analyzed the provided evidence.",
+        });
+    } catch (error) {
+         toast({
+            variant: "destructive",
+            title: "Evidence Analysis Failed",
+            description: "An error occurred while analyzing the evidence.",
         });
         onAnalysisError();
     }
@@ -1137,6 +1183,108 @@ export function ModeSwitcher({
                   </form>
                 </Form>
             );
+      case 'evidence':
+        return (
+             <Form {...evidenceForm}>
+              <form onSubmit={evidenceForm.handleSubmit(onEvidenceSubmit)} className="space-y-6" key="evidence-form">
+                <FormField
+                  control={evidenceForm.control}
+                  name="caseContext"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Case Context</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Briefly describe the case context..."
+                          className="min-h-[100px] resize-y"
+                          {...field}
+                          disabled={isSubmitting}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                    control={evidenceForm.control}
+                    name="evidenceFiles"
+                    render={({ field }) => (
+                        <FormItem>
+                            <FormLabel>Upload Evidence</FormLabel>
+                             <FormControl>
+                                <div>
+                                    <Input 
+                                        type="file"
+                                        className="hidden"
+                                        ref={evidenceFileInputRef}
+                                        multiple
+                                        onChange={async (e) => {
+                                            const files = Array.from(e.target.files || []);
+                                            if (files.length > 0) {
+                                                const newFiles = [...selectedEvidenceFiles, ...files];
+                                                setSelectedEvidenceFiles(newFiles);
+                                                
+                                                const fileDataPromises = newFiles.map(async (file) => ({
+                                                    fileName: file.name,
+                                                    fileType: file.type,
+                                                    dataUri: await readFileAsDataUri(file),
+                                                }));
+
+                                                const fileData = await Promise.all(fileDataPromises);
+                                                field.onChange(fileData);
+                                            }
+                                        }}
+                                        accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.txt"
+                                        disabled={isSubmitting}
+                                    />
+                                    <div 
+                                        className="border-2 border-dashed border-muted-foreground/30 rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors"
+                                        onClick={() => evidenceFileInputRef.current?.click()}
+                                    >
+                                        <Upload className="mx-auto h-8 w-8 text-muted-foreground" />
+                                        <p className="font-medium mt-2">Click to upload files</p>
+                                        <p className="text-xs text-muted-foreground">Images, Audio, Video, Docs</p>
+                                    </div>
+                                </div>
+                            </FormControl>
+                            <FormMessage />
+                            {selectedEvidenceFiles.length > 0 && (
+                                <div className="space-y-2 mt-2">
+                                    <p className="text-sm font-medium">Selected files:</p>
+                                    {selectedEvidenceFiles.map((file, index) => (
+                                        <div key={index} className="flex items-center justify-between text-sm p-2 bg-muted/50 rounded-md">
+                                             <div className="flex items-center gap-2">
+                                                <FileIcon className="h-4 w-4" />
+                                                <span>{file.name}</span>
+                                            </div>
+                                             <Button 
+                                                variant="ghost" 
+                                                size="icon" 
+                                                className="h-6 w-6"
+                                                onClick={(e) => {
+                                                    e.stopPropagation();
+                                                    const updatedFiles = selectedEvidenceFiles.filter((_, i) => i !== index);
+                                                    setSelectedEvidenceFiles(updatedFiles);
+                                                    evidenceForm.setValue('evidenceFiles', updatedFiles.map(f => evidenceForm.getValues('evidenceFiles').find(ef => ef.fileName === f.name)!));
+                                                }}
+                                            >
+                                                <X className="h-4 w-4" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </FormItem>
+                    )}
+                />
+                
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
+                             : <><Sparkles className="mr-2 h-4 w-4" /> Analyze Evidence</>}
+                </Button>
+              </form>
+            </Form>
+        );
       default:
         return null;
     }
@@ -1223,6 +1371,7 @@ export function ModeSwitcher({
                 selectedMode === 'cross-examination' ? 'Prepare for court by analyzing statements, generating questions, and simulating scenarios.' :
                 selectedMode === 'orchestrate' ? 'Describe a complex legal workflow, and the AI will coordinate multiple agents to complete it.' :
                 selectedMode === 'timeline' ? 'Generate a procedural timeline for a case based on jurisdiction, case type, and key dates.' :
+                selectedMode === 'evidence' ? 'Upload multimodal evidence (audio, video, images, docs) for forensic analysis and contradiction detection.' :
                 'Provide a legal scenario and a question for the AI to reason about.'
             }
         </CardDescription>
