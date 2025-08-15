@@ -24,12 +24,17 @@ export default function ResearchPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult>(null);
   const [initialQuery, setInitialQuery] = useState<{ query: string } | undefined>(undefined);
+  const [orchestrationObjective, setOrchestrationObjective] = useState<string | undefined>(undefined);
 
   const handleAnalysisStart = (data?: { query: string }) => {
     setIsLoading(true);
     setAnalysisResult(null);
+    setOrchestrationObjective(undefined);
     if(data && selectedMode === 'research') {
         setInitialQuery(data);
+    }
+    if (data && selectedMode === 'orchestrate') {
+      setOrchestrationObjective(data.query);
     }
   };
 
@@ -37,11 +42,13 @@ export default function ResearchPage() {
     setAnalysisResult(result);
     setIsLoading(false);
     setInitialQuery(undefined);
+    // Do not clear orchestration objective, so the result view can use it.
   };
 
   const handleAnalysisError = () => {
     setIsLoading(false);
     setInitialQuery(undefined);
+    setOrchestrationObjective(undefined);
   }
 
   const renderActiveComponent = () => {
@@ -74,6 +81,7 @@ export default function ResearchPage() {
                     onOrchestrationStart={handleAnalysisStart}
                     onOrchestrationComplete={handleAnalysisComplete}
                     onOrchestrationError={handleAnalysisError}
+                    objective={orchestrationObjective}
                 />;
       default:
         return null;
@@ -90,6 +98,7 @@ export default function ResearchPage() {
                         setSelectedMode(mode);
                         setAnalysisResult(null);
                         setInitialQuery(undefined);
+                        setOrchestrationObjective(undefined);
                     }}
                     onAnalysisStart={handleAnalysisStart}
                     onAnalysisComplete={handleAnalysisComplete}

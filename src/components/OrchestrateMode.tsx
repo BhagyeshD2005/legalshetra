@@ -40,6 +40,7 @@ interface OrchestrateModeProps {
   onOrchestrationStart: (data: { query: string }) => void;
   onOrchestrationComplete: (result: OrchestrationResult) => void;
   onOrchestrationError: () => void;
+  objective?: string;
 }
 
 const agentIcons = {
@@ -58,48 +59,41 @@ export function OrchestrateMode({
     onOrchestrationStart,
     onOrchestrationComplete,
     onOrchestrationError,
+    objective,
 }: OrchestrateModeProps) {
   const [error, setError] = useState<string | null>(null);
-  const [currentPlan, setCurrentPlan] = useState<OrchestrationPlanStep[]>([]);
+  const [currentPlan, setCurrentPlan] = useState<OrchestrationPlanStep[]>(result?.plan || []);
   const { toast } = useToast();
 
-  const handleStepUpdate = (step: OrchestrationPlanStep) => {
+  const handleStepUpdate = useCallback((step: OrchestrationPlanStep) => {
     setCurrentPlan(prevPlan => {
+      // Create a new array for the new state
       const newPlan = [...prevPlan];
       const stepIndex = newPlan.findIndex(s => s.step === step.step);
       if (stepIndex !== -1) {
+        // If step exists, update it
         newPlan[stepIndex] = step;
+      } else {
+        // If step is new, add it (handles race condition where plan isn't set yet)
+        newPlan.push(step);
+        newPlan.sort((a,b) => a.step - b.step);
       }
       return newPlan;
     });
-  };
+  }, []);
 
-  const executeOrchestration = useCallback(async (objective: string) => {
+
+  const executeOrchestration = useCallback(async (objectiveToRun: string) => {
     setError(null);
     setCurrentPlan([]); // Clear previous plan
-    onOrchestrationStart({ query: objective });
+    onOrchestrationStart({ query: objectiveToRun });
     
-    // Create the initial plan structure based on a preliminary AI call.
-    // This part is simplified for the UI. The actual plan is made in the flow.
-    const preliminaryPlanPrompt = `Based on the objective "${objective}", create a list of likely agent steps.`;
-    const planPrompt = ai.definePrompt({
-        name: 'preliminaryPlanPrompt',
-        input: { schema: z.object({ objective: z.string() }) },
-        output: { schema: z.object({ plan: z.array(z.object({ agent: z.string(), summary: z.string() })) }) },
-        prompt: `You are a legal workflow planner. Based on the user's objective, list the agents that will likely be used in order.
-        User Objective: "{{{objective}}}"
-        Available Agents: 'research', 'draft', 'review', 'predict', 'negotiate', 'cross-examine'.
-        Provide a short summary for each step.
-        `,
-    });
-    
-    // Since we cannot call genkit prompts directly on the client for planning,
-    // we'll show a generic "Planning..." state. The real plan is built in the backend flow.
+    // Show a generic "Planning..." state.
     setCurrentPlan([{ step: 1, agent: 'research', prompt: '', summary: "Creating execution plan...", status: 'active', result: null }]);
 
 
     try {
-      const result = await orchestrateWorkflow({ objective }, handleStepUpdate);
+      const result = await orchestrateWorkflow({ objective: objectiveToRun }, handleStepUpdate);
       onOrchestrationComplete(result);
       setCurrentPlan(result.plan);
       toast({
@@ -117,16 +111,21 @@ export function OrchestrateMode({
         description: err.message || "The workflow could not be completed.",
       });
     }
-  }, [onOrchestrationStart, onOrchestrationComplete, onOrchestrationError, toast]);
+  }, [onOrchestrationStart, onOrchestrationComplete, onOrchestrationError, toast, handleStepUpdate]);
   
-  // This is a mock useEffect to trigger the orchestration when the parent component signals it to start.
-  // In a real app, this might be triggered by a form submission passed down as props.
-  // For now, we assume the parent `isLoading` prop and a non-null `initialQuery` triggers it.
   useEffect(() => {
-    // This effect is now just for demonstration. 
-    // The actual call is initiated from the ModeSwitcher form.
-    // We could use this to listen to a prop that holds the objective.
-  }, []);
+    if (objective && isLoading) {
+      executeOrchestration(objective);
+    }
+    // We only want to run this when the objective is first set
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [objective]);
+
+  useEffect(() => {
+    if (result?.plan) {
+      setCurrentPlan(result.plan);
+    }
+  }, [result]);
 
   const renderStepResult = (step: OrchestrationPlanStep) => {
     if (!step.result) return null;
@@ -165,7 +164,7 @@ export function OrchestrateMode({
       );
   }
 
-  if (!isLoading && !result) {
+  if (!isLoading && !result && !objective) {
     return (
         <motion.div
             key="initial"
@@ -215,9 +214,9 @@ export function OrchestrateMode({
             </CardHeader>
             <CardContent>
                 <div className="space-y-2">
-                    {(result?.plan || currentPlan).map((step, index) => {
+                    {currentPlan.map((step, index) => {
                         const AgentIcon = agentIcons[step.agent] || Timer;
-                        const isLastStep = index === (result?.plan || currentPlan).length - 1;
+                        const isLastStep = index === currentPlan.length - 1;
                         return (
                             <div key={step.step}>
                                 <div className="flex items-start gap-4">
@@ -265,17 +264,3 @@ export function OrchestrateMode({
     </div>
   );
 }
-
-// Dummy AI object for client-side type-safety, as we can't call genkit prompts here.
-const ai = {
-    definePrompt: (config: any) => (input: any) => Promise.resolve({ output: { plan: [] } })
-};
-const z = {
-    object: () => ({ describe: () => ({ extend: () => {} }) }),
-    string: () => ({ describe: () => {} }),
-    array: () => ({ describe: () => {} }),
-    enum: () => ({ describe: () => {} }),
-    number: () => ({ describe: () => {} }),
-    any: () => ({ optional: () => ({ describe: () => {} }) }),
-};
-
