@@ -31,6 +31,7 @@ import {
     Component,
     CalendarClock,
     Camera,
+    TestTube2,
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
@@ -50,6 +51,16 @@ import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Calendar } from './ui/calendar';
 import { format } from 'date-fns';
 
+import { sampleResearchInput } from '@/sample/research';
+import { sampleAnalyzerInput } from '@/sample/analyzer';
+import { sampleReasoningInput } from '@/sample/reasoning';
+import { sampleDraftingInput } from '@/sample/drafting';
+import { samplePredictionInput } from '@/sample/prediction';
+import { sampleNegotiationInput } from '@/sample/negotiation';
+import { sampleCrossExaminationInput } from '@/sample/cross-examination';
+import { sampleOrchestrateInput } from '@/sample/orchestrate';
+import { sampleTimelineInput } from '@/sample/timeline';
+import { sampleEvidenceInput } from '@/sample/evidence';
 
 interface ModeSwitcherProps {
   selectedMode: Mode;
@@ -453,6 +464,53 @@ export function ModeSwitcher({
         onAnalysisError();
     }
     setIsSubmitting(false);
+  };
+
+  const sampleDataMap: Record<string, any> = {
+      research: sampleResearchInput,
+      analyzer: sampleAnalyzerInput,
+      reasoning: sampleReasoningInput,
+      drafting: sampleDraftingInput,
+      prediction: samplePredictionInput,
+      negotiation: sampleNegotiationInput,
+      'cross-examination': sampleCrossExaminationInput,
+      orchestrate: sampleOrchestrateInput,
+      timeline: sampleTimelineInput,
+      evidence: sampleEvidenceInput,
+    };
+
+  const handleLoadSampleData = () => {
+    const sampleData = sampleDataMap[selectedMode];
+    if (!sampleData) {
+        toast({ variant: 'destructive', title: 'No sample data available for this mode.' });
+        return;
+    }
+
+    switch(selectedMode) {
+        case 'research': researchForm.reset(sampleData); break;
+        case 'analyzer': analyzerForm.reset(sampleData); break;
+        case 'reasoning': reasoningForm.reset(sampleData); break;
+        case 'drafting': draftingForm.reset(sampleData); break;
+        case 'prediction': predictionForm.reset(sampleData); break;
+        case 'negotiation': negotiationForm.reset(sampleData); break;
+        case 'cross-examination': crossExaminationForm.reset(sampleData); break;
+        case 'orchestrate': orchestrateForm.reset(sampleData); break;
+        case 'timeline':
+            // The date needs to be converted from string to Date object for the form
+            timelineForm.reset({
+                ...sampleData,
+                startDate: new Date(sampleData.startDate),
+            });
+            break;
+        case 'evidence': 
+            evidenceForm.reset(sampleData); 
+            // Note: This won't show files in the UI as we can't create File objects,
+            // but the data URI is present for submission. This is a known limitation.
+            toast({ title: 'Sample evidence loaded.', description: 'Note: File list UI will not update for this sample.' });
+            break;
+        default: break;
+    }
+    toast({ title: 'Sample data loaded!', description: 'The form has been populated with sample input.' });
   };
 
 
@@ -1356,11 +1414,17 @@ export function ModeSwitcher({
       </CardContent>
       <Separator />
       <CardHeader>
-        <CardTitle className="font-headline flex items-center gap-2">
-            {modes.find(m => m.value === selectedMode)?.icon && 
-                React.createElement(modes.find(m => m.value === selectedMode)!.icon, { className: "h-5 w-5 text-primary" })}
-            {modes.find(m => m.value === selectedMode)?.label}
-        </CardTitle>
+        <div className="flex justify-between items-center">
+            <CardTitle className="font-headline flex items-center gap-2">
+                {modes.find(m => m.value === selectedMode)?.icon && 
+                    React.createElement(modes.find(m => m.value === selectedMode)!.icon, { className: "h-5 w-5 text-primary" })}
+                {modes.find(m => m.value === selectedMode)?.label}
+            </CardTitle>
+            <Button variant="outline" size="sm" onClick={handleLoadSampleData}>
+                <TestTube2 className="mr-2 h-4 w-4" />
+                Load Sample
+            </Button>
+        </div>
         <CardDescription>
             {
                 selectedMode === 'research' ? 'Enter your legal query to start comprehensive AI-powered research.' :
@@ -1383,3 +1447,5 @@ export function ModeSwitcher({
     </Card>
   );
 }
+
+    
