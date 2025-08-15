@@ -535,10 +535,13 @@ export function ModeSwitcher({
                   name="objective"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        Overall Objective
-                      </FormLabel>
+                       <div className="flex justify-between items-center">
+                        <FormLabel className="flex items-center gap-2">
+                            <FileText className="h-4 w-4" />
+                            Overall Objective
+                        </FormLabel>
+                        {renderLoadSampleButton()}
+                      </div>
                       <FormControl>
                         <Textarea
                           placeholder="e.g., 'Research precedents for contract disputes involving force majeure due to floods in Mumbai, then draft a legal notice to the defaulting party.'"
@@ -554,7 +557,6 @@ export function ModeSwitcher({
                             <span className="text-xs text-muted-foreground">
                             {field.value?.length || 0}/1500
                             </span>
-                            {renderLoadSampleButton()}
                         </div>
                       </div>
                     </FormItem>
@@ -576,10 +578,13 @@ export function ModeSwitcher({
                   name="query"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="flex items-center gap-2">
-                        <FileText className="h-4 w-4" />
-                        Legal Query
-                      </FormLabel>
+                      <div className="flex justify-between items-center">
+                        <FormLabel className="flex items-center gap-2">
+                            <FileText className="h-4 w-4" />
+                            Legal Query
+                        </FormLabel>
+                        {renderLoadSampleButton()}
+                      </div>
                       <FormControl>
                         <Textarea
                           placeholder="e.g., 'Case laws related to anticipatory bail under Section 438 CrPC' or 'Recent judgments on trademark infringement in e-commerce'"
@@ -595,7 +600,6 @@ export function ModeSwitcher({
                             <span className="text-xs text-muted-foreground">
                             {field.value?.length || 0}/1000
                             </span>
-                            {renderLoadSampleButton()}
                         </div>
                       </div>
                     </FormItem>
@@ -684,7 +688,10 @@ export function ModeSwitcher({
                   name="documentText"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Paste Text</FormLabel>
+                      <div className="flex justify-between items-center">
+                        <FormLabel>Paste Text</FormLabel>
+                        {renderLoadSampleButton()}
+                      </div>
                       <FormControl>
                         <Textarea
                           placeholder="Paste the full text of a legal document here..."
@@ -703,7 +710,6 @@ export function ModeSwitcher({
                       </FormControl>
                       <div className="flex justify-between items-center">
                         <FormMessage />
-                        {renderLoadSampleButton()}
                       </div>
                     </FormItem>
                   )}
@@ -724,7 +730,10 @@ export function ModeSwitcher({
                   name="scenario"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Case Scenario</FormLabel>
+                       <div className="flex justify-between items-center">
+                        <FormLabel>Case Scenario</FormLabel>
+                        {renderLoadSampleButton()}
+                       </div>
                       <FormControl>
                         <Textarea
                           placeholder="Describe the factual matrix of the case..."
@@ -755,7 +764,6 @@ export function ModeSwitcher({
                       </FormControl>
                        <div className="flex justify-between items-center">
                         <FormMessage />
-                        {renderLoadSampleButton()}
                       </div>
                     </FormItem>
                   )}
@@ -799,7 +807,10 @@ export function ModeSwitcher({
                       name="prompt"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Drafting Prompt</FormLabel>
+                           <div className="flex justify-between items-center">
+                            <FormLabel>Drafting Prompt</FormLabel>
+                            {renderLoadSampleButton()}
+                           </div>
                           <FormControl>
                             <Textarea
                               placeholder="e.g., 'Draft a basic rental agreement between John Doe (Landlord) and Jane Smith (Tenant) for a property in Delhi...'"
@@ -810,7 +821,6 @@ export function ModeSwitcher({
                           </FormControl>
                           <div className="flex justify-between items-center">
                             <FormMessage />
-                            {renderLoadSampleButton()}
                           </div>
                         </FormItem>
                       )}
@@ -944,7 +954,10 @@ export function ModeSwitcher({
                       name="caseSummary"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Case Summary</FormLabel>
+                          <div className="flex justify-between items-center">
+                            <FormLabel>Case Summary</FormLabel>
+                            {renderLoadSampleButton()}
+                          </div>
                           <FormControl>
                             <Textarea
                               placeholder="Provide a detailed summary of the facts, arguments, and context of the case..."
@@ -955,7 +968,6 @@ export function ModeSwitcher({
                           </FormControl>
                            <div className="flex justify-between items-center">
                             <FormMessage />
-                            {renderLoadSampleButton()}
                           </div>
                         </FormItem>
                       )}
@@ -976,7 +988,10 @@ export function ModeSwitcher({
                       name="currentClause"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Clause Under Negotiation</FormLabel>
+                          <div className="flex justify-between items-center">
+                            <FormLabel>Clause Under Negotiation</FormLabel>
+                            {renderLoadSampleButton()}
+                          </div>
                           <FormControl>
                             <Textarea
                               placeholder="Paste the full text of the clause being negotiated."
@@ -1063,7 +1078,6 @@ export function ModeSwitcher({
                           </FormControl>
                            <div className="flex justify-between items-center">
                             <FormMessage />
-                            {renderLoadSampleButton()}
                           </div>
                         </FormItem>
                       )}
@@ -1084,7 +1098,10 @@ export function ModeSwitcher({
                       name="witnessStatement"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Witness Statement</FormLabel>
+                          <div className="flex justify-between items-center">
+                            <FormLabel>Witness Statement</FormLabel>
+                            {renderLoadSampleButton()}
+                          </div>
                           <FormControl>
                             <Textarea
                               placeholder="Paste the full text of the witness's statement here."
@@ -1113,7 +1130,6 @@ export function ModeSwitcher({
                           </FormControl>
                            <div className="flex justify-between items-center">
                             <FormMessage />
-                            {renderLoadSampleButton()}
                           </div>
                         </FormItem>
                       )}
@@ -1178,7 +1194,10 @@ export function ModeSwitcher({
                       name="jurisdiction"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Jurisdiction</FormLabel>
+                          <div className="flex justify-between items-center">
+                            <FormLabel>Jurisdiction</FormLabel>
+                            {renderLoadSampleButton()}
+                          </div>
                           <FormControl>
                              <Input
                               placeholder="e.g., 'Delhi High Court', 'US Federal Court'"
@@ -1265,7 +1284,6 @@ export function ModeSwitcher({
                           </FormControl>
                            <div className="flex justify-between items-center">
                                 <FormMessage />
-                                {renderLoadSampleButton()}
                            </div>
                         </FormItem>
                       )}
@@ -1286,7 +1304,10 @@ export function ModeSwitcher({
                   name="caseContext"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Case Context</FormLabel>
+                      <div className="flex justify-between items-center">
+                        <FormLabel>Case Context</FormLabel>
+                        {renderLoadSampleButton()}
+                      </div>
                       <FormControl>
                         <Textarea
                           placeholder="Briefly describe the case context..."
@@ -1297,7 +1318,6 @@ export function ModeSwitcher({
                       </FormControl>
                        <div className="flex justify-between items-center">
                         <FormMessage />
-                        {renderLoadSampleButton()}
                       </div>
                     </FormItem>
                   )}
