@@ -31,7 +31,6 @@ import {
     Component,
     CalendarClock,
     Camera,
-    TestTube2,
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
@@ -45,7 +44,6 @@ import { generateLitigationTimeline } from '@/ai/flows/generate-litigation-timel
 import { analyzeEvidence } from '@/ai/flows/analyze-evidence';
 import { Input } from './ui/input';
 import { cn } from '@/lib/utils';
-import { enhanceQueryClarity } from '@/ai/flows/enhance-query-clarity';
 import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Calendar } from './ui/calendar';
@@ -1385,12 +1383,7 @@ export function ModeSwitcher({
     return (
         <CardFooter>
             <div className="p-4 bg-muted/50 rounded-lg w-full">
-                <div className="flex justify-between items-center mb-2">
-                    <div>{tipContent}</div>
-                </div>
-                 <Button variant="link" size="sm" onClick={handleLoadSampleData} className="p-0 h-auto">
-                    Load Sample
-                </Button>
+                 {tipContent}
             </div>
         </CardFooter>
     )
@@ -1430,9 +1423,6 @@ export function ModeSwitcher({
                     React.createElement(modes.find(m => m.value === selectedMode)!.icon, { className: "h-5 w-5 text-primary" })}
                 {modes.find(m => m.value === selectedMode)?.label}
             </CardTitle>
-            <Button variant="outline" size="sm" onClick={handleLoadSampleData}>
-                Load Sample
-            </Button>
         </div>
         <CardDescription>
             {
