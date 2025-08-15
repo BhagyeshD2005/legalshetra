@@ -62,40 +62,15 @@ export function OrchestrateMode({
     objective,
 }: OrchestrateModeProps) {
   const [error, setError] = useState<string | null>(null);
-  const [currentPlan, setCurrentPlan] = useState<OrchestrationPlanStep[]>(result?.plan || []);
   const { toast } = useToast();
-
-  const handleStepUpdate = useCallback((step: OrchestrationPlanStep) => {
-    setCurrentPlan(prevPlan => {
-      // Create a new array for the new state
-      const newPlan = [...prevPlan];
-      const stepIndex = newPlan.findIndex(s => s.step === step.step);
-      if (stepIndex !== -1) {
-        // If step exists, update it
-        newPlan[stepIndex] = step;
-      } else {
-        // If step is new, add it (handles race condition where plan isn't set yet)
-        newPlan.push(step);
-        newPlan.sort((a,b) => a.step - b.step);
-      }
-      return newPlan;
-    });
-  }, []);
-
 
   const executeOrchestration = useCallback(async (objectiveToRun: string) => {
     setError(null);
-    setCurrentPlan([]); // Clear previous plan
     onOrchestrationStart({ query: objectiveToRun });
-    
-    // Show a generic "Planning..." state.
-    setCurrentPlan([{ step: 1, agent: 'research', prompt: '', summary: "Creating execution plan...", status: 'active', result: null }]);
-
 
     try {
-      const result = await orchestrateWorkflow({ objective: objectiveToRun }, handleStepUpdate);
+      const result = await orchestrateWorkflow({ objective: objectiveToRun });
       onOrchestrationComplete(result);
-      setCurrentPlan(result.plan);
       toast({
         title: "Orchestration Complete",
         description: "The AI workflow has finished successfully.",
@@ -111,7 +86,7 @@ export function OrchestrateMode({
         description: err.message || "The workflow could not be completed.",
       });
     }
-  }, [onOrchestrationStart, onOrchestrationComplete, onOrchestrationError, toast, handleStepUpdate]);
+  }, [onOrchestrationStart, onOrchestrationComplete, onOrchestrationError, toast]);
   
   useEffect(() => {
     if (objective && isLoading) {
@@ -119,13 +94,8 @@ export function OrchestrateMode({
     }
     // We only want to run this when the objective is first set
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [objective]);
+  }, [objective, isLoading]);
 
-  useEffect(() => {
-    if (result?.plan) {
-      setCurrentPlan(result.plan);
-    }
-  }, [result]);
 
   const renderStepResult = (step: OrchestrationPlanStep) => {
     if (!step.result) return null;
@@ -149,22 +119,29 @@ export function OrchestrateMode({
     }
   }
 
-  if (isLoading && currentPlan.length === 0) {
+  if (isLoading) {
       return (
           <Card>
               <CardHeader>
-                  <Skeleton className="h-8 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
+                  <CardTitle className="font-headline flex items-center gap-2">
+                      <RefreshCw className="h-5 w-5 animate-spin text-primary" />
+                      Orchestration in Progress...
+                    </CardTitle>
+                  <CardDescription>The AI is executing the workflow. This may take a moment.</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                  <Skeleton className="h-20 w-full" />
-                  <Skeleton className="h-20 w-full" />
+                  <div className="flex items-center justify-center p-8">
+                    <div className="space-y-2 text-center">
+                        <Skeleton className="h-4 w-48" />
+                        <Skeleton className="h-4 w-32" />
+                    </div>
+                  </div>
               </CardContent>
           </Card>
       );
   }
 
-  if (!isLoading && !result && !objective) {
+  if (!result && !objective) {
     return (
         <motion.div
             key="initial"
@@ -180,6 +157,8 @@ export function OrchestrateMode({
         </motion.div>
     );
   }
+
+  const currentPlan = result?.plan || [];
 
   return (
     <div className="space-y-8">
@@ -210,7 +189,7 @@ export function OrchestrateMode({
         <Card>
             <CardHeader>
                 <CardTitle className="font-headline">Workflow Execution Plan</CardTitle>
-                <CardDescription>The AI has generated the following plan to achieve your objective. Status is updated in real-time.</CardDescription>
+                <CardDescription>The AI generated and executed the following plan to achieve your objective.</CardDescription>
             </CardHeader>
             <CardContent>
                 <div className="space-y-2">
@@ -227,10 +206,9 @@ export function OrchestrateMode({
                                             ${step.status === 'error' ? 'border-red-500 bg-red-50' : ''}
                                             ${step.status === 'pending' ? 'border-muted-foreground' : ''}
                                         `}>
-                                           {step.status === 'active' && <RefreshCw className="h-5 w-5 text-primary animate-spin" />}
                                            {step.status === 'completed' && <CheckCircle2 className="h-5 w-5 text-green-500" />}
                                            {step.status === 'error' && <AlertCircle className="h-5 w-5 text-red-500" />}
-                                           {step.status === 'pending' && <AgentIcon className="h-5 w-5 text-muted-foreground" />}
+                                           {step.status !== 'completed' && step.status !== 'error' && <AgentIcon className="h-5 w-5 text-muted-foreground" />}
                                         </div>
                                         {!isLastStep && <div className="w-px h-8 bg-border" />}
                                     </div>
@@ -250,6 +228,7 @@ export function OrchestrateMode({
             <div className="space-y-4">
                 <h3 className="text-xl font-headline">Execution Results</h3>
                 {result.plan.map(step => (
+                    step.status === 'completed' &&
                     <Card key={`result-${step.step}`}>
                         <CardHeader>
                             <CardTitle className="text-lg">Result from Step {step.step}: {step.summary}</CardTitle>

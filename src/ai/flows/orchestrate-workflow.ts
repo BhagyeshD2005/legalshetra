@@ -26,9 +26,7 @@ import { crossExaminationPrep } from './cross-examination-prep';
 
 
 export async function orchestrateWorkflow(
-  input: OrchestrateWorkflowInput,
-  // A callback to update the UI with the status of each step
-  onStepUpdate: (step: z.infer<typeof OrchestrationPlanStepSchema>) => void
+  input: OrchestrateWorkflowInput
 ): Promise<OrchestrateWorkflowOutput> {
   
   // 1. Create a plan
@@ -72,9 +70,7 @@ Ensure the prompt for each step is self-contained and has enough detail for the 
   for (let i = 0; i < plan.length; i++) {
     const step = plan[i];
 
-    // Update UI: Step is starting
     step.status = 'active';
-    onStepUpdate({...step});
 
     try {
       let stepResult: any;
@@ -108,10 +104,8 @@ Ensure the prompt for each step is self-contained and has enough detail for the 
           throw new Error(`Unknown agent: ${step.agent}`);
       }
       
-      // Update UI: Step completed successfully
       step.status = 'completed';
       step.result = stepResult;
-      onStepUpdate({...step});
       
       results.push(stepResult);
       // Update context for the next step. This is a simple implementation.
@@ -119,10 +113,8 @@ Ensure the prompt for each step is self-contained and has enough detail for the 
       executionContext += `\n\nResult from step ${step.step}: ${JSON.stringify(stepResult)}`;
 
     } catch (error: any) {
-      // Update UI: Step failed
       step.status = 'error';
       step.result = { error: error.message || 'An unknown error occurred' };
-      onStepUpdate({...step});
 
       // Stop execution on failure
       return { plan: plan, finalOutput: "Workflow failed." };
