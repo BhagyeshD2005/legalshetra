@@ -1,5 +1,3 @@
-# Firebase Studio
+# LegalshetraAI
 
-This is a NextJS starter in Firebase Studio.
-
-To get started, take a look at src/app/page.tsx.
+LegalshetraAI is a powerful, multi-faceted legal assistance platform designed for legal professionals in the Indian context. It leverages cutting-edge AI to streamline complex legal workflows. The application features ten distinct modes, including AI-powered legal research, document analysis for risks and anomalies, and automated contract drafting. It can also generate procedural litigation timelines, prepare for cross-examinations by identifying inconsistencies in witness statements, and even predict case outcomes based on historical data. With its orchestration capabilities, LegalshetraAI can coordinate multiple AI agents to handle complex, multi-step legal tasks, making it an indispensable tool for modern legal practice.
