@@ -89,7 +89,7 @@ export function ReasoningMode({ isLoading, result }: ReasoningModeProps) {
             <div class="section">
                 <h2>${section.title}</h2>
                 <ul>
-                    ${section.points.map(point => `<li>${point}</li>`).join('')}
+                    ${section.points.map(point => `<li>${point.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')}</li>`).join('')}
                 </ul>
             </div>
         `).join('')}
