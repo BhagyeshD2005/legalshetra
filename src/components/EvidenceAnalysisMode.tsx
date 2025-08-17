@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Download, AlertTriangle, FileText, FileSpreadsheet, FileType, Clapperboard, Mic, FileQuestion, BadgeCheck, BadgeAlert } from 'lucide-react';
+import { Camera, Download, AlertTriangle, FileText, FileSpreadsheet, FileType, Clapperboard, Mic, FileQuestion, BadgeCheck, BadgeAlert, Printer } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { type AnalyzeEvidenceOutput } from '@/ai/types';
 import { Alert, AlertDescription } from './ui/alert';
@@ -42,6 +42,79 @@ const getFileIcon = (fileType: string) => {
 
 export function EvidenceAnalysisMode({ isLoading, result }: EvidenceAnalysisModeProps) {
     const { toast } = useToast();
+
+    const handlePrint = () => {
+        if (!result) return;
+        
+        const { evidenceSummary, detailedAnalysis, contradictionReport, exportContent } = result;
+
+        const printContent = `
+            <style>
+                body { font-family: 'PT Sans', sans-serif; font-size: 12px; line-height: 1.5; }
+                h1 { font-size: 24px; font-weight: bold; margin-bottom: 16px; font-family: 'Playfair Display', serif; }
+                h2 { font-size: 18px; font-weight: bold; margin-top: 24px; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+                h3 { font-size: 14px; font-weight: bold; margin-top: 16px; margin-bottom: 8px; }
+                p { margin-bottom: 8px; }
+                .section { margin-bottom: 24px; page-break-inside: avoid; }
+                .item { margin-bottom: 12px; padding: 8px; border: 1px solid #f0f0f0; border-radius: 4px; }
+                .bold { font-weight: bold; }
+                .italic { font-style: italic; }
+                table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+                pre { white-space: pre-wrap; background: #f9f9f9; padding: 8px; border-radius: 4px; }
+            </style>
+            <h1>Evidence Analysis Report</h1>
+            
+            <div class="section">
+                <h2>Evidence Summary</h2>
+                <table>
+                    <thead><tr><th>File</th><th>Quality</th><th>Summary</th></tr></thead>
+                    <tbody>${evidenceSummary.map(item => `<tr><td>${item.fileName}</td><td>${item.quality}</td><td>${item.summary}</td></tr>`).join('')}</tbody>
+                </table>
+            </div>
+
+            <div class="section">
+                <h2>Detailed Analysis</h2>
+                ${detailedAnalysis.map(item => `
+                    <div>
+                        <h3>${item.fileName} (${item.analysisType})</h3>
+                        ${item.documentType ? `<p><span class="bold">Document Type:</span> ${item.documentType}</p>` : ''}
+                        <h4>${item.analysisType === 'transcript' ? 'Full Transcript' : 'OCR Output'}</h4>
+                        <pre>${item.transcript || item.ocrText}</pre>
+                        ${item.keyStatements && item.keyStatements.length > 0 ? `
+                            <h4>Key Statements</h4>
+                            <ul>
+                                ${item.keyStatements.map(ks => `<li><span class="bold">(${ks.timestamp})</span> "${ks.statement}" - <span class="italic">${ks.relevance}</span></li>`).join('')}
+                            </ul>
+                        ` : ''}
+                    </div>
+                `).join('')}
+            </div>
+            
+            <div class="section">
+                <h2>Contradiction Report</h2>
+                 <table>
+                    <thead><tr><th>Reference</th><th>Original Statement</th><th>Contradicting Source</th><th>Contradicting Statement</th><th>Notes</th></tr></thead>
+                    <tbody>${contradictionReport.map(item => `<tr><td>${item.reference}</td><td class="italic">"${item.statement}"</td><td>${item.contradictingSource}</td><td class="italic">"${item.contradictingStatement}"</td><td>${item.notes}</td></tr>`).join('')}</tbody>
+                </table>
+                ${contradictionReport.length === 0 ? `<p>No contradictions found.</p>` : ''}
+            </div>
+        `;
+        
+        try {
+            const printWindow = window.open('', '_blank');
+            if(printWindow) {
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+                printWindow.print();
+                toast({ title: 'Printing...', description: 'Your report is being sent to the printer.' });
+            }
+        } catch (e) {
+            toast({ variant: 'destructive', title: 'Print Failed', description: 'Could not open print dialog.' });
+        }
+    };
+
 
     const handleExport = (format: 'csv' | 'pdf' | 'text') => {
         if (!result || !result.exportContent) {
@@ -131,6 +204,21 @@ export function EvidenceAnalysisMode({ isLoading, result }: EvidenceAnalysisMode
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-6"
                 >
+                    <Card>
+                        <CardHeader>
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <CardTitle className="font-headline">Evidence Analysis Report</CardTitle>
+                                    <CardDescription>A forensic breakdown of all provided evidence.</CardDescription>
+                                </div>
+                                <Button variant="outline" size="sm" onClick={handlePrint}>
+                                    <Printer className="mr-2 h-4 w-4" />
+                                    Print Full Report
+                                </Button>
+                            </div>
+                        </CardHeader>
+                    </Card>
+
                     <Alert variant="default" className="bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-300">
                         <AlertTriangle className="h-4 w-4 !text-yellow-600" />
                         <AlertDescription>

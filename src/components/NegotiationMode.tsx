@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Handshake, FileText, Lightbulb, Users, Copy, Check, MessageSquareWarning, Goal } from 'lucide-react';
+import { Handshake, FileText, Lightbulb, Users, Copy, Check, MessageSquareWarning, Goal, Printer } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { type NegotiationSupportOutput } from '@/ai/types';
 import { Slider } from '@/components/ui/slider';
@@ -30,6 +30,64 @@ export function NegotiationMode({ isLoading, result }: NegotiationModeProps) {
             description: "Clause text has been copied to your clipboard.",
         });
     };
+
+    const handlePrint = () => {
+        if (!result) return;
+        
+        const { alternativeClauses, opponentAnalysis, batnaSummary } = result;
+
+        const printContent = `
+            <style>
+                body { font-family: 'PT Sans', sans-serif; font-size: 12px; line-height: 1.5; }
+                h1 { font-size: 24px; font-weight: bold; margin-bottom: 16px; font-family: 'Playfair Display', serif; }
+                h2 { font-size: 18px; font-weight: bold; margin-top: 24px; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+                p { margin-bottom: 8px; }
+                .section { margin-bottom: 24px; }
+                .item { margin-bottom: 12px; padding: 8px; border: 1px solid #f0f0f0; border-radius: 4px; }
+                .bold { font-weight: bold; }
+                .italic { font-style: italic; }
+                .pre { white-space: pre-wrap; font-family: monospace; background: #f9f9f9; padding: 8px; border-radius: 4px;}
+            </style>
+            <h1>Negotiation Support Report</h1>
+            
+            <div class="section">
+                <h2>Alternative Clauses</h2>
+                ${alternativeClauses.map((clause, index) => `
+                    <div class="item">
+                        <p class="bold">Alternative Clause ${index + 1}</p>
+                        <div class="pre">${clause.content}</div>
+                        <p><span class="bold">Explanation:</span> ${clause.explanation}</p>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div class="section">
+                <h2>Opponent Analysis</h2>
+                <div class="item">
+                    <p><span class="bold">Likely Reaction:</span> ${opponentAnalysis.likelyReaction}</p>
+                    <p><span class="bold">Acceptance Probability:</span> ${opponentAnalysis.acceptanceProbability}%</p>
+                </div>
+            </div>
+            
+            <div class="section">
+                <h2>BATNA Summary</h2>
+                <p class="italic">${batnaSummary}</p>
+            </div>
+        `;
+        
+        try {
+            const printWindow = window.open('', '_blank');
+            if(printWindow) {
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+                printWindow.print();
+                toast({ title: 'Printing...', description: 'Your report is being sent to the printer.' });
+            }
+        } catch (e) {
+            toast({ variant: 'destructive', title: 'Print Failed', description: 'Could not open print dialog.' });
+        }
+    };
+
 
     if (isLoading) {
         return (
@@ -84,6 +142,21 @@ export function NegotiationMode({ isLoading, result }: NegotiationModeProps) {
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-6"
                 >
+                    <Card>
+                        <CardHeader>
+                             <div className="flex justify-between items-center">
+                                <div>
+                                    <CardTitle className="font-headline">Negotiation Support Report</CardTitle>
+                                    <CardDescription>AI-powered strategic advice for your negotiation.</CardDescription>
+                                </div>
+                                <Button variant="outline" size="sm" onClick={handlePrint}>
+                                    <Printer className="mr-2 h-4 w-4" />
+                                    Print Report
+                                </Button>
+                            </div>
+                        </CardHeader>
+                    </Card>
+
                     <Card>
                         <CardHeader>
                             <CardTitle className="font-headline flex items-center gap-2">

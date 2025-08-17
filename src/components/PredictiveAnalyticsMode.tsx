@@ -6,11 +6,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrendingUp, FileText, Check, AlertTriangle, Scale, Target, Lightbulb } from 'lucide-react';
+import { TrendingUp, FileText, Check, AlertTriangle, Scale, Target, Lightbulb, Printer } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { type PredictCaseOutcomeOutput } from '@/ai/types';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Pie, Cell, PieChart, RadialBar, RadialBarChart } from 'recharts';
+import { Button } from './ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 export type PredictiveAnalyticsResult = PredictCaseOutcomeOutput;
 
@@ -32,6 +34,65 @@ const riskConfig = {
 };
 
 export function PredictiveAnalyticsMode({ isLoading, result }: PredictiveAnalyticsModeProps) {
+    const { toast } = useToast();
+
+    const handlePrint = () => {
+        if (!result) return;
+        
+        const { winProbability, predictionSummary, recommendedStrategies, judgeAnalysis } = result;
+
+        const printContent = `
+            <style>
+                body { font-family: 'PT Sans', sans-serif; font-size: 12px; line-height: 1.5; }
+                h1 { font-size: 24px; font-weight: bold; margin-bottom: 16px; font-family: 'Playfair Display', serif; }
+                h2 { font-size: 18px; font-weight: bold; margin-top: 24px; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+                p { margin-bottom: 8px; }
+                .section { margin-bottom: 24px; }
+                .item { margin-bottom: 12px; padding: 8px; border: 1px solid #f0f0f0; border-radius: 4px; }
+                .bold { font-weight: bold; }
+                .italic { font-style: italic; }
+            </style>
+            <h1>Predictive Analytics Report</h1>
+            
+            <div class="section">
+                <h2>Prediction & Strategy</h2>
+                <p><span class="bold">Win Probability:</span> ${winProbability}%</p>
+                <p><span class="bold">Prediction Summary:</span> ${predictionSummary}</p>
+                
+                <h3>Recommended Strategies</h3>
+                ${recommendedStrategies.map(s => `
+                    <div class="item">
+                        <p><span class="bold">Strategy:</span> ${s.strategy} (${s.predictedSuccessRate}% success)</p>
+                        <p><span class="bold">Justification:</span> ${s.justification}</p>
+                    </div>
+                `).join('')}
+            </div>
+
+            <div class="section">
+                <h2>Judicial Analysis</h2>
+                <div class="item">
+                    <p><span class="bold">Bias & Pattern Summary:</span> ${judgeAnalysis.biasSummary}</p>
+                    <h3>Relevant Past Judgments</h3>
+                     ${judgeAnalysis.pastJudgments.length > 0 ? judgeAnalysis.pastJudgments.map(j => `
+                        <p>- ${j.caseName} (Outcome: ${j.outcome}, Similarity: ${j.similarity})</p>
+                    `).join('') : '<p>No relevant past judgments in the dataset.</p>'}
+                </div>
+            </div>
+        `;
+        
+        try {
+            const printWindow = window.open('', '_blank');
+            if(printWindow) {
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+                printWindow.print();
+                toast({ title: 'Printing...', description: 'Your report is being sent to the printer.' });
+            }
+        } catch (e) {
+            toast({ variant: 'destructive', title: 'Print Failed', description: 'Could not open print dialog.' });
+        }
+    };
+
 
     if (isLoading) {
         return (
@@ -97,6 +158,21 @@ export function PredictiveAnalyticsMode({ isLoading, result }: PredictiveAnalyti
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-6"
                 >
+                    <Card>
+                        <CardHeader>
+                             <div className="flex justify-between items-center">
+                                <div>
+                                    <CardTitle className="font-headline">Predictive Analytics Report</CardTitle>
+                                    <CardDescription>An AI-powered analysis of potential case outcomes.</CardDescription>
+                                </div>
+                                <Button variant="outline" size="sm" onClick={handlePrint}>
+                                    <Printer className="mr-2 h-4 w-4" />
+                                    Print Report
+                                </Button>
+                            </div>
+                        </CardHeader>
+                    </Card>
+
                     <Card className="shadow-lg">
                         <CardHeader>
                             <CardTitle className="font-headline flex items-center gap-2">

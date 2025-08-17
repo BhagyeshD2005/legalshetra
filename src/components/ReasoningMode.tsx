@@ -2,10 +2,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { BrainCircuit, Dot } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { BrainCircuit, Dot, Printer } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from './ui/skeleton';
+import { Button } from './ui/button';
+import { useToast } from '@/hooks/use-toast';
 
 export type ReasoningResult = {
   analysis: string;
@@ -48,6 +50,7 @@ const parseAnalysis = (analysis: string): AnalysisSection[] => {
 }
 
 export function ReasoningMode({ isLoading, result }: ReasoningModeProps) {
+  const { toast } = useToast();
   
   if (isLoading) {
     return (
@@ -69,6 +72,42 @@ export function ReasoningMode({ isLoading, result }: ReasoningModeProps) {
 
   const parsedAnalysis = result?.analysis ? parseAnalysis(result.analysis) : [];
 
+  const handlePrint = () => {
+    if (!result || !parsedAnalysis.length) return;
+    
+    const printContent = `
+        <style>
+            body { font-family: 'PT Sans', sans-serif; font-size: 12px; line-height: 1.5; }
+            h1 { font-size: 24px; font-weight: bold; margin-bottom: 16px; font-family: 'Playfair Display', serif; }
+            h2 { font-size: 18px; font-weight: bold; margin-top: 24px; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+            ul { list-style-type: disc; padding-left: 20px; }
+            li { margin-bottom: 8px; }
+        </style>
+        <h1>Reasoning Analysis Report</h1>
+        
+        ${parsedAnalysis.map(section => `
+            <div class="section">
+                <h2>${section.title}</h2>
+                <ul>
+                    ${section.points.map(point => `<li>${point}</li>`).join('')}
+                </ul>
+            </div>
+        `).join('')}
+    `;
+    
+    try {
+        const printWindow = window.open('', '_blank');
+        if(printWindow) {
+            printWindow.document.write(printContent);
+            printWindow.document.close();
+            printWindow.print();
+            toast({ title: 'Printing...', description: 'Your report is being sent to the printer.' });
+        }
+    } catch (e) {
+        toast({ variant: 'destructive', title: 'Print Failed', description: 'Could not open print dialog.' });
+    }
+  };
+
   return (
     <div className="space-y-4">
         <AnimatePresence>
@@ -79,6 +118,21 @@ export function ReasoningMode({ isLoading, result }: ReasoningModeProps) {
               animate={{ opacity: 1, y: 0 }}
               className="space-y-4"
             >
+              <Card>
+                <CardHeader>
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <CardTitle className="font-headline">Reasoning Analysis Report</CardTitle>
+                            <CardDescription>A step-by-step logical breakdown of the scenario.</CardDescription>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={handlePrint}>
+                            <Printer className="mr-2 h-4 w-4" />
+                            Print Report
+                        </Button>
+                    </div>
+                </CardHeader>
+              </Card>
+
               {parsedAnalysis.map((section, index) => (
                     <motion.div
                         key={index}
