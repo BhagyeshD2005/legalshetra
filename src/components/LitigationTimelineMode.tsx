@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarClock, Download, AlertTriangle, FileText, FileSpreadsheet, FileType } from 'lucide-react';
+import { CalendarClock, Download, AlertTriangle, FileText, FileSpreadsheet, FileType, Printer } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { type LitigationTimelineOutput } from '@/ai/types';
 import { Alert, AlertDescription } from './ui/alert';
@@ -34,7 +34,79 @@ const downloadFile = (content: string, fileName: string, mimeType: string) => {
 export function LitigationTimelineMode({ isLoading, result }: LitigationTimelineModeProps) {
     const { toast } = useToast();
 
-    const handleExport = (format: 'csv' | 'pdf' | 'text') => {
+    const handlePrint = () => {
+        if (!result) return;
+        
+        const { dueToday, timeline, assumptions } = result;
+
+        const printContent = `
+            <style>
+                body { font-family: 'PT Sans', sans-serif; font-size: 12px; line-height: 1.5; }
+                h1 { font-size: 24px; font-weight: bold; margin-bottom: 16px; font-family: 'Playfair Display', serif; }
+                h2 { font-size: 18px; font-weight: bold; margin-top: 24px; margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 4px; }
+                p { margin-bottom: 8px; }
+                .section { margin-bottom: 24px; }
+                ul { list-style-type: disc; padding-left: 20px; }
+                table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+                th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                th { background-color: #f2f2f2; }
+            </style>
+            <h1>Litigation Timeline Report</h1>
+            
+            ${dueToday.length > 0 ? `
+            <div class="section">
+                <h2>Due Today</h2>
+                <ul>
+                    ${dueToday.map(task => `<li>${task}</li>`).join('')}
+                </ul>
+            </div>` : ''}
+
+            <div class="section">
+                <h2>Procedural Timeline</h2>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Step</th>
+                            <th>Task / Filing Required</th>
+                            <th>Deadline</th>
+                            <th>Notes / Dependencies</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${timeline.map(item => `
+                            <tr>
+                                <td>${item.stepNumber}</td>
+                                <td>${item.task}</td>
+                                <td>${item.deadline}</td>
+                                <td>${item.notes}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="section">
+                <h2>Assumptions & Notes</h2>
+                <ul>
+                    ${assumptions.map(note => `<li>${note}</li>`).join('')}
+                </ul>
+            </div>
+        `;
+        
+        try {
+            const printWindow = window.open('', '_blank');
+            if(printWindow) {
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+                printWindow.print();
+                toast({ title: 'Printing...', description: 'Your report is being sent to the printer.' });
+            }
+        } catch (e) {
+            toast({ variant: 'destructive', title: 'Print Failed', description: 'Could not open print dialog.' });
+        }
+    };
+
+    const handleExport = (format: 'csv' | 'text') => {
         if (!result) return;
         const { exportContent } = result;
         const baseFileName = 'Litigation-Timeline';
@@ -43,13 +115,6 @@ export function LitigationTimelineMode({ isLoading, result }: LitigationTimeline
             switch(format) {
                 case 'csv':
                     downloadFile(exportContent.csv, `${baseFileName}.csv`, 'text/csv;charset=utf-8;');
-                    break;
-                case 'pdf':
-                    // PDF generation is complex on the client. We'll use a print-friendly markdown.
-                    // For a real app, a library like jsPDF would be used here.
-                    const pdfWindow = window.open("", "_blank");
-                    pdfWindow?.document.write('<pre>' + exportContent.pdf + '</pre>');
-                    pdfWindow?.print();
                     break;
                 case 'text':
                      downloadFile(exportContent.text, `${baseFileName}.txt`, 'text/plain;charset=utf-8;');
@@ -101,7 +166,7 @@ export function LitigationTimelineMode({ isLoading, result }: LitigationTimeline
         );
     }
 
-    const { dueToday, timeline, assumptions, exportContent } = result;
+    const { dueToday, timeline, assumptions } = result;
 
     return (
         <div className="space-y-6">
@@ -112,6 +177,21 @@ export function LitigationTimelineMode({ isLoading, result }: LitigationTimeline
                     animate={{ opacity: 1, y: 0 }}
                     className="space-y-6"
                 >
+                    <Card>
+                        <CardHeader>
+                             <div className="flex justify-between items-center">
+                                <div>
+                                    <CardTitle className="font-headline">Litigation Timeline Report</CardTitle>
+                                    <CardDescription>A generated timeline of procedural steps and estimated deadlines.</CardDescription>
+                                </div>
+                                <Button variant="outline" size="sm" onClick={handlePrint}>
+                                    <Printer className="mr-2 h-4 w-4" />
+                                    Print Report
+                                </Button>
+                            </div>
+                        </CardHeader>
+                    </Card>
+
                     <Alert variant="default" className="bg-yellow-50 border-yellow-200 text-yellow-800 dark:bg-yellow-900/20 dark:border-yellow-800 dark:text-yellow-300">
                         <AlertTriangle className="h-4 w-4 !text-yellow-600" />
                         <AlertDescription>
@@ -137,9 +217,6 @@ export function LitigationTimelineMode({ isLoading, result }: LitigationTimeline
                     <Card>
                         <CardHeader>
                             <CardTitle className="font-headline">Procedural Timeline</CardTitle>
-                            <CardDescription>
-                                A generated timeline of procedural steps and estimated deadlines.
-                            </CardDescription>
                         </CardHeader>
                         <CardContent>
                             <div className="border rounded-md">
@@ -184,18 +261,15 @@ export function LitigationTimelineMode({ isLoading, result }: LitigationTimeline
                         <CardHeader>
                             <CardTitle className="font-headline flex items-center gap-2">
                                 <Download className="h-5 w-5 text-primary" />
-                                Export Timeline
+                                Export Raw Data
                             </CardTitle>
                             <CardDescription>
-                                Download the generated timeline in your preferred format.
+                                Download the generated timeline data in a raw format.
                             </CardDescription>
                         </CardHeader>
                         <CardContent className="flex items-center gap-4">
                             <Button variant="outline" onClick={() => handleExport('csv')}>
                                 <FileSpreadsheet className="mr-2 h-4 w-4"/> CSV
-                            </Button>
-                             <Button variant="outline" onClick={() => handleExport('pdf')}>
-                                <FileType className="mr-2 h-4 w-4"/> PDF
                             </Button>
                              <Button variant="outline" onClick={() => handleExport('text')}>
                                 <FileText className="mr-2 h-4 w-4"/> Plain Text
