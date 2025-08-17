@@ -24,7 +24,7 @@ const prepPrompt = ai.definePrompt({
   name: 'crossExaminationPrepPrompt',
   input: { schema: CrossExaminationPrepInputSchema },
   output: { schema: CrossExaminationPrepOutputSchema },
-  prompt: `You are an expert legal AI assistant with a specialization in litigation and trial preparation for the Indian legal system. Your task is to prepare a lawyer for cross-examination.
+  prompt: `You are an expert legal AI assistant with a specialization in litigation and trial preparation for the Indian legal system. Your task is to prepare a lawyer for cross-examination in extensive detail.
 
 **Case Context:**
 *   My Role: {{{myRole}}}
@@ -39,14 +39,15 @@ const prepPrompt = ai.definePrompt({
 *   Role-Play Simulation: I want you to role-play as the {{{simulationRole}}}.
 
 **Instructions:**
-1.  **Identify Inconsistencies**: Scrutinize the witness statement and compare it against the evidence summary. Identify any contradictions, inconsistencies, or omissions that could be exploited during cross-examination.
-2.  **Generate Strategic Questions**: Based on the inconsistencies and my role, generate a list of strategic questions to ask the witness. For each question, provide a brief explanation of its purpose (e.g., "To highlight contradiction with Exhibit A," "To question the witness's credibility").
-3.  **Anticipate Opposing Arguments**: Predict the arguments the opposing counsel might raise in response to your line of questioning or to protect their witness.
-4.  **Conduct Role-Play Simulation**: Generate a sample dialogue based on the selected role-play. 
-    *   If role-playing as the **Witness**, provide realistic answers to some of your generated questions, demonstrating how they might try to evade or explain inconsistencies.
-    *   If role-playing as the **Opposing Counsel**, provide their likely objections or re-direction questions.
+1.  **Identify Inconsistencies**: Scrutinize the witness statement and compare it against the evidence summary. Identify every possible contradiction, inconsistency, or omission that could be exploited during cross-examination. For each, explain its significance in detail.
+2.  **Analyze Witness Motivation**: Based on the statement, infer potential motivations, biases, or weaknesses of the witness that could be relevant.
+3.  **Generate Strategic Questions**: Based on the inconsistencies and my role, generate a comprehensive list of strategic questions to ask the witness. For each question, provide a detailed explanation of its purpose (e.g., "To highlight contradiction with Exhibit A," "To question the witness's credibility by exposing bias," "To establish a more accurate timeline"). The questions should be sequenced logically.
+4.  **Anticipate Opposing Arguments**: Predict the arguments and objections the opposing counsel might raise in response to your line of questioning or to protect their witness. For each, suggest a pre-emptive response or a way to rephrase the question.
+5.  **Conduct Role-Play Simulation**: Generate a detailed, realistic sample dialogue based on the selected role-play. 
+    *   If role-playing as the **Witness**, provide realistic, challenging answers to some of your generated questions, demonstrating how they might try to evade, explain inconsistencies, or become hostile.
+    *   If role-playing as the **Opposing Counsel**, provide their likely objections or re-direction questions with legal reasoning.
 
-Provide a complete and structured analysis.`,
+Provide a complete, in-depth, and structured analysis.`,
 });
 
 

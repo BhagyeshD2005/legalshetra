@@ -48,16 +48,16 @@ const prompt = ai.definePrompt({
   name: 'analyzeDocumentPrompt',
   input: {schema: AnalyzeDocumentInputSchema},
   output: {schema: AnalyzeDocumentOutputSchema},
-  prompt: `You are an expert legal AI assistant with a specialization in contract and document review for the Indian legal system. Your task is to perform a deep analysis of the provided legal document.
+  prompt: `You are an expert legal AI assistant with a specialization in contract and document review for the Indian legal system. Your task is to perform a deep and exceptionally thorough analysis of the provided legal document.
 
 **Instructions:**
 
-1.  **Summarize the Document**: Provide a brief, high-level summary of the document's overall purpose.
+1.  **Summarize the Document**: Provide a brief, high-level summary of the document's overall purpose and key commercial terms.
 
 2.  **Identify Anomalies & Risks**:
-    *   Scrutinize the document for any unusual terms, potential loopholes, or missing standard clauses that would be expected for a document of this type.
-    *   For each anomaly found, identify the relevant clause, describe the issue in simple terms, assess its severity ('high', 'medium', or 'low'), and provide a concrete recommendation for improvement.
-    *   This is the most critical part of your analysis. Be thorough. Examples include ambiguous liability clauses, lack of a clear jurisdiction clause, or an unusually short notice period.
+    *   Scrutinize the document with extreme care for any unusual terms, potential loopholes, ambiguities, or missing standard clauses that would be expected for a document of this type.
+    *   For each anomaly found, identify the relevant clause, provide a **detailed** description of the issue in simple terms, assess its severity ('high', 'medium', or 'low'), and provide a concrete, actionable recommendation for improvement.
+    *   This is the most critical part of your analysis. Be granular and exhaustive. Examples include ambiguous liability clauses, lack of a clear jurisdiction clause, an unusually short notice period, or one-sided indemnity clauses.
 
 3.  **Extract Key Dates**:
     *   Identify all critical dates and deadlines mentioned in the document.
@@ -73,7 +73,7 @@ const prompt = ai.definePrompt({
 {{/if}}
 ---
 
-Provide your structured analysis below.`,
+Provide your structured and detailed analysis below.`,
 });
 
 const analyzeDocumentFlow = ai.defineFlow(

@@ -37,13 +37,14 @@ const prompt = ai.definePrompt({
   name: 'reasonAboutScenarioPrompt',
   input: {schema: ReasonAboutScenarioInputSchema},
   output: {schema: ReasonAboutScenarioOutputSchema},
-  prompt: `You are an expert legal AI that excels at logical reasoning. Your task is to analyze a given scenario and answer a specific question about it. Provide a clear, step-by-step analysis.
+  prompt: `You are an expert legal AI that excels at logical reasoning. Your task is to analyze a given scenario and answer a specific question about it. Provide a clear, exhaustive, step-by-step analysis.
 
 **Instructions:**
-1.  **Identify Relevant Facts**: From the scenario, pull out the key facts that are relevant to the question.
-2.  **Identify Legal Principles**: State the applicable legal principles or laws that govern the situation. If possible, cite relevant sections or acts.
-3.  **Apply Principles to Facts**: Apply the legal principles to the identified facts in a logical sequence.
-4.  **Conclude**: Provide a clear conclusion that directly answers the user's question.
+1.  **Identify Relevant Facts**: From the scenario, pull out all key facts that are relevant to the question. Be specific.
+2.  **Identify Legal Principles**: State the applicable legal principles or laws that govern the situation in detail. If possible, cite relevant sections or acts from the Indian legal framework.
+3.  **Apply Principles to Facts**: Apply the legal principles to the identified facts in a logical, step-by-step sequence. Explain your reasoning at each step.
+4.  **Consider Counter-Arguments**: Briefly discuss potential counter-arguments or alternative interpretations that could be made.
+5.  **Conclude**: Provide a clear, well-supported conclusion that directly answers the user's question, based on your analysis.
 
 **Scenario:**
 ---
@@ -55,7 +56,7 @@ const prompt = ai.definePrompt({
 {{{question}}}
 ---
 
-Provide your step-by-step analysis below. Use markdown for formatting, especially for titles and lists.`,
+Provide your detailed step-by-step analysis below. Use markdown for formatting, especially for titles and lists.`,
 });
 
 const reasonAboutScenarioFlow = ai.defineFlow(

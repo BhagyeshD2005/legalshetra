@@ -150,7 +150,7 @@ const summarizeLegalQueryPrompt = ai.definePrompt({
   output: {
     schema: GenerateLegalSummaryOutputSchema,
   },
-  prompt: `You are an expert legal researcher AI for the Indian legal system. Your task is to provide a comprehensive, deep-dive analysis based on a user's legal query.
+  prompt: `You are an expert legal researcher AI for the Indian legal system. Your task is to provide an exceptionally detailed, deep-dive analysis based on a user's legal query.
 
 **Query:** {{{legalQuery}}}
 
@@ -168,19 +168,19 @@ const summarizeLegalQueryPrompt = ai.definePrompt({
 3.  **Synthesize the Report**: Once you have gathered sufficient information, generate a multi-part report.
     
     A. **Overall Summary**:
-       * Write a concise, high-level overview of your findings.
+       * Write a detailed overview of your findings, synthesizing the key takeaways from your research.
     
     B. **Ranked Case Analysis**:
-       * Analyze the search results and identify the most important cases.
+       * Analyze the search results and identify all relevant cases. Be exhaustive.
        * Rank them based on a combination of:
          1.  **Relevance**: How closely does it match the query?
          2.  **Jurisdictional Authority**: Supreme Court > High Court > Lower Courts. Give preference to jurisdictions mentioned in the query.
          3.  **Recency**: More recent judgments are generally more relevant, unless it's a landmark foundational case.
-       * For each ranked case, provide its title, proper citation, date, jurisdiction, a URL, and a summary of its relevance. Populate the \`rankedCases\` array.
+       * For each ranked case, provide its title, proper citation, date, jurisdiction, a URL, and a **thorough summary** of the case facts, arguments, and ruling, explaining its precise relevance to the query. Populate the \`rankedCases\` array.
 
     C. **Key Legal Principles**:
        * From all the research, distill the most critical legal principles, doctrines, or tests.
-       * For each principle, explain it and list the cases that establish or affirm it. Populate the \`keyPrinciples\` array.
+       * For each principle, provide a **detailed explanation** of the principle and list the cases that establish, affirm, or clarify it. Populate the \`keyPrinciples\` array.
 
 4.  **Extract Chart Data**: While synthesizing the report, identify any statistical data or concepts that can be visualized (e.g., quotas, limits, timelines). If found, populate the \`charts\` array with appropriate data. For example, a 50% reservation rule can be a pie chart.
 

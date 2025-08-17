@@ -28,7 +28,7 @@ const evidencePrompt = ai.definePrompt({
   name: 'analyzeEvidencePrompt',
   input: { schema: AnalyzeEvidenceInputSchema },
   output: { schema: AnalyzeEvidenceOutputSchema },
-  prompt: `You are a forensic legal AI analyst. Your task is to perform a detailed analysis of multimodal evidence provided by a user. The evidence may include text documents, images, and audio/video transcripts. You must be meticulous, objective, and highlight legally significant information.
+  prompt: `You are a forensic legal AI analyst. Your task is to perform a meticulous and in-depth analysis of multimodal evidence provided by a user. The evidence may include text documents, images, and audio/video transcripts. You must be objective and highlight all legally significant information in detail.
 
 **Case Context:**
 {{{caseContext}}}
@@ -45,26 +45,27 @@ A set of documents, images, and transcripts are provided. You must process each 
 
 **Instructions:**
 1.  **Summarize and Assess Each Piece of Evidence**:
-    *   For each file, provide a brief summary of its content.
-    *   Assess the quality (e.g., "clear audio", "blurry image", "legible document"). If quality is poor, state that it may limit the accuracy of the analysis.
+    *   For each file, provide a detailed summary of its content and context.
+    *   Assess the quality (e.g., "clear audio", "blurry image", "legible document"). If quality is poor, state how it may limit the accuracy of the analysis.
     *   For documents/images, perform OCR and classify the document type (e.g., "Affidavit", "Contract", "Photograph").
     *   For audio/video, transcribe the content with HH:MM:SS timestamps for key statements.
 
 2.  **Identify and Highlight Key Information**:
     *   From all evidence, extract legally relevant phrases, such as admissions of guilt, contradictions, names of individuals, specific dates, and locations.
+    *   For each piece of key information, explain its legal significance in the context of the case.
     *   This information should be populated in the \`keyStatements\` array for transcripts and the \`ocrText\` for documents.
 
 3.  **Detect Contradictions**:
-    *   This is the most critical step. Compare all pieces of evidence against each other.
-    *   Identify any discrepancies in facts, timelines, names, dates, or statements.
-    *   For each contradiction found, create an entry in the \`contradictionReport\`. Specify the timestamp or page reference, the original statement, the source of the contradiction, and a brief note explaining the discrepancy.
+    *   This is the most critical step. Compare all pieces of evidence against each other with extreme care.
+    *   Identify any discrepancies in facts, timelines, names, dates, or statements, no matter how minor.
+    *   For each contradiction found, create an entry in the \`contradictionReport\`. Specify the timestamp or page reference, the original statement, the source of the contradiction, and a detailed note explaining the discrepancy and its potential legal impact.
 
 4.  **Assemble the Final Report**:
     *   Compile all summaries into the \`evidenceSummary\` array.
     *   Compile all detailed analysis (transcripts, OCR) into the \`detailedAnalysis\` array.
     *   Present the final contradiction report.
 
-Your entire output must be a single JSON object matching the specified output schema. Be thorough and precise.`,
+Your entire output must be a single JSON object matching the specified output schema. Be thorough, precise, and exhaustive in your analysis.`,
 });
 
 
