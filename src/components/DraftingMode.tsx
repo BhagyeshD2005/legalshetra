@@ -146,11 +146,11 @@ export function DraftingMode({ isLoading, result }: DraftingModeProps) {
                                                     </div>
                                                 </CardHeader>
                                                 <CardContent>
-                                                    <p className="text-sm text-muted-foreground mb-3" dangerouslySetInnerHTML={{ __html: clause.content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+                                                    <p className="text-sm text-muted-foreground mb-3" dangerouslySetInnerHTML={{ __html: clause.content.replace(/\*\*(.*?)\*\*/g, '&lt;strong&gt;$1&lt;/strong&gt;') }} />
                                                     <Separator className="my-3"/>
                                                     <div className="text-xs p-3 bg-muted/50 rounded-md">
                                                         <p className="font-semibold text-foreground mb-1">AI Risk Explanation:</p>
-                                                        <p className="text-muted-foreground" dangerouslySetInnerHTML={{ __html: clause.riskExplanation.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+                                                        <p className="text-muted-foreground" dangerouslySetInnerHTML={{ __html: clause.riskExplanation.replace(/\*\*(.*?)\*\*/g, '&lt;strong&gt;$1&lt;/strong&gt;') }} />
                                                     </div>
                                                 </CardContent>
                                             </Card>
@@ -169,7 +169,7 @@ export function DraftingMode({ isLoading, result }: DraftingModeProps) {
                             This is the clean, finalized version of your document. You can copy or print it.
                         </CardDescription>
                         <ScrollArea className="h-[60vh] p-4 border rounded-lg bg-muted/30">
-                           <pre className="text-sm whitespace-pre-wrap font-sans">{result.fullDraft}</pre>
+                           <pre className="text-sm whitespace-pre-wrap font-sans" dangerouslySetInnerHTML={{ __html: result.fullDraft.replace(/\*\*(.*?)\*\*/g, '&lt;strong&gt;$1&lt;/strong&gt;') }} />
                         </ScrollArea>
                         <div className="flex items-center gap-2">
                             <Button onClick={() => handleCopyToClipboard(result.fullDraft)}>
