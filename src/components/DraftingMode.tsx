@@ -165,9 +165,9 @@ export function DraftingMode({ isLoading, result }: DraftingModeProps) {
                  const formattedDraft = result.fullDraft
                     .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
                     .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>')
-                    .replace(/^## (.*$)/gim, '<h2 class="text-xl font-semibold mt-6 mb-3 border-b pb-2">$1</h2>')
-                    .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-8 mb-4 border-b pb-2">$1</h1>');
-                 
+                    .replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-6 mb-3 border-b pb-2">$1</h2>')
+                    .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-extrabold mt-8 mb-4 border-b pb-2">$1</h1>');
+
                  return (
                     <div className="space-y-4">
                         <CardTitle className="font-headline text-xl">Finalized Document</CardTitle>
@@ -175,7 +175,10 @@ export function DraftingMode({ isLoading, result }: DraftingModeProps) {
                             This is the clean, finalized version of your document. You can copy or print it.
                         </CardDescription>
                         <ScrollArea className="h-[60vh] p-4 border rounded-lg bg-muted/30">
-                           <div className="text-sm whitespace-pre-wrap font-sans" dangerouslySetInnerHTML={{ __html: formattedDraft }} />
+                           <div 
+                                className="prose prose-sm dark:prose-invert max-w-none" 
+                                dangerouslySetInnerHTML={{ __html: formattedDraft.replace(/\n/g, '<br />') }} 
+                            />
                         </ScrollArea>
                         <div className="flex items-center gap-2">
                             <Button onClick={() => handleCopyToClipboard(result.fullDraft)}>
