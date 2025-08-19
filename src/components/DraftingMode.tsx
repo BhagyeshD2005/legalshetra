@@ -146,11 +146,11 @@ export function DraftingMode({ isLoading, result }: DraftingModeProps) {
                                                     </div>
                                                 </CardHeader>
                                                 <CardContent>
-                                                    <p className="text-sm text-muted-foreground mb-3" dangerouslySetInnerHTML={{ __html: clause.content.replace(/\*\*(.*?)\*\*/g, '&lt;strong&gt;$1&lt;/strong&gt;') }} />
+                                                    <p className="text-sm text-muted-foreground mb-3" dangerouslySetInnerHTML={{ __html: clause.content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                                                     <Separator className="my-3"/>
                                                     <div className="text-xs p-3 bg-muted/50 rounded-md">
                                                         <p className="font-semibold text-foreground mb-1">AI Risk Explanation:</p>
-                                                        <p className="text-muted-foreground" dangerouslySetInnerHTML={{ __html: clause.riskExplanation.replace(/\*\*(.*?)\*\*/g, '&lt;strong&gt;$1&lt;/strong&gt;') }} />
+                                                        <p className="text-muted-foreground" dangerouslySetInnerHTML={{ __html: clause.riskExplanation.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                                                     </div>
                                                 </CardContent>
                                             </Card>
@@ -162,6 +162,12 @@ export function DraftingMode({ isLoading, result }: DraftingModeProps) {
                     </div>
                 );
             case 'finalized':
+                 const formattedDraft = result.fullDraft
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    .replace(/^### (.*$)/gim, '<h3 class="text-lg font-semibold mt-4 mb-2">$1</h3>')
+                    .replace(/^## (.*$)/gim, '<h2 class="text-xl font-semibold mt-6 mb-3 border-b pb-2">$1</h2>')
+                    .replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-8 mb-4 border-b pb-2">$1</h1>');
+                 
                  return (
                     <div className="space-y-4">
                         <CardTitle className="font-headline text-xl">Finalized Document</CardTitle>
@@ -169,7 +175,7 @@ export function DraftingMode({ isLoading, result }: DraftingModeProps) {
                             This is the clean, finalized version of your document. You can copy or print it.
                         </CardDescription>
                         <ScrollArea className="h-[60vh] p-4 border rounded-lg bg-muted/30">
-                           <pre className="text-sm whitespace-pre-wrap font-sans" dangerouslySetInnerHTML={{ __html: result.fullDraft.replace(/\*\*(.*?)\*\*/g, '&lt;strong&gt;$1&lt;/strong&gt;') }} />
+                           <div className="text-sm whitespace-pre-wrap font-sans" dangerouslySetInnerHTML={{ __html: formattedDraft }} />
                         </ScrollArea>
                         <div className="flex items-center gap-2">
                             <Button onClick={() => handleCopyToClipboard(result.fullDraft)}>
