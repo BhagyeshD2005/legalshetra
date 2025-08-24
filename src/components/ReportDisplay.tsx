@@ -7,10 +7,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { useState, useRef, useEffect } from "react";
-import { 
-  Copy, 
-  Printer, 
-  FileText, 
+import {
+  Copy,
+  Printer,
+  FileText,
   Calendar,
   Clock,
   Search,
@@ -26,20 +26,76 @@ import {
   BarChart,
   LineChart,
   Target,
-  ListOrdered
+  ListOrdered,
+  Wand2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import type { GenerateLegalSummaryOutput } from "@/ai/flows/generate-legal-summary";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent } from '@/components/ui/chart';
 import { Pie, Cell, PieChart as RechartsPieChart, Bar, BarChart as RechartsBarChart, XAxis, YAxis, CartesianGrid, Line, LineChart as RechartsLineChart } from 'recharts';
+import { type AnalyzeJudgmentOutput } from "@/ai/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog"
+import { Skeleton } from "./ui/skeleton";
+
 
 interface ReportDisplayProps {
   reportData: GenerateLegalSummaryOutput;
   query: string;
+  onAnalyzeJudgment: (text: string) => void;
+  isAnalyzing: boolean;
+  analysisResult: AnalyzeJudgmentOutput | null;
 }
 
-export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
+const AnalysisResultDisplay = ({ result }: { result: AnalyzeJudgmentOutput | null }) => {
+  if (!result) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-6 w-1/3" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-4/5" />
+        <Skeleton className="h-6 w-1/4 mt-4" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+      </div>
+    );
+  }
+  
+  const sections = [
+    { title: "Facts of the Case", content: result.facts },
+    { title: "Issues Framed by the Court", content: result.issues.join('\n- ') },
+    { title: "Arguments of the Petitioner", content: result.petitionerArguments },
+    { title: "Arguments of the Respondent", content: result.respondentArguments },
+    { title: "Decision / Holding", content: result.decision },
+    { title: "Ratio Decidendi", content: result.ratioDecidendi },
+    { title: "Obiter Dicta", content: result.obiterDicta },
+    { title: "Cited Precedents", content: result.citedPrecedents.map(p => `${p.caseName} (${p.treatment})`).join('\n- ') },
+    { title: "Practical Impact / Risk Analysis", content: result.impactAnalysis },
+  ];
+
+  return (
+    <div className="space-y-4 text-sm">
+      {sections.map(section => section.content && (
+        <div key={section.title}>
+          <h4 className="font-semibold text-base mb-1">{section.title}</h4>
+          <p className="whitespace-pre-wrap text-muted-foreground">{section.content}</p>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export function ReportDisplay({ reportData, query, onAnalyzeJudgment, isAnalyzing, analysisResult }: ReportDisplayProps) {
   const { toast } = useToast();
   const [isCopying, setIsCopying] = useState(false);
   const [isPrinting, setIsPrinting] = useState(false);
@@ -295,18 +351,48 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
                     <Separator className="mb-4" />
                     <div className="space-y-4 pl-11">
                         {rankedCases.map(item => (
-                            <div key={item.rank}>
-                                <h4 className="font-semibold text-md flex items-center gap-2">
-                                    <Badge variant="secondary" className="text-base">{item.rank}</Badge> 
-                                    {item.title}
-                                </h4>
-                                <div className="text-xs text-muted-foreground mt-1 mb-2 flex items-center gap-4">
-                                    <span>{item.citation}</span>
-                                    <span>{item.jurisdiction}</span>
-                                    <span>{item.date}</span>
-                                    <a href={item.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary">Read Full Text <ExternalLink className="h-3 w-3"/></a>
+                            <div key={item.rank} className="p-4 border rounded-md">
+                                <div className="flex justify-between items-start gap-4">
+                                    <div>
+                                        <h4 className="font-semibold text-md flex items-center gap-2">
+                                            <Badge variant="secondary" className="text-base">{item.rank}</Badge> 
+                                            {item.title}
+                                        </h4>
+                                        <div className="text-xs text-muted-foreground mt-1 mb-2 flex items-center gap-4">
+                                            <span>{item.citation}</span>
+                                            <span>{item.jurisdiction}</span>
+                                            <span>{item.date}</span>
+                                            <a href={item.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 hover:text-primary">Read Full Text <ExternalLink className="h-3 w-3"/></a>
+                                        </div>
+                                    </div>
+                                    <Dialog>
+                                      <DialogTrigger asChild>
+                                        <Button size="sm" variant="outline" onClick={() => onAnalyzeJudgment(item.summary)}>
+                                            <Wand2 className="mr-2 h-4 w-4" /> Analyze
+                                        </Button>
+                                      </DialogTrigger>
+                                      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+                                        <DialogHeader>
+                                          <DialogTitle className="font-headline">Judgment Analysis: {item.title}</DialogTitle>
+                                          <DialogDescription>
+                                            An AI-generated breakdown of the key components of the judgment.
+                                          </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="py-4">
+                                          <AnalysisResultDisplay result={isAnalyzing ? null : analysisResult} />
+                                        </div>
+                                        <DialogFooter>
+                                          <DialogClose asChild>
+                                            <Button type="button" variant="secondary">
+                                              Close
+                                            </Button>
+                                          </DialogClose>
+                                        </DialogFooter>
+                                      </DialogContent>
+                                    </Dialog>
+
                                 </div>
-                                <p className="text-sm text-foreground/80" dangerouslySetInnerHTML={{ __html: item.summary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+                                <p className="text-sm text-foreground/80 mt-2" dangerouslySetInnerHTML={{ __html: item.summary.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                             </div>
                         ))}
                     </div>
@@ -402,3 +488,5 @@ export function ReportDisplay({ reportData, query }: ReportDisplayProps) {
     </div>
   );
 }
+
+    

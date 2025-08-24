@@ -239,3 +239,53 @@ export const AnalyzeEvidenceOutputSchema = z.object({
     exportContent: ExportContentSchema.describe('The analysis data pre-formatted for various export options.'),
 });
 export type AnalyzeEvidenceOutput = z.infer<typeof AnalyzeEvidenceOutputSchema>;
+
+// Schemas for Judgment Analysis
+export const AnalyzeJudgmentInputSchema = z.object({
+  judgmentText: z
+    .string()
+    .describe(
+      'The full text of the legal judgment to be analyzed.'
+    ),
+});
+export type AnalyzeJudgmentInput = z.infer<typeof AnalyzeJudgmentInputSchema>;
+
+const CitedPrecedentSchema = z.object({
+  caseName: z.string().describe('The name of the cited case.'),
+  treatment: z
+    .string()
+    .describe(
+      'How the precedent was treated (e.g., followed, distinguished, overruled).'
+    ),
+});
+
+export const AnalyzeJudgmentOutputSchema = z.object({
+  facts: z
+    .string()
+    .describe('A neutral and concise summary of the facts of the case.'),
+  issues: z
+    .array(z.string())
+    .describe('A list of the key legal or factual issues framed by the court.'),
+  petitionerArguments: z
+    .string()
+    .describe("A summary of the petitioner's main arguments."),
+  respondentArguments: z
+    .string()
+    .describe("A summary of the respondent's main arguments."),
+  decision: z.string().describe('The final decision or holding of the court.'),
+  ratioDecidendi: z
+    .string()
+    .describe('The core legal reasoning for the decision.'),
+  obiterDicta: z
+    .string()
+    .describe('Non-binding statements or observations made by the court.'),
+  citedPrecedents: z
+    .array(CitedPrecedentSchema)
+    .describe('A list of key precedents cited in the judgment.'),
+  impactAnalysis: z
+    .string()
+    .describe('A practical analysis of the judgment\'s impact.'),
+});
+export type AnalyzeJudgmentOutput = z.infer<typeof AnalyzeJudgmentOutputSchema>;
+
+    

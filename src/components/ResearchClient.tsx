@@ -23,9 +23,10 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion, AnimatePresence } from 'framer-motion';
 import { chatWithReport } from '@/ai/flows/chat-with-report';
 import { ChatInterface } from './ChatInterface';
-import { type ChatMessage as ChatMessageType } from '@/ai/types';
+import { type ChatMessage as ChatMessageType, type AnalyzeJudgmentOutput } from '@/ai/types';
 import { Button } from './ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from './ui/card';
+import { analyzeJudgment } from '@/ai/flows/analyze-judgment';
 
 interface ResearchClientProps {
   isLoading: boolean;
@@ -61,6 +62,10 @@ export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnaly
   const [chatHistory, setChatHistory] = useState<ChatMessageType[]>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
 
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<AnalyzeJudgmentOutput | null>(null);
+
+
   const { toast } = useToast();
 
   const resetStates = useCallback(() => {
@@ -72,6 +77,8 @@ export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnaly
     setStartTime(Date.now());
     setProcessingSteps(PROCESSING_STEPS.map(step => ({ ...step, status: 'pending' })));
     setChatHistory([]);
+    setAnalysisResult(null);
+    setIsAnalyzing(false);
   }, []);
 
   const updateStepStatus = useCallback((stepId: string, status: ProcessingStep['status']) => {
@@ -134,7 +141,7 @@ export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnaly
       });
       onAnalysisError();
     }
-  }, [onAnalysisComplete, onAnalysisError, resetStates, onAnalysisStart, updateStepStatus]);
+  }, [onAnalysisComplete, onAnalysisError, resetStates, onAnalysisStart, updateStepStatus, toast]);
 
   useEffect(() => {
     if (isLoading && startTime) {
@@ -201,6 +208,24 @@ export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnaly
       description: "This feature is being connected.",
     });
   };
+
+  const handleAnalyzeJudgment = async (judgmentText: string) => {
+    setIsAnalyzing(true);
+    setAnalysisResult(null);
+    try {
+      const result = await analyzeJudgment({ judgmentText });
+      setAnalysisResult(result);
+    } catch (error: any) {
+       toast({
+        variant: "destructive",
+        title: "Analysis Failed",
+        description: error.message || "Could not analyze the judgment.",
+      });
+      setAnalysisResult(null);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -343,6 +368,9 @@ export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnaly
               <ReportDisplay 
                 reportData={reportData} 
                 query={enhancedQuery || (initialQuery?.query) || ''} 
+                onAnalyzeJudgment={handleAnalyzeJudgment}
+                isAnalyzing={isAnalyzing}
+                analysisResult={analysisResult}
               />
             </motion.div>
           )}
@@ -405,3 +433,5 @@ export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnaly
     </div>
   );
 }
+
+    
