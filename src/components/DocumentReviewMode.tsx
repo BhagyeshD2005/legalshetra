@@ -79,6 +79,14 @@ const CopyButton = ({ text }: { text: string }) => {
 
 export function DocumentReviewMode({ isLoading, result }: DocumentReviewModeProps) {
     const { toast } = useToast();
+    const [shownImprovements, setShownImprovements] = useState<Record<number, boolean>>({});
+
+    const toggleImprovement = (index: number) => {
+        setShownImprovements(prev => ({
+            ...prev,
+            [index]: !prev[index]
+        }));
+    };
 
     const handlePrint = () => {
         if (!result) return;
@@ -235,20 +243,34 @@ export function DocumentReviewMode({ isLoading, result }: DocumentReviewModeProp
                                         </Badge>
                                     </div>
                                     <p className="text-sm text-muted-foreground mb-3" dangerouslySetInnerHTML={{ __html: anomaly.description.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
-                                    <Separator className="my-2" />
+                                    <Separator className="my-3" />
                                     <div>
                                         <p className="text-xs font-semibold text-foreground">Recommendation:</p>
                                         <p className="text-xs text-muted-foreground italic" dangerouslySetInnerHTML={{ __html: anomaly.recommendation.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                                     </div>
                                     {anomaly.improvedClause && (
                                         <div className="mt-3">
-                                            <p className="text-xs font-semibold text-foreground mb-1 flex items-center gap-1"><Wand2 className="h-3 w-3 text-green-500" />Suggested Improvement:</p>
-                                            <div className="relative group">
-                                                <pre className="text-xs bg-background p-3 rounded-md font-mono whitespace-pre-wrap pr-10">
-                                                    {anomaly.improvedClause}
-                                                </pre>
-                                                <CopyButton text={anomaly.improvedClause} />
-                                            </div>
+                                            <Button variant="secondary" size="sm" onClick={() => toggleImprovement(index)}>
+                                                <Wand2 className="h-3 w-3 mr-2" />
+                                                {shownImprovements[index] ? "Hide" : "Suggest Improvement"}
+                                            </Button>
+                                            <AnimatePresence>
+                                                {shownImprovements[index] && (
+                                                    <motion.div
+                                                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                                                        animate={{ opacity: 1, height: 'auto', marginTop: '0.75rem' }}
+                                                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                                                        className="overflow-hidden"
+                                                    >
+                                                        <div className="relative group">
+                                                            <pre className="text-xs bg-background p-3 rounded-md font-mono whitespace-pre-wrap pr-10">
+                                                                {anomaly.improvedClause}
+                                                            </pre>
+                                                            <CopyButton text={anomaly.improvedClause} />
+                                                        </div>
+                                                    </motion.div>
+                                                )}
+                                            </AnimatePresence>
                                         </div>
                                     )}
                                 </div>
