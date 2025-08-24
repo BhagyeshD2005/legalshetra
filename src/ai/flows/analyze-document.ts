@@ -24,6 +24,7 @@ const AnomalySchema = z.object({
     description: z.string().describe('A plain-English explanation of the anomaly, risk, or unusual term.'),
     severity: z.enum(['high', 'medium', 'low']).describe('The potential risk level associated with the anomaly.'),
     recommendation: z.string().describe('A suggested action or edit to mitigate the risk.'),
+    improvedClause: z.string().optional().describe('The revised, improved version of the clause that addresses the identified risk.'),
 });
 
 const KeyDateSchema = z.object({
@@ -57,6 +58,7 @@ const prompt = ai.definePrompt({
 2.  **Identify Anomalies & Risks**:
     *   Scrutinize the document with extreme care for any unusual terms, potential loopholes, ambiguities, or missing standard clauses that would be expected for a document of this type.
     *   For each anomaly found, identify the relevant clause, provide a **detailed** description of the issue in simple terms, assess its severity ('high', 'medium', or 'low'), and provide a concrete, actionable recommendation for improvement.
+    *   **Crucially, you must also provide an 'improvedClause'**: a rewritten, legally sound version of the clause that mitigates the identified risk. If a clause is missing, draft the ideal clause that should be included.
     *   This is the most critical part of your analysis. Be granular and exhaustive. Examples include ambiguous liability clauses, lack of a clear jurisdiction clause, an unusually short notice period, or one-sided indemnity clauses.
 
 3.  **Extract Key Dates**:

@@ -4,18 +4,20 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Skeleton } from './ui/skeleton';
-import { FileText, AlertTriangle, Calendar, ClipboardList, Printer } from 'lucide-react';
+import { FileText, AlertTriangle, Calendar, ClipboardList, Printer, Check, Copy, Sparkles, Wand2 } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { useState } from 'react';
 
 type Anomaly = {
     clause: string;
     description: string;
     severity: 'high' | 'medium' | 'low';
     recommendation: string;
+    improvedClause?: string;
 };
 
 type KeyDate = {
@@ -52,6 +54,29 @@ const severityConfig = {
     }
 };
 
+const CopyButton = ({ text }: { text: string }) => {
+    const [copied, setCopied] = useState(false);
+    const { toast } = useToast();
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(text);
+        setCopied(true);
+        toast({ title: 'Copied to clipboard!' });
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    return (
+        <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+            onClick={handleCopy}
+        >
+            {copied ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+        </Button>
+    );
+};
+
 export function DocumentReviewMode({ isLoading, result }: DocumentReviewModeProps) {
     const { toast } = useToast();
 
@@ -71,6 +96,7 @@ export function DocumentReviewMode({ isLoading, result }: DocumentReviewModeProp
                 .item p { margin: 0; }
                 .bold { font-weight: bold; }
                 .pre { white-space: pre-wrap; font-family: monospace; }
+                .improved-clause { background-color: #f0f8ff; padding: 8px; border-radius: 4px; border: 1px solid #e0efff; }
             </style>
             <h1>Document Review Report</h1>
             
@@ -87,6 +113,10 @@ export function DocumentReviewMode({ isLoading, result }: DocumentReviewModeProp
                         <p><span class="bold">Severity:</span> ${anomaly.severity.toUpperCase()}</p>
                         <p><span class="bold">Description:</span> ${anomaly.description}</p>
                         <p><span class="bold">Recommendation:</span> ${anomaly.recommendation}</p>
+                        ${anomaly.improvedClause ? `
+                            <p class="bold" style="margin-top: 8px;">Suggested Improvement:</p>
+                            <div class="improved-clause pre">${anomaly.improvedClause}</div>
+                        ` : ''}
                     </div>
                 `).join('')}
             </div>
@@ -210,6 +240,17 @@ export function DocumentReviewMode({ isLoading, result }: DocumentReviewModeProp
                                         <p className="text-xs font-semibold text-foreground">Recommendation:</p>
                                         <p className="text-xs text-muted-foreground italic" dangerouslySetInnerHTML={{ __html: anomaly.recommendation.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                                     </div>
+                                    {anomaly.improvedClause && (
+                                        <div className="mt-3">
+                                            <p className="text-xs font-semibold text-foreground mb-1 flex items-center gap-1"><Wand2 className="h-3 w-3 text-green-500" />Suggested Improvement:</p>
+                                            <div className="relative group">
+                                                <pre className="text-xs bg-background p-3 rounded-md font-mono whitespace-pre-wrap pr-10">
+                                                    {anomaly.improvedClause}
+                                                </pre>
+                                                <CopyButton text={anomaly.improvedClause} />
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                              )
                         })}
