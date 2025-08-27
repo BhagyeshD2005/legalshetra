@@ -1,3 +1,4 @@
+
 'use server';
 
 /**
@@ -99,7 +100,7 @@ Provide your detailed step-by-step analysis below.`,
 export async function reasonAboutScenario(
   input: ReasonAboutScenarioInput
 ): Promise<ReasonAboutScenarioOutput> {
-    const {output} = await ai.generate({prompt: prompt, input});
+    const {output} = await prompt(input);
     if (!output) {
       throw new Error("The model did not return a valid analysis.");
     }
