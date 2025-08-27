@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileSignature, Bot, ClipboardCheck, AlertTriangle, Shield, CheckCircle2, ChevronRight, DraftingCompass, Printer, Info, AlertCircleIcon } from 'lucide-react';
+import { FileSignature, Bot, ClipboardCheck, AlertTriangle, Shield, CheckCircle2, ChevronRight, DraftingCompass, Printer } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { type DraftLegalDocumentOutput } from '@/ai/types';
 import { cn } from '@/lib/utils';
@@ -22,7 +22,7 @@ interface DraftingModeProps {
     result: DraftResult | null;
 }
 
-type WorkflowStep = 'draft' | 'review' | 'compliance' | 'finalized';
+type WorkflowStep = 'draft' | 'review' | 'finalized';
 
 const riskConfig = {
     low: {
@@ -39,21 +39,6 @@ const riskConfig = {
         icon: AlertTriangle,
         badgeClass: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800',
         textClass: 'text-red-600',
-    }
-};
-
-const complianceConfig = {
-    info: {
-        icon: Info,
-        badgeClass: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
-    },
-    warning: {
-        icon: AlertTriangle,
-        badgeClass: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
-    },
-    critical: {
-        icon: AlertCircleIcon,
-        badgeClass: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800',
     }
 };
 
@@ -140,7 +125,6 @@ export function DraftingMode({ isLoading, result }: DraftingModeProps) {
     const workflowSteps = [
         { id: 'draft', label: 'Draft', icon: FileSignature },
         { id: 'review', label: 'Review Clauses', icon: Bot },
-        ...(result.complianceNotes && result.complianceNotes.length > 0 ? [{ id: 'compliance', label: 'Compliance', icon: AlertTriangle }] : []),
         { id: 'finalized', label: 'Finalize', icon: CheckCircle2 },
     ];
 
@@ -183,46 +167,6 @@ export function DraftingMode({ isLoading, result }: DraftingModeProps) {
                                                         <p className="font-semibold text-foreground mb-1">AI Risk Explanation:</p>
                                                         <p className="text-muted-foreground" dangerouslySetInnerHTML={{ __html: clause.riskExplanation.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                                                     </div>
-                                                </CardContent>
-                                            </Card>
-                                        </motion.div>
-                                    )
-                                })}
-                           </div>
-                        </ScrollArea>
-                    </div>
-                );
-            case 'compliance':
-                 return (
-                    <div className="space-y-4">
-                        <CardTitle className="font-headline text-xl">Compliance Review</CardTitle>
-                        <CardDescription>
-                            The AI has identified potential compliance and regulatory issues to consider.
-                        </CardDescription>
-                        <ScrollArea className="h-[60vh] p-4 border rounded-lg">
-                           <div className="space-y-4">
-                                {(result.complianceNotes || []).map((note, index) => {
-                                    const config = complianceConfig[note.severity];
-                                    const Icon = config.icon;
-                                    return (
-                                        <motion.div 
-                                            key={index}
-                                            initial={{ opacity: 0, y: 10 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: index * 0.05 }}
-                                        >
-                                            <Card>
-                                                <CardHeader className="pb-3">
-                                                    <div className="flex justify-between items-start">
-                                                        <CardTitle className="text-base font-semibold">Compliance Note</CardTitle>
-                                                        <Badge variant="outline" className={cn("capitalize", config.badgeClass)}>
-                                                            <Icon className="h-3 w-3 mr-1" />
-                                                            {note.severity}
-                                                        </Badge>
-                                                    </div>
-                                                </CardHeader>
-                                                <CardContent>
-                                                    <p className="text-sm text-muted-foreground" dangerouslySetInnerHTML={{ __html: note.note.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                                                 </CardContent>
                                             </Card>
                                         </motion.div>

@@ -20,11 +20,6 @@ const ClauseSchema = z.object({
   riskExplanation: z.string().describe('A brief explanation of why the clause was assigned a particular risk level.'),
 });
 
-const ComplianceNoteSchema = z.object({
-    note: z.string().describe("A compliance or regulatory note relevant to the drafted document."),
-    severity: z.enum(['info', 'warning', 'critical']).describe("The severity level of the compliance note."),
-});
-
 
 export const DraftLegalDocumentInputSchema = z.object({
   documentType: z.enum(['contract', 'petition', 'affidavit', 'notice']).describe('The type of legal document to be drafted.'),
@@ -38,7 +33,6 @@ export const DraftLegalDocumentOutputSchema = z.object({
   title: z.string().describe("The main title of the generated document."),
   fullDraft: z.string().describe("The complete, finalized legal document as a single string, with proper formatting."),
   clauses: z.array(ClauseSchema).describe("A detailed, clause-by-clause breakdown of the document with risk analysis."),
-  complianceNotes: z.array(ComplianceNoteSchema).describe("A list of compliance or regulatory notes."),
 });
 export type DraftLegalDocumentOutput = z.infer<typeof DraftLegalDocumentOutputSchema>;
 

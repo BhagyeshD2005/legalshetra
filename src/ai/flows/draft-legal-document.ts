@@ -46,7 +46,7 @@ const draftPrompt = ai.definePrompt({
   name: 'draftLegalDocumentPrompt',
   input: { schema: DraftLegalDocumentInputSchema.extend({ boilerplate: z.string() }) },
   output: { schema: DraftLegalDocumentOutputSchema },
-  prompt: `You are an expert legal AI assistant specializing in drafting documents for the Indian legal system. Your task is to generate a complete and well-structured legal document and provide a compliance analysis.
+  prompt: `You are an expert legal AI assistant specializing in drafting documents for the Indian legal system. Your task is to generate a complete and well-structured legal document and provide a risk analysis for each clause.
 
 **Instructions:**
 1.  **Analyze the Request**:
@@ -63,20 +63,12 @@ const draftPrompt = ai.definePrompt({
     *   The full **content** of the clause.
     *   A **risk rating** ('low', 'medium', or 'high') based on potential for dispute or ambiguity.
     *   A brief **riskExplanation** for the assigned risk.
-
-4.  **Perform Compliance & Regulatory Analysis**:
-    *   After drafting, review the entire document from a compliance perspective for the specified jurisdiction.
-    *   Identify any potential regulatory issues, required registrations, or standard practices that might have been missed.
-    *   For each compliance issue found, create a note with a 'severity' ('info', 'warning', or 'critical').
-    *   Example: For a property agreement in Mumbai, a note might be "Ensure the document is adjudicated and stamped as per the Maharashtra Stamp Act." (Severity: 'critical'). For a software contract, "Consider adding a clause for GDPR compliance if dealing with EU customers." (Severity: 'warning').
-    *   This should be populated in the \`complianceNotes\` array.
-
-5.  **Assemble the Full Draft**: Combine all generated clauses and the provided boilerplate into a single, coherent document string. Ensure proper formatting, headings, and legal structure. This must be a clean, ready-to-use document.
+    
+4.  **Assemble the Full Draft**: Combine all generated clauses and the provided boilerplate into a single, coherent document string. Ensure proper formatting, headings, and legal structure. This must be a clean, ready-to-use document.
 
 **Important:**
 *   The \`fullDraft\` field MUST contain the complete, ready-to-use document.
 *   The \`clauses\` array must contain a detailed breakdown and analysis of each individual clause as instructed above.
-*   The \`complianceNotes\` array must contain any identified regulatory or compliance issues.
 *   Incorporate the provided boilerplate text seamlessly into the full draft, usually in a "Jurisdiction" or "Governing Law" clause.
 
 Begin the draft now.`,
