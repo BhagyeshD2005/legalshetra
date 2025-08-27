@@ -1,6 +1,7 @@
 
 'use client';
 
+import * as React from 'react';
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileSignature, Bot, ClipboardCheck, AlertTriangle, Shield, CheckCircle2, ChevronRight, DraftingCompass, Printer } from 'lucide-react';
+import { FileSignature, Bot, ClipboardCheck, AlertTriangle, Shield, CheckCircle2, ChevronRight, DraftingCompass, Printer, Info, AlertCircleIcon } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { type DraftLegalDocumentOutput } from '@/ai/types';
 import { cn } from '@/lib/utils';
@@ -21,7 +22,7 @@ interface DraftingModeProps {
     result: DraftResult | null;
 }
 
-type WorkflowStep = 'draft' | 'review' | 'finalized';
+type WorkflowStep = 'draft' | 'review' | 'compliance' | 'finalized';
 
 const riskConfig = {
     low: {
@@ -41,9 +42,31 @@ const riskConfig = {
     }
 };
 
+const complianceConfig = {
+    info: {
+        icon: Info,
+        badgeClass: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
+    },
+    warning: {
+        icon: AlertTriangle,
+        badgeClass: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800',
+    },
+    critical: {
+        icon: AlertCircleIcon,
+        badgeClass: 'bg-red-100 text-red-800 border-red-200 dark:bg-red-900/30 dark:text-red-300 dark:border-red-800',
+    }
+};
+
 export function DraftingMode({ isLoading, result }: DraftingModeProps) {
     const [workflowStep, setWorkflowStep] = useState<WorkflowStep>('draft');
     const { toast } = useToast();
+
+    React.useEffect(() => {
+        // When a new result comes in, reset the workflow to the start
+        if (result) {
+            setWorkflowStep('draft');
+        }
+    }, [result]);
 
     const handleCopyToClipboard = (text: string) => {
         navigator.clipboard.writeText(text);
@@ -114,6 +137,14 @@ export function DraftingMode({ isLoading, result }: DraftingModeProps) {
         );
     }
     
+    const workflowSteps = [
+        { id: 'draft', label: 'Draft', icon: FileSignature },
+        { id: 'review', label: 'Review Clauses', icon: Bot },
+        ...(result.complianceNotes && result.complianceNotes.length > 0 ? [{ id: 'compliance', label: 'Compliance', icon: AlertTriangle }] : []),
+        { id: 'finalized', label: 'Finalize', icon: CheckCircle2 },
+    ];
+
+
     const renderContent = () => {
         switch(workflowStep) {
             case 'review':
@@ -161,6 +192,46 @@ export function DraftingMode({ isLoading, result }: DraftingModeProps) {
                         </ScrollArea>
                     </div>
                 );
+            case 'compliance':
+                 return (
+                    <div className="space-y-4">
+                        <CardTitle className="font-headline text-xl">Compliance Review</CardTitle>
+                        <CardDescription>
+                            The AI has identified potential compliance and regulatory issues to consider.
+                        </CardDescription>
+                        <ScrollArea className="h-[60vh] p-4 border rounded-lg">
+                           <div className="space-y-4">
+                                {(result.complianceNotes || []).map((note, index) => {
+                                    const config = complianceConfig[note.severity];
+                                    const Icon = config.icon;
+                                    return (
+                                        <motion.div 
+                                            key={index}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: index * 0.05 }}
+                                        >
+                                            <Card>
+                                                <CardHeader className="pb-3">
+                                                    <div className="flex justify-between items-start">
+                                                        <CardTitle className="text-base font-semibold">Compliance Note</CardTitle>
+                                                        <Badge variant="outline" className={cn("capitalize", config.badgeClass)}>
+                                                            <Icon className="h-3 w-3 mr-1" />
+                                                            {note.severity}
+                                                        </Badge>
+                                                    </div>
+                                                </CardHeader>
+                                                <CardContent>
+                                                    <p className="text-sm text-muted-foreground" dangerouslySetInnerHTML={{ __html: note.note.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+                                                </CardContent>
+                                            </Card>
+                                        </motion.div>
+                                    )
+                                })}
+                           </div>
+                        </ScrollArea>
+                    </div>
+                );
             case 'finalized':
                  return (
                     <div className="space-y-4">
@@ -188,7 +259,7 @@ export function DraftingMode({ isLoading, result }: DraftingModeProps) {
                     <div className="space-y-4">
                         <CardTitle className="font-headline text-xl">Initial Draft</CardTitle>
                          <CardDescription>
-                            Here is the initial AI-generated draft. Proceed to review the clause-by-clause analysis.
+                            Here is the initial AI-generated draft. Proceed to the next steps for analysis and finalization.
                         </CardDescription>
                         <ScrollArea className="h-[60vh] p-4 border rounded-lg">
                            <pre className="text-sm whitespace-pre-wrap font-sans">{result.fullDraft}</pre>
@@ -206,30 +277,21 @@ export function DraftingMode({ isLoading, result }: DraftingModeProps) {
                         <CardTitle className="font-headline">{result.title}</CardTitle>
                         <CardDescription>Generated Legal Document</CardDescription>
                     </div>
-                     <div className="flex items-center gap-2">
-                        <Button 
-                            variant={workflowStep === 'draft' ? 'default' : 'outline'}
-                            onClick={() => setWorkflowStep('draft')}
-                            size="sm"
-                        >
-                            <FileSignature className="mr-2 h-4 w-4" /> Draft
-                        </Button>
-                        <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                        <Button 
-                            variant={workflowStep === 'review' ? 'default' : 'outline'}
-                            onClick={() => setWorkflowStep('review')}
-                            size="sm"
-                        >
-                            <Bot className="mr-2 h-4 w-4" /> Review
-                        </Button>
-                         <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                        <Button 
-                            variant={workflowStep === 'finalized' ? 'default' : 'outline'}
-                            onClick={() => setWorkflowStep('finalized')}
-                            size="sm"
-                        >
-                            <CheckCircle2 className="mr-2 h-4 w-4" /> Finalize
-                        </Button>
+                     <div className="flex items-center gap-2 flex-wrap">
+                        {workflowSteps.map((step, index) => (
+                            <React.Fragment key={step.id}>
+                                <Button 
+                                    variant={workflowStep === step.id ? 'default' : 'ghost'}
+                                    onClick={() => setWorkflowStep(step.id as WorkflowStep)}
+                                    size="sm"
+                                    className="flex items-center gap-2"
+                                >
+                                    <step.icon className="h-4 w-4" />
+                                    {step.label}
+                                </Button>
+                                {index < workflowSteps.length - 1 && <ChevronRight className="h-4 w-4 text-muted-foreground" />}
+                             </React.Fragment>
+                        ))}
                     </div>
                 </div>
             </CardHeader>
