@@ -16,7 +16,6 @@ export type ChatMessage = z.infer<typeof ChatMessageSchema>;
 const ClauseSchema = z.object({
   title: z.string().describe('The title or heading of the clause.'),
   content: z.string().describe('The full text of the clause.'),
-  tone: z.enum(['aggressive', 'neutral', 'conciliatory']).describe('The tone used for this specific clause.'),
   risk: z.enum(['low', 'medium', 'high']).describe('The assessed risk level of the clause.'),
   riskExplanation: z.string().describe('A brief explanation of why the clause was assigned a particular risk level.'),
 });
@@ -36,9 +35,9 @@ export const DraftLegalDocumentInputSchema = z.object({
 export type DraftLegalDocumentInput = z.infer<typeof DraftLegalDocumentInputSchema>;
 
 export const DraftLegalDocumentOutputSchema = z.object({
-  plan: z.array(z.string()).describe("A high-level plan or outline for the document to be drafted."),
-  draft: z.string().describe("The complete, finalized legal document as a single string."),
-  critique: z.array(z.string()).describe("The AI's self-critique of the draft, highlighting potential issues."),
+  title: z.string().describe("The main title of the generated document."),
+  fullDraft: z.string().describe("The complete, finalized legal document as a single string, with proper formatting."),
+  clauses: z.array(ClauseSchema).describe("A detailed, clause-by-clause breakdown of the document with risk analysis."),
   complianceNotes: z.array(ComplianceNoteSchema).describe("A list of compliance or regulatory notes."),
 });
 export type DraftLegalDocumentOutput = z.infer<typeof DraftLegalDocumentOutputSchema>;
