@@ -23,7 +23,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion, AnimatePresence } from 'framer-motion';
 import { orchestrateWorkflow } from '@/ai/flows/orchestrate-workflow';
-import { type OrchestrationPlanStep, type OrchestrateWorkflowOutput } from '@/ai/types';
+import { type OrchestrationPlanStep, type OrchestrateWorkflowOutput, type AnalyzeJudgmentOutput } from '@/ai/types';
 import { Button } from './ui/button';
 import { ReportDisplay } from './ReportDisplay';
 import { DocumentReviewMode } from './DocumentReviewMode';
@@ -31,6 +31,7 @@ import { DraftingMode } from './DraftingMode';
 import { PredictiveAnalyticsMode } from './PredictiveAnalyticsMode';
 import { NegotiationMode } from './NegotiationMode';
 import { CrossExaminationMode } from './CrossExaminationMode';
+import { analyzeJudgment } from '@/ai/flows/analyze-judgment';
 
 export type OrchestrationResult = OrchestrateWorkflowOutput;
 
@@ -64,6 +65,9 @@ export function OrchestrateMode({
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<AnalyzeJudgmentOutput | null>(null);
+
   const executeOrchestration = useCallback(async (objectiveToRun: string) => {
     setError(null);
     onOrchestrationStart({ query: objectiveToRun });
@@ -95,6 +99,24 @@ export function OrchestrateMode({
     // We only want to run this when the objective is first set
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [objective, isLoading]);
+  
+  const handleAnalyzeJudgment = async (judgmentText: string) => {
+    setIsAnalyzing(true);
+    setAnalysisResult(null);
+    try {
+      const result = await analyzeJudgment({ judgmentText });
+      setAnalysisResult(result);
+    } catch (error: any) {
+       toast({
+        variant: "destructive",
+        title: "Analysis Failed",
+        description: error.message || "Could not analyze the judgment.",
+      });
+      setAnalysisResult(null);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }
 
 
   const renderStepResult = (step: OrchestrationPlanStep) => {
@@ -103,7 +125,13 @@ export function OrchestrateMode({
 
     switch(step.agent) {
         case 'research':
-            return <ReportDisplay reportData={step.result} query={step.prompt} />;
+            return <ReportDisplay 
+                      reportData={step.result} 
+                      query={step.prompt} 
+                      onAnalyzeJudgment={handleAnalyzeJudgment}
+                      isAnalyzing={isAnalyzing}
+                      analysisResult={analysisResult}
+                   />;
         case 'review':
             return <DocumentReviewMode isLoading={false} result={step.result} />;
         case 'draft':
