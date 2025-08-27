@@ -1,6 +1,7 @@
 
 'use client';
 
+import * as React from 'react';
 import { useState, useCallback, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -420,7 +421,7 @@ export function DraftingMode({ isLoading, result, onGenerateDocument }: Drafting
             case 'critique':
                 return (
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between gap-4">
                             <div>
                                 <CardTitle className="font-headline text-xl">AI Critique</CardTitle>
                                 <CardDescription>
