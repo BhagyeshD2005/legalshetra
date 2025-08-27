@@ -21,6 +21,12 @@ const ClauseSchema = z.object({
   riskExplanation: z.string().describe('A brief explanation of why the clause was assigned a particular risk level.'),
 });
 
+const ComplianceNoteSchema = z.object({
+    note: z.string().describe("A compliance or regulatory note relevant to the drafted document."),
+    severity: z.enum(['info', 'warning', 'critical']).describe("The severity level of the compliance note."),
+});
+
+
 export const DraftLegalDocumentInputSchema = z.object({
   documentType: z.enum(['contract', 'petition', 'affidavit', 'notice']).describe('The type of legal document to be drafted.'),
   prompt: z.string().describe('The user\'s detailed prompt outlining the requirements for the document.'),
@@ -30,9 +36,10 @@ export const DraftLegalDocumentInputSchema = z.object({
 export type DraftLegalDocumentInput = z.infer<typeof DraftLegalDocumentInputSchema>;
 
 export const DraftLegalDocumentOutputSchema = z.object({
-  title: z.string().describe("The title of the generated legal document."),
-  fullDraft: z.string().describe("The complete, finalized legal document as a single string."),
-  clauses: z.array(ClauseSchema).describe('An array of individual clauses with their analysis.'),
+  plan: z.array(z.string()).describe("A high-level plan or outline for the document to be drafted."),
+  draft: z.string().describe("The complete, finalized legal document as a single string."),
+  critique: z.array(z.string()).describe("The AI's self-critique of the draft, highlighting potential issues."),
+  complianceNotes: z.array(ComplianceNoteSchema).describe("A list of compliance or regulatory notes."),
 });
 export type DraftLegalDocumentOutput = z.infer<typeof DraftLegalDocumentOutputSchema>;
 
@@ -288,4 +295,24 @@ export const AnalyzeJudgmentOutputSchema = z.object({
 });
 export type AnalyzeJudgmentOutput = z.infer<typeof AnalyzeJudgmentOutputSchema>;
 
-    
+// Schemas for Reasoning Mode
+export const ReasonAboutScenarioInputSchema = z.object({
+  scenario: z.string().describe('The factual matrix of the legal case or scenario.'),
+  question: z.string().describe('The specific legal question to be answered based on the scenario.'),
+});
+export type ReasonAboutScenarioInput = z.infer<typeof ReasonAboutScenarioInputSchema>;
+
+const CitedCaseSchema = z.object({
+    title: z.string().describe('The title of the case or statute.'),
+    url: z.string().describe('The URL to the document.'),
+});
+
+export const ReasonAboutScenarioOutputSchema = z.object({
+  factAnalysis: z.string().describe('An analysis of the relevant facts from the scenario.'),
+  legalPrinciples: z.string().describe('A summary of the applicable legal principles, acts, or laws, based on research.'),
+  application: z.string().describe('The application of the legal principles to the facts in a logical, step-by-step sequence.'),
+  counterArguments: z.string().describe('Potential counter-arguments or alternative interpretations.'),
+  conclusion: z.string().describe('A clear, well-supported conclusion that directly answers the user\'s question.'),
+  citedCases: z.array(CitedCaseSchema).describe('A list of cases or statutes cited in the analysis.'),
+});
+export type ReasonAboutScenarioOutput = z.infer<typeof ReasonAboutScenarioOutputSchema>;
