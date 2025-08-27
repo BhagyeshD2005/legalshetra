@@ -81,7 +81,7 @@ const prompt = ai.definePrompt({
     *   **Application of Principles to Facts**: Apply the legal principles to the identified facts in a logical, step-by-step sequence.
     *   **Counter-Arguments**: Briefly discuss potential counter-arguments or alternative interpretations.
     *   **Conclusion**: Provide a clear, well-supported conclusion that directly answers the user's question.
-4.  **Cite Sources**: Populate the \`citedCases\` array with the title and URL of any case law or statute you referenced from your research.
+4.  **Cite Sources**: Populate the \`citedCases\` array with the title, URL, and a brief snippet of any case law or statute you referenced from your research.
 
 **Scenario:**
 ---

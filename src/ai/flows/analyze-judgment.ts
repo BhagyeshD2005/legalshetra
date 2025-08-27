@@ -77,5 +77,3 @@ const analyzeJudgmentFlow = ai.defineFlow(
     return output;
   }
 );
-
-    

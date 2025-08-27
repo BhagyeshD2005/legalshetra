@@ -304,6 +304,7 @@ export type ReasonAboutScenarioInput = z.infer<typeof ReasonAboutScenarioInputSc
 const CitedCaseSchema = z.object({
     title: z.string().describe('The title of the case or statute.'),
     url: z.string().describe('The URL to the document.'),
+    snippet: z.string().describe('A brief snippet of the document highlighting its relevance.'),
 });
 
 export const ReasonAboutScenarioOutputSchema = z.object({

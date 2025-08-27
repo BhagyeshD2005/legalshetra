@@ -3,19 +3,68 @@
 
 import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { BrainCircuit, Printer, BookText, Scale, Gavel, ShieldAlert, CheckSquare, ExternalLink } from 'lucide-react';
+import { BrainCircuit, Printer, BookText, Scale, Gavel, ShieldAlert, CheckSquare, ExternalLink, Wand2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from './ui/skeleton';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { type ReasonAboutScenarioOutput } from '@/ai/types';
-import { Separator } from './ui/separator';
+import { type ReasonAboutScenarioOutput, type AnalyzeJudgmentOutput } from '@/ai/types';
+import { analyzeJudgment } from '@/ai/flows/analyze-judgment';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog"
 
 export type ReasoningResult = ReasonAboutScenarioOutput;
 
 interface ReasoningModeProps {
     isLoading: boolean;
     result: ReasoningResult | null;
+}
+
+const AnalysisResultDisplay = ({ result }: { result: AnalyzeJudgmentOutput | null }) => {
+  if (!result) {
+    return (
+      <div className="space-y-4">
+        <Skeleton className="h-6 w-1/3" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-4/5" />
+        <Skeleton className="h-6 w-1/4 mt-4" />
+        <Skeleton className="h-4 w-full" />
+        <Skeleton className="h-4 w-full" />
+      </div>
+    );
+  }
+  
+  const sections = [
+    { title: "Facts of the Case", content: result.facts },
+    { title: "Issues Framed by the Court", content: result.issues.join('\n- ') },
+    { title: "Arguments of the Petitioner", content: result.petitionerArguments },
+    { title: "Arguments of the Respondent", content: result.respondentArguments },
+    { title: "Decision / Holding", content: result.decision },
+    { title: "Ratio Decidendi", content: result.ratioDecidendi },
+    { title: "Obiter Dicta", content: result.obiterDicta },
+    { title: "Cited Precedents", content: result.citedPrecedents.map(p => `${p.caseName} (${p.treatment})`).join('\n- ') },
+    { title: "Practical Impact / Risk Analysis", content: result.impactAnalysis },
+  ];
+
+  return (
+    <div className="space-y-4 text-sm">
+      {sections.map(section => section.content && (
+        <div key={section.title}>
+          <h4 className="font-semibold text-base mb-1">{section.title}</h4>
+          <p className="whitespace-pre-wrap text-muted-foreground">{section.content}</p>
+        </div>
+      ))}
+    </div>
+  )
 }
 
 const Section = ({ icon: Icon, title, content, delay, children }: { icon: React.ElementType, title: string, content?: string | null, delay: number, children?: React.ReactNode }) => {
@@ -45,6 +94,8 @@ const Section = ({ icon: Icon, title, content, delay, children }: { icon: React.
 
 export function ReasoningMode({ isLoading, result }: ReasoningModeProps) {
   const { toast } = useToast();
+  const [isAnalyzing, setIsAnalyzing] = React.useState(false);
+  const [analysisResult, setAnalysisResult] = React.useState<AnalyzeJudgmentOutput | null>(null);
   
   if (isLoading) {
     return (
@@ -70,6 +121,24 @@ export function ReasoningMode({ isLoading, result }: ReasoningModeProps) {
             </Card>
         </div>
     )
+  }
+
+  const handleAnalyzeJudgment = async (judgmentText: string) => {
+    setIsAnalyzing(true);
+    setAnalysisResult(null);
+    try {
+      const result = await analyzeJudgment({ judgmentText });
+      setAnalysisResult(result);
+    } catch (error: any) {
+       toast({
+        variant: "destructive",
+        title: "Analysis Failed",
+        description: error.message || "Could not analyze the judgment.",
+      });
+      setAnalysisResult(null);
+    } finally {
+      setIsAnalyzing(false);
+    }
   }
 
   const handlePrint = () => {
@@ -156,16 +225,42 @@ export function ReasoningMode({ isLoading, result }: ReasoningModeProps) {
                        <Section icon={Scale} title="Cited Precedents" delay={0.3}>
                            <div className="space-y-2">
                             {result.citedCases.map((c, i) => (
-                                <a 
-                                    key={i} 
-                                    href={c.url} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="flex items-center justify-between text-sm p-3 bg-muted/50 rounded-md hover:bg-muted"
-                                >
-                                    <span>{c.title}</span>
-                                    <ExternalLink className="h-4 w-4 text-muted-foreground" />
-                                </a>
+                                <div key={i} className="flex items-center justify-between text-sm p-3 bg-muted/50 rounded-md">
+                                    <a 
+                                        href={c.url} 
+                                        target="_blank" 
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-2 hover:underline"
+                                    >
+                                        <span>{c.title}</span>
+                                        <ExternalLink className="h-3 w-3 text-muted-foreground" />
+                                    </a>
+                                     <Dialog>
+                                      <DialogTrigger asChild>
+                                        <Button size="sm" variant="ghost" onClick={() => handleAnalyzeJudgment(c.snippet)}>
+                                            <Wand2 className="mr-2 h-3 w-3" /> Analyze
+                                        </Button>
+                                      </DialogTrigger>
+                                      <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+                                        <DialogHeader>
+                                          <DialogTitle className="font-headline">Judgment Analysis: {c.title}</DialogTitle>
+                                          <DialogDescription>
+                                            An AI-generated breakdown of the key components of the judgment.
+                                          </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="py-4">
+                                          <AnalysisResultDisplay result={isAnalyzing ? null : analysisResult} />
+                                        </div>
+                                        <DialogFooter>
+                                          <DialogClose asChild>
+                                            <Button type="button" variant="secondary">
+                                              Close
+                                            </Button>
+                                          </DialogClose>
+                                        </DialogFooter>
+                                      </DialogContent>
+                                    </Dialog>
+                                </div>
                             ))}
                            </div>
                        </Section>
