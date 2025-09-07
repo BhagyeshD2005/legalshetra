@@ -32,6 +32,7 @@ import {
     Component,
     CalendarClock,
     Camera,
+    Plus,
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
@@ -178,6 +179,7 @@ export function ModeSwitcher({
   const evidenceFileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedEvidenceFiles, setSelectedEvidenceFiles] = useState<File[]>([]);
+  const [isDriveConnected, setIsDriveConnected] = useState(false);
 
   const researchForm = useForm<z.infer<typeof researchFormSchema>>({
     resolver: zodResolver(researchFormSchema),
@@ -512,6 +514,29 @@ export function ModeSwitcher({
     toast({ title: 'Sample data loaded!', description: 'The form has been populated with sample input.' });
   };
 
+  const handleConnectDrive = () => {
+    // This is a placeholder for the Google Drive integration.
+    // In a real application, this would trigger the OAuth 2.0 flow.
+    setIsSubmitting(true);
+    toast({ title: "Connecting to Google Drive...", description: "Please wait."});
+    setTimeout(() => {
+        setIsDriveConnected(true);
+        setIsSubmitting(false);
+        toast({ title: "Connected!", description: "You can now select files from Google Drive."});
+    }, 1500);
+  };
+  
+  const handleSelectDriveFile = (fileName: string) => {
+    // This is a placeholder. In a real app, this would use the Google Drive API
+    // to fetch the file content and convert it to a data URI.
+    toast({ title: "Selected File", description: `${fileName} is being prepared for analysis.`});
+    // For demonstration, we'll just set a dummy data URI.
+    analyzerForm.setValue('documentDataUri', `data:text/plain;base64,U2FtcGxlIGNvbnRlbnQgZnJvbSAi${fileName.replace(/\s+/g, '')}Ig`);
+    analyzerForm.setValue('documentText', ''); // Clear text input
+    analyzerForm.handleSubmit(onAnalyzerSubmit)(); // Automatically submit for analysis
+  };
+
+
   const renderLoadSampleButton = () => (
     <Button
       type="button"
@@ -617,6 +642,38 @@ export function ModeSwitcher({
         return (
             <Form {...analyzerForm}>
               <form onSubmit={analyzerForm.handleSubmit(onAnalyzerSubmit)} className="space-y-4" key="analyzer-form">
+                
+                <div className="space-y-2">
+                  <FormLabel>Input Source</FormLabel>
+                  <div className="p-2 border rounded-lg bg-muted/30 space-y-4">
+                    {isDriveConnected ? (
+                      <div>
+                        <p className="text-sm font-medium mb-2">Select a file from Google Drive</p>
+                        <div className="space-y-2">
+                          {/* This is a placeholder for the actual Google Drive file picker */}
+                          <Button variant="outline" className="w-full justify-start" onClick={() => handleSelectDriveFile('Client_Contract_v2.docx')}>
+                            <FileIcon className="mr-2 h-4 w-4" /> Client_Contract_v2.docx
+                          </Button>
+                          <Button variant="outline" className="w-full justify-start" onClick={() => handleSelectDriveFile('Property_Lease_Agreement.pdf')}>
+                            <FileIcon className="mr-2 h-4 w-4" /> Property_Lease_Agreement.pdf
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <Button variant="outline" className="w-full" onClick={handleConnectDrive} disabled={isSubmitting}>
+                        <svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2"><title>Google Drive</title><path d="M18.706 11.213L24 20.46l-5.879 1.46-3.064-5.328zM8.288 0l-5.88 10.247 5.88 10.246h11.759L24 10.247zm-3.064 5.328H1.46L0 8.392l5.224-3.064z"/></svg>
+                        Connect Google Drive
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                    <Separator className="flex-1" />
+                    <span className="text-xs text-muted-foreground">OR</span>
+                    <Separator className="flex-1" />
+                </div>
+                
                 <FormItem>
                     <FormLabel>Upload Document</FormLabel>
                     <FormControl>
@@ -1509,3 +1566,4 @@ export function ModeSwitcher({
 }
 
     
+
