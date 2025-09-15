@@ -516,14 +516,17 @@ export function ModeSwitcher({
 
   const handleConnectDrive = () => {
     // This is a placeholder for the Google Drive integration.
-    // In a real application, this would trigger the OAuth 2.0 flow.
+    // In a real application, this would trigger the OAuth 2.0 flow
+    // by redirecting the user to a backend endpoint.
     setIsSubmitting(true);
-    toast({ title: "Connecting to Google Drive...", description: "Please wait."});
+    toast({ title: "Connecting to Google Drive...", description: "Please wait. In a real app, you would be redirected to Google to sign in."});
+
+    // Simulate the authentication process
     setTimeout(() => {
         setIsDriveConnected(true);
         setIsSubmitting(false);
         toast({ title: "Connected!", description: "You can now select files from Google Drive."});
-    }, 1500);
+    }, 2500);
   };
   
   const handleSelectDriveFile = (fileName: string) => {
@@ -1566,4 +1569,5 @@ export function ModeSwitcher({
 }
 
     
+
 
