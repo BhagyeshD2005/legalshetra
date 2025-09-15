@@ -96,8 +96,8 @@ export default function ResearchPage() {
 
   return (
     <MainLayout>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start mt-6">
-            <div className="lg:col-span-1">
+        <div className="grid grid-cols-12 gap-8 items-start mt-6">
+            <div className="col-span-12 lg:col-span-4">
                  <ModeSwitcher 
                     selectedMode={selectedMode} 
                     onModeChange={(mode) => {
@@ -111,7 +111,7 @@ export default function ResearchPage() {
                     onAnalysisError={handleAnalysisError}
                  />
             </div>
-            <div className="lg:col-span-2">
+            <div className="col-span-12 lg:col-span-8">
                 {renderActiveComponent()}
             </div>
         </div>
