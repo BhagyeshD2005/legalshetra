@@ -3,7 +3,7 @@
 import { memo } from 'react';
 import { type ChatMessage as ChatMessageType } from '@/ai/types';
 import { cn } from '@/lib/utils';
-import { Bot, User, PlusSquare } from 'lucide-react';
+import { Bot, User, PlusSquare, FileOutput } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from './ui/button';
 
@@ -11,9 +11,10 @@ interface ChatMessageProps {
   message: ChatMessageType;
   isLoading?: boolean;
   onAddToReport?: (content: string) => void;
+  onExportToDocs?: (content: string) => void;
 }
 
-const ChatMessageComponent = ({ message, isLoading = false, onAddToReport }: ChatMessageProps) => {
+const ChatMessageComponent = ({ message, isLoading = false, onAddToReport, onExportToDocs }: ChatMessageProps) => {
   const isUser = message.role === 'user';
   
   const TypingIndicator = () => (
@@ -52,38 +53,48 @@ const ChatMessageComponent = ({ message, isLoading = false, onAddToReport }: Cha
         </div>
       )}
 
-      <div className="relative">
-        <div
-          className={cn(
-            'max-w-md rounded-lg px-4 py-3 text-sm',
-            isUser
-              ? 'bg-primary text-primary-foreground'
-              : 'bg-muted'
-          )}
-        >
-          {isLoading ? (
-              <TypingIndicator />
-          ) : (
-            <p className="whitespace-pre-wrap">{message.content}</p>
-          )}
-        </div>
+      <div
+        className={cn(
+          'relative max-w-md rounded-lg px-4 py-3 text-sm',
+          isUser
+            ? 'bg-primary text-primary-foreground'
+            : 'bg-muted'
+        )}
+      >
+        {isLoading ? (
+            <TypingIndicator />
+        ) : (
+          <p className="whitespace-pre-wrap">{message.content}</p>
+        )}
         
-        {!isUser && !isLoading && onAddToReport && (
+        {!isUser && !isLoading && (
             <motion.div
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ scale: 1.1 }}
-                className="absolute -bottom-3 -right-3 opacity-0 group-hover:opacity-100 transition-opacity"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="absolute bottom-0 right-0 translate-x-full translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity pl-2"
             >
-                <Button 
-                    size="icon" 
-                    variant="ghost"
-                    className="h-7 w-7 rounded-full bg-background hover:bg-primary/10 shadow-md"
-                    onClick={() => onAddToReport(message.content)}
-                    aria-label="Add to report"
-                >
-                    <PlusSquare className="h-4 w-4 text-primary" />
-                </Button>
+                {onAddToReport && (
+                    <Button 
+                        size="icon" 
+                        variant="ghost"
+                        className="h-7 w-7 rounded-full bg-background hover:bg-primary/10 shadow-md"
+                        onClick={() => onAddToReport(message.content)}
+                        aria-label="Add to report"
+                    >
+                        <PlusSquare className="h-4 w-4 text-primary" />
+                    </Button>
+                )}
+                {onExportToDocs && (
+                    <Button 
+                        size="icon" 
+                        variant="ghost"
+                        className="h-7 w-7 rounded-full bg-background hover:bg-primary/10 shadow-md"
+                        onClick={() => onExportToDocs(message.content)}
+                        aria-label="Export to Google Docs"
+                    >
+                        <FileOutput className="h-4 w-4 text-primary" />
+                    </Button>
+                )}
             </motion.div>
         )}
       </div>

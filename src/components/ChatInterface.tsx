@@ -14,9 +14,10 @@ interface ChatInterfaceProps {
   onSendMessage: (message: string) => void;
   isLoading: boolean;
   onAddToReport: (content: string) => void;
+  onExportToDocs: (content: string) => void;
 }
 
-export function ChatInterface({ messages, onSendMessage, isLoading, onAddToReport }: ChatInterfaceProps) {
+export function ChatInterface({ messages, onSendMessage, isLoading, onAddToReport, onExportToDocs }: ChatInterfaceProps) {
   const [input, setInput] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
 
@@ -64,6 +65,7 @@ export function ChatInterface({ messages, onSendMessage, isLoading, onAddToRepor
                     key={index} 
                     message={msg} 
                     onAddToReport={onAddToReport}
+                    onExportToDocs={onExportToDocs}
                 />
               ))}
               {isLoading && messages[messages.length-1]?.role === 'user' && (

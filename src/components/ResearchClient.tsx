@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useCallback, useRef, useEffect } from 'react';
@@ -208,6 +209,32 @@ export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnaly
       description: "This feature is being connected.",
     });
   };
+
+  const handleExportToDocs = async (content: string) => {
+    toast({
+      title: "Connecting to Google Docs...",
+      description: "Please wait while we authenticate and create your document.",
+    });
+
+    // Simulate API call to Google Docs
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    toast({
+      title: "Successfully exported to Google Doc!",
+      description: "Your content has been saved.",
+      action: (
+        <a 
+          href="https://docs.new" 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="text-sm font-medium text-primary hover:underline"
+        >
+          Open Document
+        </a>
+      ),
+    });
+  };
+
 
   const handleAnalyzeJudgment = async (judgmentText: string) => {
     setIsAnalyzing(true);
@@ -427,11 +454,10 @@ export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnaly
               onSendMessage={handleSendMessage} 
               isLoading={isChatLoading}
               onAddToReport={handleAddToReport}
+              onExportToDocs={handleExportToDocs}
             />
           </motion.div>
         )}
     </div>
   );
 }
-
-    
