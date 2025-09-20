@@ -6,7 +6,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 import { RefreshCw, CheckCircle2, AlertCircle, Clock } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 export interface ProcessingStep {
   id: string;
@@ -32,10 +32,50 @@ export function StepwiseLoading({ title, description, initialSteps }: StepwiseLo
   const [progressValue, setProgressValue] = useState(0);
   const [estimatedTime, setEstimatedTime] = useState<number | null>(30); // Initial estimate
   const [startTime] = useState<number>(Date.now());
-  const activeStepIndex = steps.findIndex(s => s.status === 'active');
+  const activeStepIndex = useMemo(() => steps.findIndex(s => s.status === 'active'), [steps]);
 
+  // This effect simulates the progression of steps for modes with fixed steps.
+  // It will be overridden by live data for Orchestrate mode.
+  useEffect(() => {
+    if (initialSteps.some(s => s.status !== 'pending' && s.status !== 'active')) {
+      // This is likely a dynamic plan (like from orchestrator), don't simulate.
+      setSteps(initialSteps);
+      return;
+    }
+
+    const interval = setInterval(() => {
+        setSteps(currentSteps => {
+            const newSteps = [...currentSteps];
+            const currentActiveIndex = newSteps.findIndex(step => step.status === 'active');
+
+            if (currentActiveIndex === -1 && newSteps.every(s => s.status === 'pending')) {
+                 newSteps[0].status = 'active';
+            } else if (currentActiveIndex !== -1 && currentActiveIndex < newSteps.length -1) {
+                 newSteps[currentActiveIndex].status = 'completed';
+                 newSteps[currentActiveIndex + 1].status = 'active';
+            } else if (currentActiveIndex === newSteps.length - 1) {
+                 newSteps[currentActiveIndex].status = 'completed';
+                 clearInterval(interval);
+            }
+            return newSteps;
+        });
+    }, 2000); // Simulate step change every 2 seconds
+
+    return () => clearInterval(interval);
+  }, []); // Only run once on mount for the simulation
+
+
+  // This effect ensures the component updates when the `initialSteps` prop changes (for Orchestrator)
+  useEffect(() => {
+    setSteps(initialSteps);
+  }, [initialSteps]);
+
+
+  // This effect calculates the progress bar value based on step statuses
   useEffect(() => {
     const totalSteps = steps.length;
+    if (totalSteps === 0) return;
+
     const completedSteps = steps.filter(s => s.status === 'completed').length;
     const activeStepIndex = steps.findIndex(s => s.status === 'active');
 
@@ -50,40 +90,23 @@ export function StepwiseLoading({ title, description, initialSteps }: StepwiseLo
         setProgressValue((completedSteps / totalSteps) * 100);
     }
   }, [steps]);
-  
-  useEffect(() => {
-    const interval = setInterval(() => {
-        const newSteps = [...steps];
-        const currentActiveIndex = newSteps.findIndex(step => step.status === 'active');
-
-        if (currentActiveIndex === -1 && newSteps.every(s => s.status === 'pending')) {
-             newSteps[0].status = 'active';
-        } else if (currentActiveIndex !== -1 && currentActiveIndex < newSteps.length -1) {
-             newSteps[currentActiveIndex].status = 'completed';
-             newSteps[currentActiveIndex + 1].status = 'active';
-        } else if (currentActiveIndex === newSteps.length - 1) {
-             newSteps[currentActiveIndex].status = 'completed';
-             clearInterval(interval);
-        }
-        setSteps(newSteps);
-
-    }, 2000); // Simulate step change every 2 seconds
-
-    return () => clearInterval(interval);
-  }, []);
 
 
+  // This effect calculates the estimated time remaining
   useEffect(() => {
     const interval = setInterval(() => {
         const elapsed = (Date.now() - startTime) / 1000;
         const completedSteps = steps.filter(step => step.status === 'completed').length;
         
-        if (completedSteps > 0) {
+        if (completedSteps > 0 && steps.length > 0) {
           const avgTimePerStep = elapsed / completedSteps;
           const remainingSteps = steps.length - completedSteps;
-          setEstimatedTime(Math.ceil(avgTimePerStep * remainingSteps));
+          const newEstimate = Math.ceil(avgTimePerStep * remainingSteps);
+          if (newEstimate > 0) setEstimatedTime(newEstimate);
         } else {
-          setEstimatedTime(30 - Math.floor(elapsed)); // Countdown initial estimate
+          const initialEstimate = 30; // Initial guess in seconds
+          const timeRemaining = initialEstimate - Math.floor(elapsed);
+          if (timeRemaining > 0) setEstimatedTime(timeRemaining);
         }
       }, 1000);
 

@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
@@ -18,7 +19,8 @@ import {
   TrendingUp,
   Handshake,
   Swords,
-  Timer
+  Timer,
+  Lightbulb,
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -32,6 +34,7 @@ import { PredictiveAnalyticsMode } from './PredictiveAnalyticsMode';
 import { NegotiationMode } from './NegotiationMode';
 import { CrossExaminationMode } from './CrossExaminationMode';
 import { analyzeJudgment } from '@/ai/flows/analyze-judgment';
+import { StepwiseLoading } from './StepwiseLoading';
 
 export type OrchestrationResult = OrchestrateWorkflowOutput;
 
@@ -44,7 +47,7 @@ interface OrchestrateModeProps {
   objective?: string;
 }
 
-const agentIcons = {
+const agentIcons: { [key: string]: React.ElementType } = {
     research: FileSearch,
     draft: DraftingCompass,
     review: FileText,
@@ -52,7 +55,9 @@ const agentIcons = {
     negotiate: Handshake,
     'cross-examine': Swords,
     reasoning: BrainCircuit,
+    default: Lightbulb,
 };
+
 
 export function OrchestrateMode({
     result,
@@ -67,13 +72,20 @@ export function OrchestrateMode({
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalyzeJudgmentOutput | null>(null);
+  const [livePlan, setLivePlan] = useState<OrchestrationPlanStep[]>([]);
 
   const executeOrchestration = useCallback(async (objectiveToRun: string) => {
     setError(null);
     onOrchestrationStart({ query: objectiveToRun });
+    setLivePlan([]);
 
     try {
-      const result = await orchestrateWorkflow({ objective: objectiveToRun });
+      const result = await orchestrateWorkflow({ 
+        objective: objectiveToRun,
+        onStepUpdate: (plan) => {
+           setLivePlan(plan);
+        }
+      });
       onOrchestrationComplete(result);
       toast({
         title: "Orchestration Complete",
@@ -148,25 +160,25 @@ export function OrchestrateMode({
   }
 
   if (isLoading) {
+      const steps = livePlan.length > 0 ? livePlan.map(step => {
+        const AgentIcon = agentIcons[step.agent] || agentIcons.default;
+        return {
+          id: step.step.toString(),
+          label: step.summary,
+          status: step.status,
+          icon: AgentIcon,
+        }
+      }) : [
+        { id: 'plan', label: 'Creating execution plan...', status: 'active', icon: BrainCircuit }
+      ];
+
       return (
-          <Card>
-              <CardHeader>
-                  <CardTitle className="font-headline flex items-center gap-2">
-                      <RefreshCw className="h-5 w-5 animate-spin text-primary" />
-                      Orchestration in Progress...
-                    </CardTitle>
-                  <CardDescription>The AI is executing the workflow. This may take a moment.</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                  <div className="flex items-center justify-center p-8">
-                    <div className="space-y-2 text-center">
-                        <Skeleton className="h-4 w-48" />
-                        <Skeleton className="h-4 w-32" />
-                    </div>
-                  </div>
-              </CardContent>
-          </Card>
-      );
+        <StepwiseLoading
+            title="Orchestration in Progress..."
+            description="The AI is executing the multi-agent workflow. Please wait."
+            initialSteps={steps}
+        />
+      )
   }
 
   if (!result && !objective) {

@@ -26,7 +26,7 @@ import { crossExaminationPrep } from './cross-examination-prep';
 
 
 export async function orchestrateWorkflow(
-  input: OrchestrateWorkflowInput
+  input: OrchestrateWorkflowInput & { onStepUpdate?: (plan: z.infer<typeof OrchestrationPlanStepSchema>[]) => void }
 ): Promise<OrchestrateWorkflowOutput> {
   
   // 1. Create a plan
@@ -63,6 +63,11 @@ Ensure the prompt for each step is self-contained and has enough detail for the 
   }
 
   const plan = planOutput.plan;
+  if(input.onStepUpdate) {
+    input.onStepUpdate(plan);
+  }
+
+
   let executionContext = input.objective; // The context that gets passed from step to step
   const results: any[] = [];
 
@@ -71,6 +76,10 @@ Ensure the prompt for each step is self-contained and has enough detail for the 
     const step = plan[i];
 
     step.status = 'active';
+    if(input.onStepUpdate) {
+        input.onStepUpdate([...plan]);
+    }
+
 
     try {
       let stepResult: any;
@@ -107,6 +116,10 @@ Ensure the prompt for each step is self-contained and has enough detail for the 
       step.status = 'completed';
       step.result = stepResult;
       
+      if(input.onStepUpdate) {
+        input.onStepUpdate([...plan]);
+      }
+      
       results.push(stepResult);
       // Update context for the next step. This is a simple implementation.
       // A more advanced version would intelligently merge contexts.
@@ -115,7 +128,9 @@ Ensure the prompt for each step is self-contained and has enough detail for the 
     } catch (error: any) {
       step.status = 'error';
       step.result = { error: error.message || 'An unknown error occurred' };
-
+        if(input.onStepUpdate) {
+            input.onStepUpdate([...plan]);
+        }
       // Stop execution on failure
       return { plan: plan, finalOutput: "Workflow failed." };
     }
