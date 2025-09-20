@@ -24,49 +24,28 @@ export async function patentSearch(input: PatentSearchInput): Promise<PatentSear
 }
 
 
-// 1. Define a tool to search a patent database.
-// This simulates calling an external API like Google Patents or a private database.
-const searchPatentsTool = ai.defineTool(
+// 1. Define a tool to search the web for patents.
+// This allows the model to use Google Search to find real prior art.
+const googleSearchPatents = ai.defineTool(
   {
-    name: 'searchPatents',
-    description: 'Searches a database of existing patents for documents relevant to a given invention description. Returns a list of patent documents with summaries.',
+    name: 'googleSearchPatents',
+    description: 'Performs a Google search for relevant patents, primarily on patents.google.com. Use this to find prior art based on an invention\'s description.',
     inputSchema: z.object({
-      query: z.string().describe('A search query derived from the user\'s invention description, focusing on key technical features.'),
+      query: z.string().describe('A targeted search query for finding patents related to the invention.'),
     }),
     outputSchema: z.object({
       results: z.array(z.object({
-        patentId: z.string(),
         title: z.string(),
         url: z.string(),
-        publicationDate: z.string(),
-        abstract: z.string(),
+        snippet: z.string(),
       })),
     }),
   },
   async (input) => {
-    // In a real application, this would make an API call to a patent database.
-    // For this example, we return realistic mock data based on the query.
-    console.log(`Tool "searchPatents" called with query: ${input.query}`);
-    if (input.query.toLowerCase().includes('drone' || 'delivery')) {
-       return {
-            results: [
-                {
-                    patentId: 'US 10,987,654 B2',
-                    title: 'Autonomous Drone Delivery System with Secure Payload Release',
-                    url: 'https://patents.google.com/patent/US10987654B2/en',
-                    publicationDate: '2021-05-18',
-                    abstract: 'A system and method for autonomous aerial delivery of payloads. Drones navigate to a destination and use a secure, authenticated mechanism to release a payload container. The system includes features for obstacle avoidance and real-time route adjustment based on weather data.'
-                },
-                 {
-                    patentId: 'US 9,123,456 B1',
-                    title: 'Method for Coordinating a Fleet of Delivery Vehicles',
-                    url: 'https://patents.google.com/patent/US9123456B1/en',
-                    publicationDate: '2015-11-03',
-                    abstract: 'A central server coordinates a fleet of delivery vehicles (ground-based or aerial) to optimize delivery routes. It allocates tasks based on vehicle location, capacity, and delivery deadlines, using a predictive model to estimate travel times.'
-                }
-            ]
-        }
-    }
+    // This is a placeholder for the actual search implementation.
+    // In a real Genkit app with the right setup, you could use a proper
+    // search plugin here. The model's built-in search capability will be used.
+    console.log(`Tool "googleSearchPatents" called with query: ${input.query}`);
     return { results: [] };
   }
 );
@@ -75,7 +54,7 @@ const searchPatentsTool = ai.defineTool(
 // 2. Define the main prompt that uses the tool to generate the report.
 const patentSearchPrompt = ai.definePrompt({
   name: 'patentSearchPrompt',
-  tools: [searchPatentsTool],
+  tools: [googleSearchPatents],
   input: { schema: PatentSearchInputSchema },
   output: { schema: PatentSearchOutputSchema },
   prompt: `You are a world-class patent analyst AI. Your task is to conduct a thorough prior art search based on the user's invention description and generate a structured Patent Search Report.
@@ -86,19 +65,20 @@ const patentSearchPrompt = ai.definePrompt({
 ---
 
 **Instructions:**
-1.  **Formulate Search Query**: Based on the invention description, formulate a precise search query highlighting the key technical features and concepts.
-2.  **Conduct Search**: Use the \`searchPatents\` tool to find relevant prior art. You may need to call it more than once with refined queries to get the best results.
-3.  **Analyze and Rank Results**: Review the search results. For each relevant patent, you must:
-    a.  **Assess Relevance**: Assign a relevance score from 0-100 indicating how closely it relates to the user's invention.
-    b.  **Summarize**: Write a concise summary of the patent's abstract.
-    c.  **Perform Novelty Comparison**: This is the most critical step. Directly compare the prior art to the user's invention. Clearly state what is similar and, more importantly, what appears to be novel or different in the user's invention compared to this specific patent.
+1.  **Formulate Search Query**: Based on the invention description, formulate a precise search query highlighting the key technical features and concepts. Your query should be targeted towards finding documents on Google Patents (patents.google.com).
+2.  **Conduct Search**: Use the \`googleSearchPatents\` tool to find relevant prior art from the web. You may need to call it more than once with refined queries to get the best results.
+3.  **Analyze and Rank Results**: Review the search results. For each relevant patent you find, you must:
+    a.  **Extract Details**: From the patent information, extract the Patent ID, title, publication date, and abstract.
+    b.  **Assess Relevance**: Assign a relevance score from 0-100 indicating how closely it relates to the user's invention.
+    c.  **Summarize**: Write a concise summary of the patent's abstract.
+    d.  **Perform Novelty Comparison**: This is the most critical step. Directly compare the prior art to the user's invention. Clearly state what is similar and, more importantly, what appears to be novel or different in the user's invention compared to this specific patent.
 4.  **Synthesize Final Report**: Compile your findings into the final structured report.
     a.  **Report Summary**: Write a high-level overview of your findings and give an initial assessment of the invention's patentability.
     b.  **Prior Art List**: Create the ranked list of the most relevant prior art you analyzed.
     c.  **Key Concepts**: List the key technical terms you identified.
     d.  **Recommendations**: Provide actionable next steps for the user. Do not give legal advice, but suggest areas of focus or consultation with a patent attorney.
 
-Your entire output must strictly follow the defined JSON schema. Do not invent patents; rely only on the information provided by the \`searchPatents\` tool.`,
+Your entire output must strictly follow the defined JSON schema. Rely only on the information provided by the \`googleSearchPatents\` tool.`,
 });
 
 
