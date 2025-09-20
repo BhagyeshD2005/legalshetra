@@ -5,12 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
-import { CalendarClock, Download, AlertTriangle, FileText, FileSpreadsheet, FileType, Printer } from 'lucide-react';
+import { CalendarClock, Download, AlertTriangle, FileText, FileSpreadsheet, FileType, Printer, Calculator, ListChecks, FileClock } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { type LitigationTimelineOutput } from '@/ai/types';
 import { Alert, AlertDescription } from './ui/alert';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from './ui/table';
 import { useToast } from '@/hooks/use-toast';
+import { StepwiseLoading, type ProcessingStep } from './StepwiseLoading';
 
 export type LitigationTimelineResult = LitigationTimelineOutput;
 
@@ -30,6 +31,12 @@ const downloadFile = (content: string, fileName: string, mimeType: string) => {
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 };
+
+const loadingSteps: ProcessingStep[] = [
+    { id: 'rules', label: 'Loading Procedural Rules', status: 'pending', icon: FileClock },
+    { id: 'calc', label: 'Calculating Deadlines', status: 'pending', icon: Calculator },
+    { id: 'report', label: 'Generating Timeline Report', status: 'pending', icon: ListChecks },
+];
 
 export function LitigationTimelineMode({ isLoading, result }: LitigationTimelineModeProps) {
     const { toast } = useToast();
@@ -135,18 +142,11 @@ export function LitigationTimelineMode({ isLoading, result }: LitigationTimeline
 
 
     if (isLoading) {
-        return (
-             <Card>
-                <CardHeader>
-                    <Skeleton className="h-8 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <Skeleton className="h-20 w-full" />
-                    <Skeleton className="h-40 w-full" />
-                </CardContent>
-            </Card>
-        )
+        return <StepwiseLoading 
+                    title="Generating Timeline..."
+                    description="The AI is calculating procedural deadlines based on the provided info."
+                    initialSteps={loadingSteps}
+                />;
     }
 
     if (!result) {

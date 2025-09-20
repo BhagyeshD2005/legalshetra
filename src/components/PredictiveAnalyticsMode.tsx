@@ -6,13 +6,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TrendingUp, FileText, Check, AlertTriangle, Scale, Target, Lightbulb, Printer } from 'lucide-react';
+import { TrendingUp, FileText, Check, AlertTriangle, Scale, Target, Lightbulb, Printer, Database, BarChart, BrainCircuit } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { type PredictCaseOutcomeOutput } from '@/ai/types';
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '@/components/ui/chart';
 import { Pie, Cell, PieChart, RadialBar, RadialBarChart } from 'recharts';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
+import { StepwiseLoading, type ProcessingStep } from './StepwiseLoading';
 
 export type PredictiveAnalyticsResult = PredictCaseOutcomeOutput;
 
@@ -32,6 +33,12 @@ const riskConfig = {
         badgeClass: 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800',
     }
 };
+
+const loadingSteps: ProcessingStep[] = [
+    { id: 'data', label: 'Analyzing Historical Data', status: 'pending', icon: Database },
+    { id: 'model', label: 'Running Predictive Model', status: 'pending', icon: BarChart },
+    { id: 'strategy', label: 'Generating Strategic Recommendations', status: 'pending', icon: BrainCircuit },
+];
 
 export function PredictiveAnalyticsMode({ isLoading, result }: PredictiveAnalyticsModeProps) {
     const { toast } = useToast();
@@ -95,36 +102,11 @@ export function PredictiveAnalyticsMode({ isLoading, result }: PredictiveAnalyti
 
 
     if (isLoading) {
-        return (
-            <div className="space-y-4">
-                <Card>
-                    <CardHeader>
-                        <Skeleton className="h-8 w-3/4" />
-                        <Skeleton className="h-4 w-1/2" />
-                    </CardHeader>
-                    <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="flex flex-col items-center justify-center space-y-4">
-                            <Skeleton className="h-40 w-40 rounded-full" />
-                            <Skeleton className="h-6 w-3/4" />
-                        </div>
-                        <div className="space-y-4">
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-10 w-full" />
-                            <Skeleton className="h-10 w-full" />
-                        </div>
-                    </CardContent>
-                </Card>
-                <Card>
-                    <CardHeader>
-                        <Skeleton className="h-8 w-1/2" />
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                    </CardContent>
-                </Card>
-            </div>
-        )
+        return <StepwiseLoading 
+                    title="Running Prediction..."
+                    description="The AI is analyzing historical data and running predictive models."
+                    initialSteps={loadingSteps}
+                />;
     }
 
     if (!result) {

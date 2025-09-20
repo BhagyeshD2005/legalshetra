@@ -3,13 +3,14 @@
 
 import * as React from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { BrainCircuit, Printer, BookText, Scale, Gavel, ShieldAlert, CheckSquare, ExternalLink, Wand2 } from 'lucide-react';
+import { BrainCircuit, Printer, BookText, Scale, Gavel, ShieldAlert, CheckSquare, ExternalLink, Wand2, Search, Lightbulb, ListChecks } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Skeleton } from './ui/skeleton';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { type ReasonAboutScenarioOutput, type AnalyzeJudgmentOutput } from '@/ai/types';
 import { analyzeJudgment } from '@/ai/flows/analyze-judgment';
+import { StepwiseLoading, type ProcessingStep } from './StepwiseLoading';
 import {
   Dialog,
   DialogContent,
@@ -92,35 +93,24 @@ const Section = ({ icon: Icon, title, content, delay, children }: { icon: React.
     )
 }
 
+const loadingSteps: ProcessingStep[] = [
+    { id: 'research', label: 'Researching Legal Principles', status: 'pending', icon: Search },
+    { id: 'apply', label: 'Applying Principles to Facts', status: 'pending', icon: Lightbulb },
+    { id: 'conclude', label: 'Formulating Conclusion', status: 'pending', icon: ListChecks },
+];
+
+
 export function ReasoningMode({ isLoading, result }: ReasoningModeProps) {
   const { toast } = useToast();
   const [isAnalyzing, setIsAnalyzing] = React.useState(false);
   const [analysisResult, setAnalysisResult] = React.useState<AnalyzeJudgmentOutput | null>(null);
   
   if (isLoading) {
-    return (
-        <div className="space-y-4">
-            <Card>
-                <CardHeader>
-                    <Skeleton className="h-8 w-3/4" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
-                </CardContent>
-            </Card>
-            <Card>
-                <CardHeader>
-                    <Skeleton className="h-8 w-1/2" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-4/6" />
-                </CardContent>
-            </Card>
-        </div>
-    )
+    return <StepwiseLoading 
+        title="Analyzing Scenario..."
+        description="The AI is performing a step-by-step logical analysis. Please wait."
+        initialSteps={loadingSteps}
+    />;
   }
 
   const handleAnalyzeJudgment = async (judgmentText: string) => {

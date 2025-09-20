@@ -4,14 +4,14 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Swords, MessageCircleWarning, Lightbulb, Users, UserCheck, Printer } from 'lucide-react';
+import { Swords, MessageCircleWarning, Lightbulb, Users, UserCheck, Printer, FileScan, BrainCircuit, Drama } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { type CrossExaminationPrepOutput } from '@/ai/types';
 import { Badge } from './ui/badge';
 import { cn } from '@/lib/utils';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
-
+import { StepwiseLoading, type ProcessingStep } from './StepwiseLoading';
 
 export type CrossExaminationResult = CrossExaminationPrepOutput;
 
@@ -19,6 +19,12 @@ interface CrossExaminationModeProps {
     isLoading: boolean;
     result: CrossExaminationResult | null;
 }
+
+const loadingSteps: ProcessingStep[] = [
+    { id: 'analyze', label: 'Analyzing Statements for Inconsistencies', status: 'pending', icon: FileScan },
+    { id: 'questions', label: 'Generating Strategic Questions', status: 'pending', icon: BrainCircuit },
+    { id: 'simulate', label: 'Simulating Role-Play Scenarios', status: 'pending', icon: Drama },
+];
 
 export function CrossExaminationMode({ isLoading, result }: CrossExaminationModeProps) {
     const { toast } = useToast();
@@ -102,19 +108,11 @@ export function CrossExaminationMode({ isLoading, result }: CrossExaminationMode
 
 
     if (isLoading) {
-        return (
-             <Card>
-                <CardHeader>
-                    <Skeleton className="h-8 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <Skeleton className="h-20 w-full" />
-                    <Skeleton className="h-20 w-full" />
-                    <Skeleton className="h-20 w-full" />
-                </CardContent>
-            </Card>
-        )
+        return <StepwiseLoading 
+            title="Preparing Examination..."
+            description="The AI is analyzing evidence and generating a full cross-examination strategy."
+            initialSteps={loadingSteps}
+        />;
     }
 
     if (!result) {

@@ -7,11 +7,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Handshake, FileText, Lightbulb, Users, Copy, Check, MessageSquareWarning, Goal, Printer } from 'lucide-react';
+import { Handshake, FileText, Lightbulb, Users, Copy, Check, MessageSquareWarning, Goal, Printer, Scale, Drama, BrainCircuit } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { type NegotiationSupportOutput } from '@/ai/types';
 import { Slider } from '@/components/ui/slider';
 import { useToast } from '@/hooks/use-toast';
+import { StepwiseLoading, type ProcessingStep } from './StepwiseLoading';
 
 export type NegotiationResult = NegotiationSupportOutput;
 
@@ -19,6 +20,12 @@ interface NegotiationModeProps {
     isLoading: boolean;
     result: NegotiationResult | null;
 }
+
+const loadingSteps: ProcessingStep[] = [
+    { id: 'profile', label: 'Profiling Opponent', status: 'pending', icon: Users },
+    { id: 'batna', label: 'Analyzing Your BATNA', status: 'pending', icon: Scale },
+    { id: 'clauses', label: 'Generating Alternative Clauses', status: 'pending', icon: BrainCircuit },
+];
 
 export function NegotiationMode({ isLoading, result }: NegotiationModeProps) {
     const { toast } = useToast();
@@ -90,30 +97,11 @@ export function NegotiationMode({ isLoading, result }: NegotiationModeProps) {
 
 
     if (isLoading) {
-        return (
-            <div className="space-y-4">
-                <Card>
-                    <CardHeader>
-                        <Skeleton className="h-8 w-3/4" />
-                        <Skeleton className="h-4 w-1/2" />
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-10 w-full" />
-                        <Skeleton className="h-10 w-full" />
-                    </CardContent>
-                </Card>
-                 <Card>
-                    <CardHeader>
-                        <Skeleton className="h-8 w-1/2" />
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                        <Skeleton className="h-12 w-full" />
-                        <Skeleton className="h-12 w-full" />
-                    </CardContent>
-                </Card>
-            </div>
-        )
+        return <StepwiseLoading 
+                    title="Generating Negotiation Strategy..."
+                    description="The AI is analyzing the scenario and generating strategic advice."
+                    initialSteps={loadingSteps}
+                />;
     }
 
     if (!result) {

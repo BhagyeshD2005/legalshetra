@@ -9,11 +9,13 @@ import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileSignature, Bot, ClipboardCheck, AlertTriangle, Shield, CheckCircle2, ChevronRight, DraftingCompass, Printer } from 'lucide-react';
+import { FileSignature, Bot, ClipboardCheck, AlertTriangle, Shield, CheckCircle2, ChevronRight, DraftingCompass, Printer, Pencil, ScanText, FileCheck } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { type DraftLegalDocumentOutput } from '@/ai/types';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { StepwiseLoading, type ProcessingStep } from './StepwiseLoading';
+
 
 export type DraftResult = DraftLegalDocumentOutput;
 
@@ -41,6 +43,12 @@ const riskConfig = {
         textClass: 'text-red-600',
     }
 };
+
+const loadingSteps: ProcessingStep[] = [
+    { id: 'draft', label: 'Generating Initial Draft', status: 'pending', icon: Pencil },
+    { id: 'analyze', label: 'Analyzing Clauses for Risk', status: 'pending', icon: ScanText },
+    { id: 'finalize', label: 'Assembling Final Document', status: 'pending', icon: FileCheck },
+];
 
 export function DraftingMode({ isLoading, result }: DraftingModeProps) {
     const [workflowStep, setWorkflowStep] = useState<WorkflowStep>('draft');
@@ -87,22 +95,11 @@ export function DraftingMode({ isLoading, result }: DraftingModeProps) {
     };
 
     if (isLoading) {
-        return (
-            <Card>
-                <CardHeader>
-                    <Skeleton className="h-8 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
-                    <br />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-4/6" />
-                </CardContent>
-            </Card>
-        );
+        return <StepwiseLoading 
+                    title="Drafting Document..."
+                    description="The AI is generating your legal document. Please wait."
+                    initialSteps={loadingSteps}
+                />;
     }
 
     if (!result) {

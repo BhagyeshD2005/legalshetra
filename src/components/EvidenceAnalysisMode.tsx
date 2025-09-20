@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Camera, Download, AlertTriangle, FileText, FileSpreadsheet, FileType, Clapperboard, Mic, FileQuestion, BadgeCheck, BadgeAlert, Printer } from 'lucide-react';
+import { Camera, Download, AlertTriangle, FileText, FileSpreadsheet, FileType, Clapperboard, Mic, FileQuestion, BadgeCheck, BadgeAlert, Printer, FileScan, AudioLines, Search, ListChecks } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { type AnalyzeEvidenceOutput } from '@/ai/types';
 import { Alert, AlertDescription } from './ui/alert';
@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
+import { StepwiseLoading, type ProcessingStep } from './StepwiseLoading';
 
 export type EvidenceAnalysisResult = AnalyzeEvidenceOutput;
 
@@ -39,6 +40,13 @@ const getFileIcon = (fileType: string) => {
     if (fileType.startsWith('image')) return <Camera className="h-4 w-4" />;
     return <FileText className="h-4 w-4" />;
 }
+
+const loadingSteps: ProcessingStep[] = [
+    { id: 'transcribe', label: 'Transcribing Audio/Video', status: 'pending', icon: AudioLines },
+    { id: 'ocr', label: 'Running OCR on Documents/Images', status: 'pending', icon: FileScan },
+    { id: 'contradiction', label: 'Searching for Contradictions', status: 'pending', icon: Search },
+    { id: 'report', label: 'Assembling Final Report', status: 'pending', icon: ListChecks },
+];
 
 export function EvidenceAnalysisMode({ isLoading, result }: EvidenceAnalysisModeProps) {
     const { toast } = useToast();
@@ -162,18 +170,11 @@ export function EvidenceAnalysisMode({ isLoading, result }: EvidenceAnalysisMode
 
 
     if (isLoading) {
-        return (
-             <Card>
-                <CardHeader>
-                    <Skeleton className="h-8 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <Skeleton className="h-20 w-full" />
-                    <Skeleton className="h-40 w-full" />
-                </CardContent>
-            </Card>
-        )
+        return <StepwiseLoading 
+                    title="Analyzing Evidence..."
+                    description="The AI is processing all files, running transcription, OCR, and contradiction analysis."
+                    initialSteps={loadingSteps}
+                />;
     }
 
     if (!result) {

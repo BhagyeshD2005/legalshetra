@@ -5,12 +5,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileKey, FileText, Bot, ExternalLink, Printer, ChevronRight, AlertTriangle, Lightbulb } from 'lucide-react';
+import { FileKey, FileText, Bot, ExternalLink, Printer, ChevronRight, AlertTriangle, Lightbulb, Search, Database } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
 import { type PatentSearchOutput } from '@/ai/types';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
+import { StepwiseLoading, type ProcessingStep } from './StepwiseLoading';
 
 export type PatentSearchResult = PatentSearchOutput;
 
@@ -18,6 +19,12 @@ interface PatentSearchModeProps {
     isLoading: boolean;
     result: PatentSearchResult | null;
 }
+
+const loadingSteps: ProcessingStep[] = [
+    { id: 'search', label: 'Searching Global Patent Databases', status: 'pending', icon: Search },
+    { id: 'analyze', label: 'Analyzing Prior Art for Novelty', status: 'pending', icon: Bot },
+    { id: 'recommend', label: 'Generating Recommendations', status: 'pending', icon: Lightbulb },
+];
 
 export function PatentSearchMode({ isLoading, result }: PatentSearchModeProps) {
     const { toast } = useToast();
@@ -89,18 +96,11 @@ export function PatentSearchMode({ isLoading, result }: PatentSearchModeProps) {
 
 
     if (isLoading) {
-        return (
-             <Card>
-                <CardHeader>
-                    <Skeleton className="h-8 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <Skeleton className="h-20 w-full" />
-                    <Skeleton className="h-40 w-full" />
-                </CardContent>
-            </Card>
-        )
+        return <StepwiseLoading 
+                    title="Searching for Prior Art..."
+                    description="The AI is searching global patent databases and analyzing results for novelty."
+                    initialSteps={loadingSteps}
+                />;
     }
 
     if (!result) {

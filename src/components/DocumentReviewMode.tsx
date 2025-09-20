@@ -4,13 +4,14 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { Skeleton } from './ui/skeleton';
-import { FileText, AlertTriangle, Calendar, ClipboardList, Printer, Check, Copy, Sparkles, Wand2 } from 'lucide-react';
+import { FileText, AlertTriangle, Calendar, ClipboardList, Printer, Check, Copy, Sparkles, Wand2, FileScan, FileUp, ListChecks } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { cn } from '@/lib/utils';
 import { Separator } from './ui/separator';
 import { Button } from './ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
+import { StepwiseLoading, type ProcessingStep } from './StepwiseLoading';
 
 type Anomaly = {
     clause: string;
@@ -76,6 +77,12 @@ const CopyButton = ({ text }: { text: string }) => {
         </Button>
     );
 };
+
+const loadingSteps: ProcessingStep[] = [
+    { id: 'parse', label: 'Parsing Document', status: 'pending', icon: FileUp },
+    { id: 'analyze', label: 'Analyzing Clauses for Risks', status: 'pending', icon: FileScan },
+    { id: 'report', label: 'Generating Final Report', status: 'pending', icon: ListChecks },
+];
 
 export function DocumentReviewMode({ isLoading, result }: DocumentReviewModeProps) {
     const { toast } = useToast();
@@ -155,30 +162,11 @@ export function DocumentReviewMode({ isLoading, result }: DocumentReviewModeProp
 
 
   if (isLoading) {
-    return (
-        <div className="space-y-4">
-            <Card>
-                <CardHeader>
-                    <Skeleton className="h-8 w-3/4" />
-                    <Skeleton className="h-4 w-1/2" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-5/6" />
-                </CardContent>
-            </Card>
-             <Card>
-                <CardHeader>
-                    <Skeleton className="h-8 w-1/2" />
-                </CardHeader>
-                <CardContent className="space-y-4">
-                    <Skeleton className="h-12 w-full" />
-                    <Skeleton className="h-12 w-full" />
-                </CardContent>
-            </Card>
-        </div>
-    )
+    return <StepwiseLoading 
+                title="Reviewing Document..."
+                description="The AI is performing a deep analysis of your document. Please wait."
+                initialSteps={loadingSteps}
+            />;
   }
   
   return (
