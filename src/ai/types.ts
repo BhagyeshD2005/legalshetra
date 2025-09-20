@@ -1,4 +1,5 @@
 
+
 /**
  * @fileOverview This file contains shared Zod schemas and TypeScript types
  * used across both client and server components for AI features.
@@ -221,7 +222,7 @@ const DetailedAnalysisSchema = z.object({
     documentType: z.string().optional().describe("The classified type of document (e.g., 'Affidavit', 'Contract')."),
     transcript: z.string().optional().describe("The full verbatim transcript of the audio/video file."),
     keyStatements: z.array(KeyStatementSchema).optional().describe("A list of legally significant statements with timestamps."),
-    ocrText: zstring().optional().describe("The full text extracted from an image or document."),
+    ocrText: z.string().optional().describe("The full text extracted from an image or document."),
 });
 
 const ContradictionSchema = z.object({
