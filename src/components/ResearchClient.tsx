@@ -369,17 +369,11 @@ export function ResearchClient({ reportData, isLoading, onAnalysisStart, onAnaly
                           </span>
                           
                           {step.status === 'active' && (
-                            <Badge variant="secondary" size="sm">Active</Badge>
+                            <Badge variant="outline" className="ml-auto">Active</Badge>
                           )}
                         </motion.div>
                       );
                     })}
-                  </div>
-
-                  <div className="space-y-3 pt-4">
-                    <Skeleton className="h-4 w-[85%]" />
-                    <Skeleton className="h-4 w-full" />
-                    <Skeleton className="h-4 w-[92%]" />
                   </div>
                 </CardContent>
               </Card>
