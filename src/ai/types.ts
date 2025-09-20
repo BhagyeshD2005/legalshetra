@@ -5,7 +5,6 @@
  */
 
 import {z} from 'genkit';
-import { PatentSearchInputSchema, PatentSearchOutputSchema } from './flows/patent-search';
 
 export const ChatMessageSchema = z.object({
   role: z.enum(['user', 'model']),
@@ -313,5 +312,26 @@ export const ReasonAboutScenarioOutputSchema = z.object({
 export type ReasonAboutScenarioOutput = z.infer<typeof ReasonAboutScenarioOutputSchema>;
 
 
-// Export patent search types
-export type { PatentSearchInput, PatentSearchOutput };
+// Schemas for Patent Search Mode
+export const PatentSearchInputSchema = z.object({
+  inventionDescription: z.string().describe('A detailed description of the user\'s invention, including its purpose, components, and method of operation.'),
+});
+export type PatentSearchInput = z.infer<typeof PatentSearchInputSchema>;
+
+const PriorArtSchema = z.object({
+    patentId: z.string().describe('The ID number of the prior art patent (e.g., "US 9,123,456 B2").'),
+    title: z.string().describe('The title of the patent.'),
+    url: z.string().describe('A URL to view the full patent document.'),
+    publicationDate: z.string().describe('The date the patent was published.'),
+    relevanceScore: z.number().min(0).max(100).describe('A score from 0-100 indicating how relevant this patent is to the user\'s invention.'),
+    summary: z.string().describe('A brief summary of what the patent covers.'),
+    noveltyComparison: z.string().describe('A specific analysis of how the user\'s invention differs from or is similar to this patent, highlighting potential novelty issues.'),
+});
+
+export const PatentSearchOutputSchema = z.object({
+  reportSummary: z.string().describe('A high-level summary of the search findings, including an overall assessment of the invention\'s potential patentability.'),
+  priorArt: z.array(PriorArtSchema).describe('A ranked list of the most relevant prior art patents found.'),
+  keyTechnicalConcepts: z.array(z.string()).describe('A list of key technical terms and concepts identified in the search space.'),
+  recommendations: z.string().describe('Next steps and strategic recommendations for the user (e.g., "Consider focusing on X novel feature," "Consult with a patent attorney").'),
+});
+export type PatentSearchOutput = z.infer<typeof PatentSearchOutputSchema>;
