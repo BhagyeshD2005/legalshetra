@@ -221,7 +221,7 @@ const DetailedAnalysisSchema = z.object({
     documentType: z.string().optional().describe("The classified type of document (e.g., 'Affidavit', 'Contract')."),
     transcript: z.string().optional().describe("The full verbatim transcript of the audio/video file."),
     keyStatements: z.array(KeyStatementSchema).optional().describe("A list of legally significant statements with timestamps."),
-    ocrText: z.string().optional().describe("The full text extracted from an image or document."),
+    ocrText: zstring().optional().describe("The full text extracted from an image or document."),
 });
 
 const ContradictionSchema = z.object({
@@ -332,6 +332,6 @@ export const PatentSearchOutputSchema = z.object({
   reportSummary: z.string().describe('A high-level summary of the search findings, including an overall assessment of the invention\'s potential patentability.'),
   priorArt: z.array(PriorArtSchema).describe('A ranked list of the most relevant prior art patents found.'),
   keyTechnicalConcepts: z.array(z.string()).describe('A list of key technical terms and concepts identified in the search space.'),
-  recommendations: z.string().describe('Next steps and strategic recommendations for the user (e.g., "Consider focusing on X novel feature," "Consult with a patent attorney").'),
+  recommendations: z.string().describe('Next steps and strategic recommendations for the user, including suggestions to improve novelty.'),
 });
 export type PatentSearchOutput = z.infer<typeof PatentSearchOutputSchema>;

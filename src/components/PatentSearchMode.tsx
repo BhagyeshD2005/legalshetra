@@ -7,7 +7,7 @@ import { Separator } from '@/components/ui/separator';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FileKey, FileText, Bot, ExternalLink, Printer, ChevronRight, AlertTriangle, Lightbulb } from 'lucide-react';
 import { Skeleton } from './ui/skeleton';
-import { type PatentSearchOutput } from '@/ai/flows/patent-search';
+import { type PatentSearchOutput } from '@/ai/types';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from './ui/badge';
 import { Progress } from './ui/progress';
@@ -49,7 +49,7 @@ export function PatentSearchMode({ isLoading, result }: PatentSearchModeProps) {
             </div>
 
              <div class="section">
-                <h2>Recommendations</h2>
+                <h2>Recommendations & Suggested Improvements</h2>
                 <p>${recommendations}</p>
             </div>
 
@@ -158,15 +158,15 @@ export function PatentSearchMode({ isLoading, result }: PatentSearchModeProps) {
                         </CardContent>
                     </Card>
 
-                    <Card>
+                    <Card className="border-yellow-500/50 bg-yellow-50/30 dark:bg-yellow-900/10">
                         <CardHeader>
-                            <CardTitle className="font-headline flex items-center gap-2 text-lg">
-                                <Lightbulb className="h-5 w-5 text-yellow-500" />
-                                Recommendations
+                            <CardTitle className="font-headline flex items-center gap-2 text-lg text-yellow-700 dark:text-yellow-400">
+                                <Lightbulb className="h-5 w-5" />
+                                Recommendations &amp; Suggested Improvements
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-muted-foreground" dangerouslySetInnerHTML={{ __html: recommendations.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
+                            <p className="text-yellow-800/80 dark:text-yellow-200/80" dangerouslySetInnerHTML={{ __html: recommendations.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                         </CardContent>
                     </Card>
 

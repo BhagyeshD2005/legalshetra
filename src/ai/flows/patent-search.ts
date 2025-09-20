@@ -71,12 +71,12 @@ const patentSearchPrompt = ai.definePrompt({
     a.  **Extract Details**: From the patent information, extract the Patent ID, title, publication date, and abstract.
     b.  **Assess Relevance**: Assign a relevance score from 0-100 indicating how closely it relates to the user's invention.
     c.  **Summarize**: Write a concise summary of the patent's abstract.
-    d.  **Perform Novelty Comparison**: This is the most critical step. Directly compare the prior art to the user's invention. Clearly state what is similar and, more importantly, what appears to be novel or different in the user's invention compared to this specific patent.
+    d.  **Novelty Comparison**: This is the most critical step. Directly compare the prior art to the user's invention. Clearly state what is similar and, more importantly, what appears to be novel or different in the user's invention compared to this specific patent.
 4.  **Synthesize Final Report**: Compile your findings into the final structured report.
     a.  **Report Summary**: Write a high-level overview of your findings and give an initial assessment of the invention's patentability.
     b.  **Prior Art List**: Create the ranked list of the most relevant prior art you analyzed.
     c.  **Key Concepts**: List the key technical terms you identified.
-    d.  **Recommendations**: Provide actionable next steps for the user. Do not give legal advice, but suggest areas of focus or consultation with a patent attorney.
+    d.  **Recommendations & Suggested Improvements**: Based on the prior art, provide actionable next steps. This MUST include concrete suggestions for how the user could modify or add to their invention to improve its novelty and overcome the challenges posed by the prior art. Do not give legal advice.
 
 Your entire output must strictly follow the defined JSON schema. Rely only on the information provided by the \`googleSearchPatents\` tool.`,
 });
