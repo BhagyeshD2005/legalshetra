@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -266,7 +267,7 @@ export function ReportDisplay({ reportData, query, onAnalyzeJudgment, isAnalyzin
                 <FileText className="h-5 w-5 text-primary" />
                 <CardTitle className="font-headline text-2xl">Legal Research Report</CardTitle>
               </div>
-              <CardDescription asChild>
+              <CardDescription>
                   <div className="flex items-center gap-4 flex-wrap">
                     <span className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
@@ -488,5 +489,7 @@ export function ReportDisplay({ reportData, query, onAnalyzeJudgment, isAnalyzin
     </div>
   );
 }
+
+    
 
     
