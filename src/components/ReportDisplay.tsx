@@ -267,8 +267,8 @@ export function ReportDisplay({ reportData, query, onAnalyzeJudgment, isAnalyzin
                 <FileText className="h-5 w-5 text-primary" />
                 <CardTitle className="font-headline text-2xl">Legal Research Report</CardTitle>
               </div>
-              <CardDescription>
-                  <div className="flex items-center gap-4 flex-wrap">
+              <div>
+                  <div className="flex items-center gap-4 flex-wrap text-sm text-muted-foreground">
                     <span className="flex items-center gap-1">
                       <Calendar className="h-3 w-3" />
                       {new Date().toLocaleDateString()}
@@ -282,7 +282,7 @@ export function ReportDisplay({ reportData, query, onAnalyzeJudgment, isAnalyzin
                       AI Generated
                     </Badge>
                   </div>
-              </CardDescription>
+              </div>
             </div>
             
             <div className="flex items-center gap-2 flex-wrap">
