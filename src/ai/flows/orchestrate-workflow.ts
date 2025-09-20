@@ -3,19 +3,19 @@
 
 /**
  * @fileOverview A Genkit flow that orchestrates other AI agents to complete a complex legal task.
- * - orchestrateWorkflow - The main function that plans and executes a series of tasks.
- * - OrchestrateWorkflowInput - The input type for the function.
- * - OrchestrateWorkflowOutput - The return type for the function.
+ * - createWorkflowPlan - A function that creates a plan to execute a series of tasks.
+ * - executeWorkflowStep - A function that executes a single step from the plan.
  */
 
 import { ai } from '@/ai/genkit';
 import { z } from 'genkit';
 import { 
     OrchestrateWorkflowInputSchema, 
-    OrchestrateWorkflowOutputSchema, 
+    OrchestrationPlanSchema,
+    OrchestrateStepInputSchema,
     type OrchestrateWorkflowInput, 
-    type OrchestrateWorkflowOutput,
-    OrchestrationPlanStepSchema,
+    type OrchestrationPlan,
+    type OrchestrateStepInput
 } from '@/ai/types';
 import { generateLegalSummary } from './generate-legal-summary';
 import { draftLegalDocument } from './draft-legal-document';
@@ -25,15 +25,16 @@ import { negotiationSupport } from './negotiation-support';
 import { crossExaminationPrep } from './cross-examination-prep';
 
 
-export async function orchestrateWorkflow(
+/**
+ * Creates a step-by-step plan for the AI to follow.
+ */
+export async function createWorkflowPlan(
   input: OrchestrateWorkflowInput
-): Promise<OrchestrateWorkflowOutput> {
-  
-  // 1. Create a plan
+): Promise<OrchestrationPlan> {
   const planPrompt = ai.definePrompt({
     name: 'createOrchestrationPlanPrompt',
     input: { schema: OrchestrateWorkflowInputSchema },
-    output: { schema: z.object({ plan: z.array(OrchestrationPlanStepSchema) }) },
+    output: { schema: OrchestrationPlanSchema },
     prompt: `You are a master legal workflow orchestrator. Your job is to analyze a user's high-level objective and break it down into a logical sequence of tasks that other AI agents can perform.
 
 User Objective: "{{{objective}}}"
@@ -57,73 +58,57 @@ Ensure the prompt for each step is self-contained and has enough detail for the 
 `,
   });
 
-  const { output: planOutput } = await planPrompt(input);
-  if (!planOutput || !planOutput.plan) {
+  const { output } = await planPrompt(input);
+  if (!output || !output.plan) {
     throw new Error('Could not create a valid workflow plan.');
   }
 
-  const plan = planOutput.plan;
-  
-  let executionContext = input.objective; // The context that gets passed from step to step
-  const results: any[] = [];
+  return output;
+}
 
-  // 2. Execute the plan
-  for (let i = 0; i < plan.length; i++) {
-    const step = plan[i];
 
-    step.status = 'active';
-
+/**
+ * Executes a single step of a workflow plan.
+ */
+export async function executeWorkflowStep(input: OrchestrateStepInput): Promise<any> {
+    const { step, context } = input;
+    
+    let stepResult: any;
+    
     try {
-      let stepResult: any;
-      const stepInput = { ...input, prompt: step.prompt, objective: executionContext };
+        const stepInput = { ...input, prompt: step.prompt, objective: context };
+        
+        switch (step.agent) {
+            case 'research':
+            stepResult = await generateLegalSummary({ legalQuery: step.prompt });
+            break;
+            case 'draft':
+            const draftInput = { documentType: 'contract', tone: 'neutral', jurisdiction: 'generic', prompt: step.prompt };
+            stepResult = await draftLegalDocument(draftInput);
+            break;
+            case 'review':
+            stepResult = await analyzeDocument({ documentText: context });
+            break;
+            case 'predict':
+                const predictInput = { caseType: 'civil', jurisdiction: 'generic', judgeName: 'other', caseSummary: step.prompt };
+                stepResult = await predictCaseOutcome(predictInput);
+                break;
+            case 'negotiate':
+                const negotiateInput = { currentClause: context, myGoal: step.prompt, opponentPosition: 'Not specified', opponentStyle: 'default', context: 'Not specified' };
+                stepResult = await negotiationSupport(negotiateInput);
+                break;
+            case 'cross-examine':
+                const crossExamineInput = { witnessStatement: context, evidenceSummary: step.prompt, myRole: 'prosecution', simulationRole: 'witness' };
+                stepResult = await crossExaminationPrep(crossExamineInput);
+                break;
+            default:
+            throw new Error(`Unknown agent: ${step.agent}`);
+        }
 
-      switch (step.agent) {
-        case 'research':
-          stepResult = await generateLegalSummary({ legalQuery: step.prompt });
-          break;
-        case 'draft':
-          // This is a simplified mapping. A real implementation might need more complex logic to map context.
-          const draftInput = { documentType: 'contract', tone: 'neutral', jurisdiction: 'generic', prompt: step.prompt };
-          stepResult = await draftLegalDocument(draftInput);
-          break;
-        case 'review':
-          stepResult = await analyzeDocument({ documentText: executionContext });
-          break;
-        case 'predict':
-            const predictInput = { caseType: 'civil', jurisdiction: 'generic', judgeName: 'other', caseSummary: step.prompt };
-            stepResult = await predictCaseOutcome(predictInput);
-            break;
-        case 'negotiate':
-             const negotiateInput = { currentClause: executionContext, myGoal: step.prompt, opponentPosition: 'Not specified', opponentStyle: 'default', context: 'Not specified' };
-            stepResult = await negotiationSupport(negotiateInput);
-            break;
-        case 'cross-examine':
-             const crossExamineInput = { witnessStatement: executionContext, evidenceSummary: step.prompt, myRole: 'prosecution', simulationRole: 'witness' };
-            stepResult = await crossExaminationPrep(crossExamineInput);
-            break;
-        default:
-          throw new Error(`Unknown agent: ${step.agent}`);
-      }
-      
-      step.status = 'completed';
-      step.result = stepResult;
-      
-      results.push(stepResult);
-      // Update context for the next step. This is a simple implementation.
-      // A more advanced version would intelligently merge contexts.
-      executionContext += `\n\nResult from step ${step.step}: ${JSON.stringify(stepResult)}`;
+        return stepResult;
 
     } catch (error: any) {
-      step.status = 'error';
-      step.result = { error: error.message || 'An unknown error occurred' };
-      // Stop execution on failure
-      return { plan: plan, finalOutput: "Workflow failed." };
+        console.error(`Error in step ${step.step} (${step.agent}):`, error);
+        throw new Error(`Execution failed for step ${step.step}: ${error.message}`);
     }
-  }
-
-  // 3. Finalize and return
-  // A final AI call could be made here to synthesize all results into one cohesive report.
-  const finalSummary = `Workflow completed with ${plan.length} steps. The results of each step are included in the plan.`;
-
-  return { plan: plan, finalOutput: finalSummary };
 }

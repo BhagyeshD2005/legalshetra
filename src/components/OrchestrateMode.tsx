@@ -24,8 +24,8 @@ import {
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { motion, AnimatePresence } from 'framer-motion';
-import { orchestrateWorkflow } from '@/ai/flows/orchestrate-workflow';
-import { type OrchestrationPlanStep, type OrchestrateWorkflowOutput, type AnalyzeJudgmentOutput } from '@/ai/types';
+import { createWorkflowPlan, executeWorkflowStep } from '@/ai/flows/orchestrate-workflow';
+import { type OrchestrationPlanStep, type OrchestrateWorkflowOutput, type AnalyzeJudgmentOutput, type OrchestrationPlan } from '@/ai/types';
 import { Button } from './ui/button';
 import { ReportDisplay } from './ReportDisplay';
 import { DocumentReviewMode } from './DocumentReviewMode';
@@ -69,6 +69,7 @@ export function OrchestrateMode({
 }: OrchestrateModeProps) {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
+  const [currentPlan, setCurrentPlan] = useState<OrchestrationPlanStep[]>([]);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalyzeJudgmentOutput | null>(null);
@@ -76,26 +77,56 @@ export function OrchestrateMode({
   const executeOrchestration = useCallback(async (objectiveToRun: string) => {
     setError(null);
     onOrchestrationStart({ query: objectiveToRun });
+    let accumulatedContext = objectiveToRun;
+    let finalPlan: OrchestrationPlanStep[] = [];
 
     try {
-      const result = await orchestrateWorkflow({ 
-        objective: objectiveToRun,
-      });
-      onOrchestrationComplete(result);
-      toast({
-        title: "Orchestration Complete",
-        description: "The AI workflow has finished successfully.",
-      });
+        // 1. Create a plan first
+        const planResult = await createWorkflowPlan({ objective: objectiveToRun });
+        finalPlan = planResult.plan;
+        setCurrentPlan(finalPlan);
+
+        // 2. Execute each step of the plan
+        for (let i = 0; i < finalPlan.length; i++) {
+            const step = finalPlan[i];
+            
+            // Mark as active
+            setCurrentPlan(prev => prev.map(s => s.step === step.step ? {...s, status: 'active'} : s));
+            
+            try {
+                const stepResult = await executeWorkflowStep({ step, context: accumulatedContext });
+                
+                // Mark as completed
+                accumulatedContext += `\n\nResult from step ${step.step}: ${JSON.stringify(stepResult)}`;
+                finalPlan[i] = { ...step, status: 'completed', result: stepResult };
+                setCurrentPlan(finalPlan);
+
+            } catch (stepError: any) {
+                 // Mark as error and stop
+                finalPlan[i] = { ...step, status: 'error', result: { error: stepError.message } };
+                setCurrentPlan(finalPlan);
+                throw stepError;
+            }
+        }
+        
+        onOrchestrationComplete({ plan: finalPlan, finalOutput: "Workflow completed successfully." });
+        toast({
+            title: "Orchestration Complete",
+            description: "The AI workflow has finished successfully.",
+        });
 
     } catch (err: any) {
-      console.error("Orchestration failed:", err);
-      setError(err.message || "An unexpected error occurred during orchestration.");
-      onOrchestrationError();
-       toast({
-        variant: "destructive",
-        title: "Orchestration Failed",
-        description: err.message || "The workflow could not be completed.",
-      });
+        console.error("Orchestration failed:", err);
+        setError(err.message || "An unexpected error occurred during orchestration.");
+        onOrchestrationError();
+        toast({
+            variant: "destructive",
+            title: "Orchestration Failed",
+            description: err.message || "The workflow could not be completed.",
+        });
+        if (finalPlan.length > 0) {
+            onOrchestrationComplete({ plan: finalPlan, finalOutput: "Workflow failed." });
+        }
     }
   }, [onOrchestrationStart, onOrchestrationComplete, onOrchestrationError, toast]);
   
@@ -107,6 +138,13 @@ export function OrchestrateMode({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [objective, isLoading]);
   
+  useEffect(() => {
+    // Sync local plan state with result from props
+    if (result?.plan) {
+        setCurrentPlan(result.plan);
+    }
+  }, [result]);
+
   const handleAnalyzeJudgment = async (judgmentText: string) => {
     setIsAnalyzing(true);
     setAnalysisResult(null);
@@ -155,7 +193,7 @@ export function OrchestrateMode({
   }
 
   if (isLoading) {
-      const loadingSteps = result?.plan?.map(step => {
+      const loadingSteps = currentPlan.length > 0 ? currentPlan.map(step => {
         const AgentIcon = agentIcons[step.agent] || agentIcons.default;
         return {
           id: step.step.toString(),
@@ -163,7 +201,7 @@ export function OrchestrateMode({
           status: step.status,
           icon: AgentIcon,
         }
-      }) || [
+      }) : [
         { id: 'plan', label: 'Creating execution plan...', status: 'active', icon: BrainCircuit }
       ];
 
@@ -192,8 +230,6 @@ export function OrchestrateMode({
         </motion.div>
     );
   }
-
-  const currentPlan = result?.plan || [];
 
   return (
     <div className="space-y-8">
@@ -263,7 +299,7 @@ export function OrchestrateMode({
             <div className="space-y-4">
                 <h3 className="text-xl font-headline">Execution Results</h3>
                 {result.plan.map(step => (
-                    step.status === 'completed' &&
+                    (step.status === 'completed' || step.status === 'error') &&
                     <Card key={`result-${step.step}`}>
                         <CardHeader>
                             <CardTitle className="text-lg">Result from Step {step.step}: {step.summary}</CardTitle>
