@@ -34,7 +34,7 @@ import { PredictiveAnalyticsMode } from './PredictiveAnalyticsMode';
 import { NegotiationMode } from './NegotiationMode';
 import { CrossExaminationMode } from './CrossExaminationMode';
 import { analyzeJudgment } from '@/ai/flows/analyze-judgment';
-import { StepwiseLoading } from './StepwiseLoading';
+import { StepwiseLoading, type ProcessingStep } from './StepwiseLoading';
 
 export type OrchestrationResult = OrchestrateWorkflowOutput;
 
@@ -72,19 +72,14 @@ export function OrchestrateMode({
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AnalyzeJudgmentOutput | null>(null);
-  const [livePlan, setLivePlan] = useState<OrchestrationPlanStep[]>([]);
 
   const executeOrchestration = useCallback(async (objectiveToRun: string) => {
     setError(null);
     onOrchestrationStart({ query: objectiveToRun });
-    setLivePlan([]);
 
     try {
       const result = await orchestrateWorkflow({ 
         objective: objectiveToRun,
-        onStepUpdate: (plan) => {
-           setLivePlan(plan);
-        }
       });
       onOrchestrationComplete(result);
       toast({
@@ -160,7 +155,7 @@ export function OrchestrateMode({
   }
 
   if (isLoading) {
-      const steps = livePlan.length > 0 ? livePlan.map(step => {
+      const loadingSteps = result?.plan?.map(step => {
         const AgentIcon = agentIcons[step.agent] || agentIcons.default;
         return {
           id: step.step.toString(),
@@ -168,7 +163,7 @@ export function OrchestrateMode({
           status: step.status,
           icon: AgentIcon,
         }
-      }) : [
+      }) || [
         { id: 'plan', label: 'Creating execution plan...', status: 'active', icon: BrainCircuit }
       ];
 
@@ -176,7 +171,7 @@ export function OrchestrateMode({
         <StepwiseLoading
             title="Orchestration in Progress..."
             description="The AI is executing the multi-agent workflow. Please wait."
-            initialSteps={steps}
+            initialSteps={loadingSteps}
         />
       )
   }
