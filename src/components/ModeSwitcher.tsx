@@ -1,5 +1,6 @@
 
 
+
 'use client';
 
 import * as React from 'react';
@@ -7,8 +8,8 @@ import type { Mode, AnalysisResult } from '@/app/research/page';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from './ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
+import { Button } from './ui/button';
+import { Textarea } from './ui/textarea';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -33,6 +34,7 @@ import {
     CalendarClock,
     Camera,
     Plus,
+    FileKey,
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
@@ -44,12 +46,14 @@ import { negotiationSupport } from '@/ai/flows/negotiation-support';
 import { crossExaminationPrep } from '@/ai/flows/cross-examination-prep';
 import { generateLitigationTimeline } from '@/ai/flows/generate-litigation-timeline';
 import { analyzeEvidence } from '@/ai/flows/analyze-evidence';
+import { patentSearch } from '@/ai/flows/patent-search';
 import { Input } from './ui/input';
 import { cn } from '@/lib/utils';
 import { ToggleGroup, ToggleGroupItem } from './ui/toggle-group';
 import { Popover, PopoverContent, PopoverTrigger } from './ui/popover';
 import { Calendar } from './ui/calendar';
 import { format } from 'date-fns';
+import { type User } from "firebase/auth";
 
 import { sampleResearchInput } from '@/sample/research';
 import { sampleAnalyzerInput } from '@/sample/analyzer';
@@ -61,6 +65,9 @@ import { sampleCrossExaminationInput } from '@/sample/cross-examination';
 import { sampleOrchestrateInput } from '@/sample/orchestrate';
 import { sampleTimelineInput } from '@/sample/timeline';
 import { sampleEvidenceInput } from '@/sample/evidence';
+import { samplePatentSearchInput } from '@/sample/patent-search';
+import { app } from '@/lib/firebase';
+import { getAuth, GoogleAuthProvider, signInWithPopup, OAuthCredential } from "firebase/auth";
 
 interface ModeSwitcherProps {
   selectedMode: Mode;
@@ -143,9 +150,15 @@ const evidenceFormSchema = z.object({
     })).min(1, { message: "Please upload at least one evidence file." }),
 });
 
+const patentSearchFormSchema = z.object({
+  inventionDescription: z.string().min(50, { message: 'Please describe your invention in at least 50 characters.' }),
+});
+
+
 const modes = [
   { value: 'orchestrate' as Mode, label: 'Orchestrate AI', icon: Component },
   { value: 'research' as Mode, label: 'AI Legal Research', icon: FileSearch },
+  { value: 'patent' as Mode, label: 'Patent Search', icon: FileKey },
   { value: 'timeline' as Mode, label: 'Litigation Timeline', icon: CalendarClock },
   { value: 'evidence' as Mode, label: 'Evidence Analysis', icon: Camera },
   { value: 'analyzer' as Mode, label: 'Document Review', icon: FileText },
@@ -179,7 +192,11 @@ export function ModeSwitcher({
   const evidenceFileInputRef = useRef<HTMLInputElement>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedEvidenceFiles, setSelectedEvidenceFiles] = useState<File[]>([]);
+  
+  const [user, setUser] = useState<User | null>(null);
   const [isDriveConnected, setIsDriveConnected] = useState(false);
+  const [driveFiles, setDriveFiles] = useState<{ id: string; name: string }[]>([]);
+
 
   const researchForm = useForm<z.infer<typeof researchFormSchema>>({
     resolver: zodResolver(researchFormSchema),
@@ -259,6 +276,11 @@ export function ModeSwitcher({
     },
   });
 
+  const patentSearchForm = useForm<z.infer<typeof patentSearchFormSchema>>({
+    resolver: zodResolver(patentSearchFormSchema),
+    defaultValues: { inventionDescription: '' },
+  });
+
   // Reset forms when mode changes to prevent state leakage
   useEffect(() => {
     researchForm.reset();
@@ -271,8 +293,9 @@ export function ModeSwitcher({
     orchestrateForm.reset();
     timelineForm.reset();
     evidenceForm.reset();
+    patentSearchForm.reset();
     setSelectedEvidenceFiles([]);
-  }, [selectedMode, researchForm, analyzerForm, reasoningForm, draftingForm, predictionForm, negotiationForm, crossExaminationForm, orchestrateForm, timelineForm, evidenceForm]);
+  }, [selectedMode, researchForm, analyzerForm, reasoningForm, draftingForm, predictionForm, negotiationForm, crossExaminationForm, orchestrateForm, timelineForm, evidenceForm, patentSearchForm]);
 
   const onResearchSubmit: SubmitHandler<z.infer<typeof researchFormSchema>> = async (data) => {
     onAnalysisStart(data);
@@ -467,6 +490,29 @@ export function ModeSwitcher({
     setIsSubmitting(false);
   };
 
+  const onPatentSearchSubmit: SubmitHandler<z.infer<typeof patentSearchFormSchema>> = async (data) => {
+    setIsSubmitting(true);
+    onAnalysisStart();
+    try {
+        const result = await patentSearch(data);
+        onAnalysisComplete(result);
+        // patentSearchForm.reset();
+        toast({
+          title: "Patent Search Complete",
+          description: "The AI has generated a novelty report for your invention.",
+        });
+    } catch (error) {
+         toast({
+            variant: "destructive",
+            title: "Search Failed",
+            description: "An error occurred while performing the patent search.",
+        });
+        onAnalysisError();
+    }
+    setIsSubmitting(false);
+  };
+
+
   const sampleDataMap: Record<string, any> = {
       research: sampleResearchInput,
       analyzer: sampleAnalyzerInput,
@@ -478,6 +524,7 @@ export function ModeSwitcher({
       orchestrate: sampleOrchestrateInput,
       timeline: sampleTimelineInput,
       evidence: sampleEvidenceInput,
+      patent: samplePatentSearchInput,
     };
 
   const handleLoadSampleData = () => {
@@ -496,6 +543,7 @@ export function ModeSwitcher({
         case 'negotiation': negotiationForm.reset(sampleData); break;
         case 'cross-examination': crossExaminationForm.reset(sampleData); break;
         case 'orchestrate': orchestrateForm.reset(sampleData); break;
+        case 'patent': patentSearchForm.reset(sampleData); break;
         case 'timeline':
             // The date needs to be converted from string to Date object for the form
             timelineForm.reset({
@@ -514,19 +562,52 @@ export function ModeSwitcher({
     toast({ title: 'Sample data loaded!', description: 'The form has been populated with sample input.' });
   };
 
-  const handleConnectDrive = () => {
-    // This is a placeholder for the Google Drive integration.
-    // In a real application, this would trigger the OAuth 2.0 flow
-    // by redirecting the user to a backend endpoint.
-    setIsSubmitting(true);
-    toast({ title: "Connecting to Google Drive...", description: "Please wait. In a real app, you would be redirected to Google to sign in."});
+  const handleConnectDrive = async () => {
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+    // Request read-only access to Google Drive files.
+    provider.addScope('https://www.googleapis.com/auth/drive.readonly');
 
-    // Simulate the authentication process
-    setTimeout(() => {
-        setIsDriveConnected(true);
-        setIsSubmitting(false);
-        toast({ title: "Connected!", description: "You can now select files from Google Drive."});
-    }, 2500);
+    setIsSubmitting(true);
+    toast({ title: "Connecting to Google Drive...", description: "Please sign in with Google to grant access." });
+
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      
+      if (!credential) {
+        throw new Error("Could not get credential from sign-in result.");
+      }
+      
+      // IMPORTANT: In a real production app, you would send this idToken
+      // to your secure backend server. The server would then use it to
+      // securely obtain an OAuth2 access token for the Google Drive API.
+      // We simulate this by just storing the user and setting the connected state.
+      // const idToken = await result.user.getIdToken();
+      // await fetch('/api/google-drive-auth', { method: 'POST', body: JSON.stringify({ token: idToken }) });
+
+      setUser(result.user);
+      setIsDriveConnected(true);
+      
+      // Simulate fetching files from Google Drive API
+      // In a real app, this would be an API call to your backend,
+      // which then uses the stored credentials to query the Drive API.
+      setDriveFiles([
+        { id: '1', name: 'Client_Contract_v2.docx' },
+        { id: '2', name: 'Property_Lease_Agreement.pdf' },
+        { id: '3', name: 'NDA_Template.docx' },
+        { id: '4', name: 'Shareholder_Resolution.pdf' },
+      ]);
+
+      toast({ title: "Connected!", description: `Signed in as ${result.user.displayName}. You can now select files.` });
+
+    } catch (error: any) {
+      console.error("Google Sign-In error:", error);
+      toast({ variant: 'destructive', title: 'Connection Failed', description: error.message || 'Could not connect to Google Drive.' });
+      setIsDriveConnected(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   
   const handleSelectDriveFile = (fileName: string) => {
@@ -652,14 +733,12 @@ export function ModeSwitcher({
                     {isDriveConnected ? (
                       <div>
                         <p className="text-sm font-medium mb-2">Select a file from Google Drive</p>
-                        <div className="space-y-2">
-                          {/* This is a placeholder for the actual Google Drive file picker */}
-                          <Button variant="outline" className="w-full justify-start" onClick={() => handleSelectDriveFile('Client_Contract_v2.docx')}>
-                            <FileIcon className="mr-2 h-4 w-4" /> Client_Contract_v2.docx
-                          </Button>
-                          <Button variant="outline" className="w-full justify-start" onClick={() => handleSelectDriveFile('Property_Lease_Agreement.pdf')}>
-                            <FileIcon className="mr-2 h-4 w-4" /> Property_Lease_Agreement.pdf
-                          </Button>
+                        <div className="space-y-2 max-h-32 overflow-y-auto">
+                          {driveFiles.map(file => (
+                            <Button key={file.id} variant="outline" className="w-full justify-start" onClick={() => handleSelectDriveFile(file.name)}>
+                              <FileIcon className="mr-2 h-4 w-4" /> {file.name}
+                            </Button>
+                          ))}
                         </div>
                       </div>
                     ) : (
@@ -1462,6 +1541,40 @@ export function ModeSwitcher({
               </form>
             </Form>
         );
+      case 'patent':
+        return (
+            <Form {...patentSearchForm}>
+              <form onSubmit={patentSearchForm.handleSubmit(onPatentSearchSubmit)} className="space-y-4" key="patent-form">
+                <FormField
+                  control={patentSearchForm.control}
+                  name="inventionDescription"
+                  render={({ field }) => (
+                    <FormItem>
+                      <div className="flex justify-between items-center">
+                        <FormLabel>Invention Description</FormLabel>
+                        {renderLoadSampleButton()}
+                      </div>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Describe your invention in detail, including its components, functionality, and what makes it unique..."
+                          className="min-h-[200px] resize-y"
+                          {...field}
+                          disabled={isSubmitting}
+                        />
+                      </FormControl>
+                       <div className="flex justify-between items-center">
+                        <FormMessage />
+                      </div>
+                    </FormItem>
+                  )}
+                />
+                <Button type="submit" className="w-full" disabled={isSubmitting}>
+                  {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Searching...</> 
+                             : <><Search className="mr-2 h-4 w-4" /> Search for Prior Art</>}
+                </Button>
+              </form>
+            </Form>
+        );
       default:
         return null;
     }
@@ -1492,6 +1605,19 @@ export function ModeSwitcher({
             <li>Clearly state your final goal (e.g., "draft a contract," "prepare for a hearing").</li>
             <li>Provide all necessary context in your prompt.</li>
             <li>The AI will break it down into steps and execute them for you.</li>
+          </ul>
+        </>
+      ),
+      patent: (
+        <>
+          <h4 className="text-sm font-medium mb-2 flex items-center gap-1">
+            <Lightbulb className="h-3 w-3 text-yellow-500" />
+            Patent Search Tips
+          </h4>
+          <ul className="text-xs text-muted-foreground space-y-1 list-disc list-inside">
+            <li>Describe the problem your invention solves.</li>
+            <li>List the key components and how they interact.</li>
+            <li>Explain what you believe is novel about your approach.</li>
           </ul>
         </>
       )
@@ -1556,6 +1682,7 @@ export function ModeSwitcher({
                 selectedMode === 'orchestrate' ? 'Describe a complex legal workflow, and the AI will coordinate multiple agents to complete it.' :
                 selectedMode === 'timeline' ? 'Generate a procedural timeline for a case based on jurisdiction, case type, and key dates.' :
                 selectedMode === 'evidence' ? 'Upload multimodal evidence (audio, video, images, docs) for forensic analysis and contradiction detection.' :
+                selectedMode === 'patent' ? 'Describe your invention to search for prior art and generate a novelty analysis report.' :
                 'Provide a legal scenario and a question for the AI to reason about.'
             }
         </CardDescription>
@@ -1569,5 +1696,6 @@ export function ModeSwitcher({
 }
 
     
+
 
 

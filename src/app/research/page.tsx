@@ -13,13 +13,14 @@ import { CrossExaminationMode, type CrossExaminationResult } from '@/components/
 import { OrchestrateMode, type OrchestrationResult } from '@/components/OrchestrateMode';
 import { LitigationTimelineMode, type LitigationTimelineResult } from '@/components/LitigationTimelineMode';
 import { EvidenceAnalysisMode, type EvidenceAnalysisResult } from '@/components/EvidenceAnalysisMode';
+import { PatentSearchMode, type PatentSearchResult } from '@/components/PatentSearchMode';
 import { ModeSwitcher } from '@/components/ModeSwitcher';
 import { type GenerateLegalSummaryOutput } from '@/ai/flows/generate-legal-summary';
 
 
-export type Mode = 'research' | 'analyzer' | 'reasoning' | 'drafting' | 'prediction' | 'negotiation' | 'cross-examination' | 'orchestrate' | 'timeline' | 'evidence';
+export type Mode = 'research' | 'analyzer' | 'reasoning' | 'drafting' | 'prediction' | 'negotiation' | 'cross-examination' | 'orchestrate' | 'timeline' | 'evidence' | 'patent';
 
-export type AnalysisResult = GenerateLegalSummaryOutput | DocumentReviewResult | ReasoningResult | DraftResult | PredictiveAnalyticsResult | NegotiationResult | CrossExaminationResult | OrchestrationResult | LitigationTimelineResult | EvidenceAnalysisResult | null;
+export type AnalysisResult = GenerateLegalSummaryOutput | DocumentReviewResult | ReasoningResult | DraftResult | PredictiveAnalyticsResult | NegotiationResult | CrossExaminationResult | OrchestrationResult | LitigationTimelineResult | EvidenceAnalysisResult | PatentSearchResult | null;
 
 export default function ResearchPage() {
   const [selectedMode, setSelectedMode] = useState<Mode>('orchestrate');
@@ -89,6 +90,8 @@ export default function ResearchPage() {
         return <LitigationTimelineMode isLoading={isLoading} result={analysisResult as LitigationTimelineResult | null} />;
       case 'evidence':
         return <EvidenceAnalysisMode isLoading={isLoading} result={analysisResult as EvidenceAnalysisResult | null} />;
+      case 'patent':
+        return <PatentSearchMode isLoading={isLoading} result={analysisResult as PatentSearchResult | null} />;
       default:
         return null;
     }
@@ -96,8 +99,8 @@ export default function ResearchPage() {
 
   return (
     <MainLayout>
-        <div className="grid grid-cols-12 gap-8 items-start mt-6">
-            <div className="col-span-12 lg:col-span-4">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 md:gap-8 items-start mt-6">
+            <div className="col-span-12 md:col-span-5 lg:col-span-4">
                  <ModeSwitcher 
                     selectedMode={selectedMode} 
                     onModeChange={(mode) => {
@@ -111,7 +114,7 @@ export default function ResearchPage() {
                     onAnalysisError={handleAnalysisError}
                  />
             </div>
-            <div className="col-span-12 lg:col-span-8">
+            <div className="col-span-12 md:col-span-7 lg:col-span-8">
                 {renderActiveComponent()}
             </div>
         </div>

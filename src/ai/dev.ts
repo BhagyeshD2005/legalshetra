@@ -15,6 +15,7 @@ import '@/ai/flows/orchestrate-workflow.ts';
 import '@/ai/flows/generate-litigation-timeline.ts';
 import '@/ai/flows/analyze-evidence.ts';
 import '@/ai/flows/analyze-judgment.ts';
+import '@/ai/flows/patent-search.ts';
 
 
 

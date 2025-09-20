@@ -5,6 +5,7 @@
  */
 
 import {z} from 'genkit';
+import { PatentSearchInputSchema, PatentSearchOutputSchema } from './flows/patent-search';
 
 export const ChatMessageSchema = z.object({
   role: z.enum(['user', 'model']),
@@ -310,3 +311,7 @@ export const ReasonAboutScenarioOutputSchema = z.object({
   citedCases: z.array(CitedCaseSchema).describe('A list of cases or statutes cited in the analysis.'),
 });
 export type ReasonAboutScenarioOutput = z.infer<typeof ReasonAboutScenarioOutputSchema>;
+
+
+// Export patent search types
+export type { PatentSearchInput, PatentSearchOutput };
