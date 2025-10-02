@@ -64,7 +64,7 @@ const draftPrompt = ai.definePrompt({
     *   A **risk rating** ('low', 'medium', or 'high') based on potential for dispute or ambiguity.
     *   A brief **riskExplanation** for the assigned risk.
     
-4.  **Assemble the Full Draft**: Combine all generated clauses and the provided boilerplate into a single, coherent document string. Ensure proper formatting with clear headings, numbered paragraphs, and professional signature blocks. This must be a clean, ready-to-use document.
+4.  **Assemble the Full Draft**: Combine all generated clauses and the provided boilerplate into a single, coherent document string. Ensure proper formatting with clear headings and numbered paragraphs. For signature blocks, leave ample vertical space (several blank lines) above the typed name and title to allow for a physical signature.
 
 **Important:**
 *   The \`fullDraft\` field MUST contain the complete, ready-to-use document.
