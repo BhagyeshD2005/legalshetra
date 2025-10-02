@@ -435,9 +435,11 @@ export function ModeSwitcher({
   };
 
   const onOrchestrateSubmit: SubmitHandler<z.infer<typeof orchestrateFormSchema>> = async (data) => {
-    // This will be handled by the OrchestrateMode component, which will call the flow
-    // and provide step-by-step updates. Here, we just initiate it.
+    setIsSubmitting(true);
     onAnalysisStart({ query: data.objective });
+    // The actual execution is now handled in the OrchestrateMode component via useEffect
+    // We just need to signal the start and set the objective.
+    // The isSubmitting state will be handled by the parent's isLoading prop.
   };
   
   const onTimelineSubmit: SubmitHandler<z.infer<typeof timelineFormSchema>> = async (data) => {
@@ -1695,6 +1697,7 @@ export function ModeSwitcher({
 }
 
     
+
 
 
 

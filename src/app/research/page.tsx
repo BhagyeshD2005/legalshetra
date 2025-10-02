@@ -32,6 +32,7 @@ export default function ResearchPage() {
   const handleAnalysisStart = (data?: { query: string }) => {
     setIsLoading(true);
     setAnalysisResult(null);
+    setInitialQuery(undefined);
     setOrchestrationObjective(undefined);
     if(data && selectedMode === 'research') {
         setInitialQuery(data);
@@ -44,14 +45,12 @@ export default function ResearchPage() {
   const handleAnalysisComplete = (result: AnalysisResult) => {
     setAnalysisResult(result);
     setIsLoading(false);
-    setInitialQuery(undefined);
     // Do not clear orchestration objective, so the result view can use it.
   };
 
   const handleAnalysisError = () => {
     setIsLoading(false);
-    setInitialQuery(undefined);
-    setOrchestrationObjective(undefined);
+    // Do not clear orchestration objective in case user wants to retry
   }
 
   const renderActiveComponent = () => {

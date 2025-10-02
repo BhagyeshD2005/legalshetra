@@ -76,7 +76,6 @@ export function OrchestrateMode({
 
   const executeOrchestration = useCallback(async (objectiveToRun: string) => {
     setError(null);
-    onOrchestrationStart({ query: objectiveToRun });
     let accumulatedContext = objectiveToRun;
     let finalPlan: OrchestrationPlanStep[] = [];
 
@@ -84,7 +83,7 @@ export function OrchestrateMode({
         // 1. Create a plan first
         const planResult = await createWorkflowPlan({ objective: objectiveToRun });
         finalPlan = planResult.plan;
-        setCurrentPlan(finalPlan);
+        setCurrentPlan(finalPlan.map(s => ({ ...s, status: 'pending' })));
 
         // 2. Execute each step of the plan
         for (let i = 0; i < finalPlan.length; i++) {
@@ -96,15 +95,15 @@ export function OrchestrateMode({
             try {
                 const stepResult = await executeWorkflowStep({ step, context: accumulatedContext });
                 
-                // Mark as completed
+                // Mark as completed and update for next step
                 accumulatedContext += `\n\nResult from step ${step.step}: ${JSON.stringify(stepResult)}`;
                 finalPlan[i] = { ...step, status: 'completed', result: stepResult };
-                setCurrentPlan(finalPlan);
+                setCurrentPlan(prev => prev.map(s => s.step === step.step ? { ...s, status: 'completed', result: stepResult } : s));
 
             } catch (stepError: any) {
                  // Mark as error and stop
                 finalPlan[i] = { ...step, status: 'error', result: { error: stepError.message } };
-                setCurrentPlan(finalPlan);
+                setCurrentPlan(prev => prev.map(s => s.step === step.step ? { ...s, status: 'error', result: { error: stepError.message } } : s));
                 throw stepError;
             }
         }
@@ -128,15 +127,13 @@ export function OrchestrateMode({
             onOrchestrationComplete({ plan: finalPlan, finalOutput: "Workflow failed." });
         }
     }
-  }, [onOrchestrationStart, onOrchestrationComplete, onOrchestrationError, toast]);
+  }, [onOrchestrationComplete, onOrchestrationError, toast]);
   
   useEffect(() => {
     if (objective && isLoading) {
       executeOrchestration(objective);
     }
-    // We only want to run this when the objective is first set
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [objective, isLoading]);
+  }, [objective, isLoading, executeOrchestration]);
   
   useEffect(() => {
     // Sync local plan state with result from props
@@ -193,7 +190,7 @@ export function OrchestrateMode({
   }
 
   if (isLoading) {
-      const loadingSteps = currentPlan.length > 0 ? currentPlan.map(step => {
+      const loadingSteps: ProcessingStep[] = currentPlan.length > 0 ? currentPlan.map(step => {
         const AgentIcon = agentIcons[step.agent] || agentIcons.default;
         return {
           id: step.step.toString(),
