@@ -34,6 +34,7 @@ import {
     Camera,
     Plus,
     FileKey,
+    ChevronRight,
 } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
@@ -74,6 +75,7 @@ interface ModeSwitcherProps {
   onAnalysisStart: (data?: {query: string}) => void;
   onAnalysisComplete: (result: AnalysisResult) => void;
   onAnalysisError: () => void;
+  isSubmitting: boolean;
 }
 
 const researchFormSchema = z.object({
@@ -183,9 +185,9 @@ export function ModeSwitcher({
     onModeChange, 
     onAnalysisStart,
     onAnalysisComplete,
-    onAnalysisError
+    onAnalysisError,
+    isSubmitting
 }: ModeSwitcherProps) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const evidenceFileInputRef = useRef<HTMLInputElement>(null);
@@ -301,7 +303,6 @@ export function ModeSwitcher({
   };
   
   const onAnalyzerSubmit: SubmitHandler<z.infer<typeof analyzerFormSchema>> = async (data) => {
-    setIsSubmitting(true);
     onAnalysisStart();
     try {
         const result = await analyzeDocument(data);
@@ -320,11 +321,9 @@ export function ModeSwitcher({
         toast({ variant: 'destructive', title: 'Analysis Failed', description: 'Could not analyze the document.' });
         onAnalysisError();
     }
-    setIsSubmitting(false);
   };
   
   const onReasoningSubmit: SubmitHandler<z.infer<typeof reasoningFormSchema>> = async (data) => {
-    setIsSubmitting(true);
     onAnalysisStart();
     try {
         const result = await reasonAboutScenario(data);
@@ -342,11 +341,9 @@ export function ModeSwitcher({
         });
         onAnalysisError();
     }
-    setIsSubmitting(false);
   };
   
   const onDraftingSubmit: SubmitHandler<z.infer<typeof draftingFormSchema>> = async (data) => {
-    setIsSubmitting(true);
     onAnalysisStart();
     try {
         const result = await draftLegalDocument(data);
@@ -364,11 +361,9 @@ export function ModeSwitcher({
         });
         onAnalysisError();
     }
-    setIsSubmitting(false);
   };
   
   const onPredictionSubmit: SubmitHandler<z.infer<typeof predictionFormSchema>> = async (data) => {
-    setIsSubmitting(true);
     onAnalysisStart();
     try {
         const result = await predictCaseOutcome(data);
@@ -386,11 +381,9 @@ export function ModeSwitcher({
         });
         onAnalysisError();
     }
-    setIsSubmitting(false);
   };
   
   const onNegotiationSubmit: SubmitHandler<z.infer<typeof negotiationFormSchema>> = async (data) => {
-    setIsSubmitting(true);
     onAnalysisStart();
     try {
         const result = await negotiationSupport(data);
@@ -409,11 +402,9 @@ export function ModeSwitcher({
         });
         onAnalysisError();
     }
-    setIsSubmitting(false);
   };
 
   const onCrossExaminationSubmit: SubmitHandler<z.infer<typeof crossExaminationFormSchema>> = async (data) => {
-    setIsSubmitting(true);
     onAnalysisStart();
     try {
         const result = await crossExaminationPrep(data);
@@ -431,19 +422,13 @@ export function ModeSwitcher({
         });
         onAnalysisError();
     }
-    setIsSubmitting(false);
   };
 
   const onOrchestrateSubmit: SubmitHandler<z.infer<typeof orchestrateFormSchema>> = async (data) => {
-    setIsSubmitting(true);
     onAnalysisStart({ query: data.objective });
-    // The actual execution is now handled in the OrchestrateMode component via useEffect
-    // We just need to signal the start and set the objective.
-    // The isSubmitting state will be handled by the parent's isLoading prop.
   };
   
   const onTimelineSubmit: SubmitHandler<z.infer<typeof timelineFormSchema>> = async (data) => {
-    setIsSubmitting(true);
     onAnalysisStart();
     try {
         const input = {
@@ -465,11 +450,9 @@ export function ModeSwitcher({
         });
         onAnalysisError();
     }
-    setIsSubmitting(false);
   };
 
   const onEvidenceSubmit: SubmitHandler<z.infer<typeof evidenceFormSchema>> = async (data) => {
-    setIsSubmitting(true);
     onAnalysisStart();
     try {
         const result = await analyzeEvidence(data);
@@ -488,11 +471,9 @@ export function ModeSwitcher({
         });
         onAnalysisError();
     }
-    setIsSubmitting(false);
   };
 
   const onPatentSearchSubmit: SubmitHandler<z.infer<typeof patentSearchFormSchema>> = async (data) => {
-    setIsSubmitting(true);
     onAnalysisStart();
     try {
         const result = await patentSearch(data);
@@ -510,7 +491,6 @@ export function ModeSwitcher({
         });
         onAnalysisError();
     }
-    setIsSubmitting(false);
   };
 
 
@@ -569,7 +549,7 @@ export function ModeSwitcher({
     // Request read-only access to Google Drive files.
     provider.addScope('https://www.googleapis.com/auth/drive.readonly');
 
-    setIsSubmitting(true);
+    onAnalysisStart();
     toast({ title: "Connecting to Google Drive...", description: "Please sign in with Google to grant access." });
 
     try {
@@ -607,7 +587,7 @@ export function ModeSwitcher({
       toast({ variant: 'destructive', title: 'Connection Failed', description: error.message || 'Could not connect to Google Drive.' });
       setIsDriveConnected(false);
     } finally {
-      setIsSubmitting(false);
+      onAnalysisError();
     }
   };
   
@@ -674,8 +654,11 @@ export function ModeSwitcher({
                   )}
                 />
                 <Button type="submit" className="w-full" disabled={isSubmitting} size="lg">
-                    {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Orchestrating...</>
-                               : <><Sparkles className="mr-2 h-4 w-4" /> Begin Workflow</>}
+                    {isSubmitting ? (
+                        <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Working...</>
+                    ) : (
+                        <><ChevronRight className="mr-2 h-4 w-4" /> Proceed</>
+                    )}
                 </Button>
               </form>
             </Form>
@@ -717,8 +700,11 @@ export function ModeSwitcher({
                   )}
                 />
                 <Button type="submit" className="w-full" disabled={isSubmitting} size="lg">
-                    {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Researching...</>
-                               : <><Search className="mr-2 h-4 w-4" /> Start Research</>}
+                    {isSubmitting ? (
+                        <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Working...</>
+                    ) : (
+                        <><ChevronRight className="mr-2 h-4 w-4" /> Proceed</>
+                    )}
                 </Button>
               </form>
             </Form>
@@ -856,8 +842,8 @@ export function ModeSwitcher({
                   )}
                 />
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Reviewing...</> 
-                             : <><Sparkles className="mr-2 h-4 w-4" /> Review Document</>}
+                  {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Working...</> 
+                             : <><ChevronRight className="mr-2 h-4 w-4" /> Proceed</>}
                 </Button>
               </form>
             </Form>
@@ -910,8 +896,8 @@ export function ModeSwitcher({
                   )}
                 />
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
-                             : <><Wand2 className="mr-2 h-4 w-4" /> Analyze Scenario</>}
+                  {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Working...</> 
+                             : <><ChevronRight className="mr-2 h-4 w-4" /> Proceed</>}
                 </Button>
               </form>
             </Form>
@@ -1012,8 +998,8 @@ export function ModeSwitcher({
                       )}
                     />
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
-                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Drafting...</> 
-                                 : <><Sparkles className="mr-2 h-4 w-4" /> Start Drafting</>}
+                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Working...</> 
+                                 : <><ChevronRight className="mr-2 h-4 w-4" /> Proceed</>}
                     </Button>
                   </form>
                 </Form>
@@ -1114,8 +1100,8 @@ export function ModeSwitcher({
                       )}
                     />
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
-                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
-                                 : <><Sparkles className="mr-2 h-4 w-4" /> Generate Prediction</>}
+                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Working...</> 
+                                 : <><ChevronRight className="mr-2 h-4 w-4" /> Proceed</>}
                     </Button>
                   </form>
                 </Form>
@@ -1224,8 +1210,8 @@ export function ModeSwitcher({
                       )}
                     />
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
-                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
-                                 : <><Sparkles className="mr-2 h-4 w-4" /> Get Negotiation Advice</>}
+                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Working...</> 
+                                 : <><ChevronRight className="mr-2 h-4 w-4" /> Proceed</>}
                     </Button>
                   </form>
                 </Form>
@@ -1320,8 +1306,8 @@ export function ModeSwitcher({
                         />
                     </div>
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
-                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Preparing...</> 
-                                 : <><Swords className="mr-2 h-4 w-4" /> Prepare for Examination</>}
+                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Working...</> 
+                                 : <><ChevronRight className="mr-2 h-4 w-4" /> Proceed</>}
                     </Button>
                   </form>
                 </Form>
@@ -1430,8 +1416,8 @@ export function ModeSwitcher({
                       )}
                     />
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
-                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Generating...</> 
-                                 : <><Sparkles className="mr-2 h-4 w-4" /> Generate Timeline</>}
+                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Working...</> 
+                                 : <><ChevronRight className="mr-2 h-4 w-4" /> Proceed</>}
                     </Button>
                   </form>
                 </Form>
@@ -1536,8 +1522,8 @@ export function ModeSwitcher({
                     )}
                 />
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analyzing...</> 
-                             : <><Sparkles className="mr-2 h-4 w-4" /> Analyze Evidence</>}
+                  {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Working...</> 
+                             : <><ChevronRight className="mr-2 h-4 w-4" /> Proceed</>}
                 </Button>
               </form>
             </Form>
@@ -1570,8 +1556,8 @@ export function ModeSwitcher({
                   )}
                 />
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Searching...</> 
-                             : <><Search className="mr-2 h-4 w-4" /> Search for Prior Art</>}
+                  {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Working...</> 
+                             : <><ChevronRight className="mr-2 h-4 w-4" /> Proceed</>}
                 </Button>
               </form>
             </Form>
@@ -1697,6 +1683,7 @@ export function ModeSwitcher({
 }
 
     
+
 
 
 

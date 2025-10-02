@@ -76,6 +76,7 @@ export function OrchestrateMode({
 
   const executeOrchestration = useCallback(async (objectiveToRun: string) => {
     setError(null);
+    setCurrentPlan([]);
     let accumulatedContext = objectiveToRun;
     let finalPlan: OrchestrationPlanStep[] = [];
 

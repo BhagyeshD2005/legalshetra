@@ -107,10 +107,12 @@ export default function ResearchPage() {
                         setAnalysisResult(null);
                         setInitialQuery(undefined);
                         setOrchestrationObjective(undefined);
+                        setIsLoading(false);
                     }}
                     onAnalysisStart={handleAnalysisStart}
                     onAnalysisComplete={handleAnalysisComplete}
                     onAnalysisError={handleAnalysisError}
+                    isSubmitting={isLoading}
                  />
             </div>
             <div className="col-span-12 md:col-span-7 lg:col-span-8">
