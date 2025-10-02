@@ -181,7 +181,7 @@ export function DraftingMode({ isLoading, result }: DraftingModeProps) {
                             This is the clean, finalized version of your document. You can copy or print it.
                         </CardDescription>
                         <ScrollArea className="h-[60vh] p-4 border rounded-lg bg-muted/30">
-                           <pre className="text-sm whitespace-pre-wrap font-sans">{result.fullDraft}</pre>
+                           <div className="text-sm whitespace-pre-wrap font-sans" dangerouslySetInnerHTML={{ __html: result.fullDraft.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                         </ScrollArea>
                         <div className="flex items-center gap-2">
                             <Button onClick={() => handleCopyToClipboard(result.fullDraft)}>
@@ -203,7 +203,7 @@ export function DraftingMode({ isLoading, result }: DraftingModeProps) {
                             Here is the initial AI-generated draft. Proceed to the next steps for analysis and finalization.
                         </CardDescription>
                         <ScrollArea className="h-[60vh] p-4 border rounded-lg">
-                           <pre className="text-sm whitespace-pre-wrap font-sans">{result.fullDraft}</pre>
+                           <div className="text-sm whitespace-pre-wrap font-sans" dangerouslySetInnerHTML={{ __html: result.fullDraft.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') }} />
                         </ScrollArea>
                     </div>
                 );

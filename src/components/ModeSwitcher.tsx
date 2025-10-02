@@ -655,9 +655,9 @@ export function ModeSwitcher({
                 />
                 <Button type="submit" className="w-full" disabled={isSubmitting} size="lg">
                     {isSubmitting ? (
-                        <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Working...</>
+                        <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Orchestrating...</>
                     ) : (
-                        <><ChevronRight className="mr-2 h-4 w-4" /> Proceed</>
+                        <><ChevronRight className="mr-2 h-4 w-4" /> Begin Workflow</>
                     )}
                 </Button>
               </form>
@@ -701,9 +701,9 @@ export function ModeSwitcher({
                 />
                 <Button type="submit" className="w-full" disabled={isSubmitting} size="lg">
                     {isSubmitting ? (
-                        <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Working...</>
+                        <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Researching...</>
                     ) : (
-                        <><ChevronRight className="mr-2 h-4 w-4" /> Proceed</>
+                        <><ChevronRight className="mr-2 h-4 w-4" /> Start Research</>
                     )}
                 </Button>
               </form>
@@ -896,8 +896,8 @@ export function ModeSwitcher({
                   )}
                 />
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
-                  {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Working...</> 
-                             : <><ChevronRight className="mr-2 h-4 w-4" /> Proceed</>}
+                  {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Reasoning...</> 
+                             : <><ChevronRight className="mr-2 h-4 w-4" /> Begin Reasoning</>}
                 </Button>
               </form>
             </Form>
@@ -998,8 +998,8 @@ export function ModeSwitcher({
                       )}
                     />
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
-                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Working...</> 
-                                 : <><ChevronRight className="mr-2 h-4 w-4" /> Proceed</>}
+                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Drafting...</> 
+                                 : <><ChevronRight className="mr-2 h-4 w-4" /> Draft</>}
                     </Button>
                   </form>
                 </Form>
@@ -1100,8 +1100,8 @@ export function ModeSwitcher({
                       )}
                     />
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
-                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Working...</> 
-                                 : <><ChevronRight className="mr-2 h-4 w-4" /> Proceed</>}
+                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Analysing...</> 
+                                 : <><ChevronRight className="mr-2 h-4 w-4" /> Analyze</>}
                     </Button>
                   </form>
                 </Form>
@@ -1210,8 +1210,8 @@ export function ModeSwitcher({
                       )}
                     />
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
-                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Working...</> 
-                                 : <><ChevronRight className="mr-2 h-4 w-4" /> Proceed</>}
+                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Working</> 
+                                 : <><ChevronRight className="mr-2 h-4 w-4" /> Negotiate</>}
                     </Button>
                   </form>
                 </Form>
@@ -1416,8 +1416,8 @@ export function ModeSwitcher({
                       )}
                     />
                     <Button type="submit" className="w-full" disabled={isSubmitting}>
-                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Working...</> 
-                                 : <><ChevronRight className="mr-2 h-4 w-4" /> Proceed</>}
+                      {isSubmitting ? <><RefreshCw className="mr-2 h-4 w-4 animate-spin" /> Examining...</> 
+                                 : <><ChevronRight className="mr-2 h-4 w-4" /> Examine</>}
                     </Button>
                   </form>
                 </Form>
