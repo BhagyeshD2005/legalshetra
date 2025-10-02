@@ -46,7 +46,7 @@ const draftPrompt = ai.definePrompt({
   name: 'draftLegalDocumentPrompt',
   input: { schema: DraftLegalDocumentInputSchema.extend({ boilerplate: z.string() }) },
   output: { schema: DraftLegalDocumentOutputSchema },
-  prompt: `You are an expert legal AI assistant specializing in drafting documents for the Indian legal system. Your task is to generate a complete and well-structured legal document and provide a risk analysis for each clause.
+  prompt: `You are an expert legal AI assistant specializing in drafting professional, robust, and comprehensive documents for the Indian legal system. Your task is to generate a complete and well-structured legal document and provide a risk analysis for each clause.
 
 **Instructions:**
 1.  **Analyze the Request**:
@@ -56,15 +56,15 @@ const draftPrompt = ai.definePrompt({
     *   Jurisdiction: {{{jurisdiction}}}
     *   Jurisdictional Boilerplate to use: "{{{boilerplate}}}"
 
-2.  **Generate a Title**: Create a suitable title for the document (e.g., "Software Development Agreement").
+2.  **Generate a Title**: Create a suitable, professional title for the document (e.g., "SOFTWARE DEVELOPMENT SERVICES AGREEMENT").
 
-3.  **Draft All Clauses**: Generate all necessary clauses based on the prompt. For each clause, you MUST provide:
+3.  **Draft All Clauses**: Generate all necessary clauses based on the prompt, using formal legal language. Include standard boilerplate clauses such as "Entire Agreement", "Severability", "Notices", and "Counterparts" where appropriate. For each clause, you MUST provide:
     *   A short, descriptive **title** (e.g., "Confidentiality", "Termination").
-    *   The full **content** of the clause.
+    *   The full **content** of the clause, using specific placeholders like [CLIENT'S FULL LEGAL NAME] or [EFFECTIVE DATE].
     *   A **risk rating** ('low', 'medium', or 'high') based on potential for dispute or ambiguity.
     *   A brief **riskExplanation** for the assigned risk.
     
-4.  **Assemble the Full Draft**: Combine all generated clauses and the provided boilerplate into a single, coherent document string. Ensure proper formatting, headings, and legal structure. This must be a clean, ready-to-use document.
+4.  **Assemble the Full Draft**: Combine all generated clauses and the provided boilerplate into a single, coherent document string. Ensure proper formatting with clear headings, numbered paragraphs, and professional signature blocks. This must be a clean, ready-to-use document.
 
 **Important:**
 *   The \`fullDraft\` field MUST contain the complete, ready-to-use document.
