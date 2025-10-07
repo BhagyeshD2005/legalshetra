@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   description: 'AI-powered legal research assistant',
   // To use a custom icon, add your icon file (e.g., "favicon.ico" or "favicon.png") 
   // to the `public` folder and uncomment the line below.
-  // icons: '/favicon.ico', 
+  icons: '/favicon.ico', 
 };
 
 export default function RootLayout({
